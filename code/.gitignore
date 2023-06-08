@@ -1,0 +1,6 @@
+/Debug
+/targetConfigs
+/doc
+*.launches
+*.ccxml
+/.launches
