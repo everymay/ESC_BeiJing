@@ -502,41 +502,59 @@ extern unsigned long FFTCalcChan;
 extern float TestLoadCur[3][GEN_FUNDPOINT];
 
 
+/*A相低压侧电流。WY*/
+#define ADC_RU_IMA       (AdcaResultRegs.ADCRESULT0)
 
-#define ADC_RU_IMA       ( AdcaResultRegs.ADCRESULT0)          //A2  ESC涓荤數鎶楃數缃戠數娴丄
-#define ADC_RU_IMB       ( AdccResultRegs.ADCRESULT0)          //C3  ESC涓荤數鎶楃數缃戠數娴丅
-#define ADC_RU_IMC       ( AdcdResultRegs.ADCRESULT0)          //D5  ESC涓荤數鎶楃數缃戠數娴丆
+/*B相低压侧电流。WY*/
+#define ADC_RU_IMB       (AdccResultRegs.ADCRESULT0)
 
-#define ADC_RU_IBYA      ( AdcaResultRegs.ADCRESULT5)          //A0  ESC鏃佽矾鐢垫祦A(ISU)
-#define ADC_RU_IBYB      ( AdcbResultRegs.ADCRESULT2)          //B2  ESC鏃佽矾鐢垫祦B(ISV)
-#define ADC_RU_IBYC      ( AdcdResultRegs.ADCRESULT4)          //D4  ESC鏃佽矾鐢垫祦C(ISW)
+/*C相低压侧电流。WY*/
+#define ADC_RU_IMC       (AdcdResultRegs.ADCRESULT0)
 
-#define ADC_DC_UA        ( AdcdResultRegs.ADCRESULT3)          //D3  ESC A鐩哥洿娴佺數瀹圭數鍘婭OU
-#define ADC_DC_UB        ( AdcaResultRegs.ADCRESULT1)          //A5  ESC B鐩哥洿娴佺數瀹圭數鍘婭OV
-#define ADC_DC_UC        ( AdccResultRegs.ADCRESULT1)          //C4  ESC C鐩哥洿娴佺數瀹圭數鍘婭OW
+/*A相高压侧电流。WY*/
+#define ADC_RU_IBYA      (AdcaResultRegs.ADCRESULT5)
 
-#define ADC_RU_HVA       ( AdcaResultRegs.ADCRESULT2)          //A15 ESC楂樺帇渚N
-#define ADC_RU_LVA       ( AdcdResultRegs.ADCRESULT1)          //D1  ESC浣庡帇渚N
+/*B相高压侧电流。WY*/
+#define ADC_RU_IBYB      (AdcbResultRegs.ADCRESULT2)
 
-#define ADC_RU_HVB       ( AdcbResultRegs.ADCRESULT1)          //B4  ESC楂樺帇渚N
-#define ADC_RU_LVB       ( AdcbResultRegs.ADCRESULT0)          //B5  ESC浣庡帇渚N
+/*C相高压侧电流。WY*/
+#define ADC_RU_IBYC      (AdcdResultRegs.ADCRESULT4)
 
-#define ADC_RU_HVC       ( AdccResultRegs.ADCRESULT3)          //C2  ESC楂樺帇渚N
-#define ADC_RU_LVC       ( AdcaResultRegs.ADCRESULT4)          //A4  ESC浣庡帇渚N
+/*A相直流电容电压。WY*/
+#define ADC_DC_UA        (AdcdResultRegs.ADCRESULT3)
 
-#define ADC_RU_TEMP0     ( AdcbResultRegs.ADCRESULT3)          //B1 ESC 娴嬭瘯娓╁害T1
-#define ADC_RU_TEMP1     ( AdcdResultRegs.ADCRESULT2)          //D2 ESC 娴嬭瘯娓╁害T2
-#define ADC_RU_TEMP2     ( AdccResultRegs.ADCRESULT2)          //C5 ESC 娴嬭瘯娓╁害T3
+/*B相直流电容电压。WY*/
+#define ADC_DC_UB        (AdcaResultRegs.ADCRESULT1)
 
+/*C相直流电容电压。WY*/
+#define ADC_DC_UC        (AdccResultRegs.ADCRESULT1)
 
-//#define IO_OUTPUT(IO,VAL) (IO)=(VAL);asm(" RPT #7 || NOP") ;asm(" RPT #7 || NOP")
-//#define IO_STATE(IO,VAL) (IO)!=(VAL)?1:0
-//
-//#if DEBUG_WAVE_INNER
-//	#define DBG_IOOUT(IO,VAL)  (IO)=(VAL)
-//#else
-//	#define DBG_IOOUT(IO,VAL)
-//#endif
+/*A相高压侧电压。WY*/
+#define ADC_RU_HVA       (AdcaResultRegs.ADCRESULT2)
+
+/*A相低压侧电压。WY*/
+#define ADC_RU_LVA       (AdcdResultRegs.ADCRESULT1)
+
+/*B相高压侧电压。WY*/
+#define ADC_RU_HVB       (AdcbResultRegs.ADCRESULT1)
+
+/*B相低压侧电压。WY*/
+#define ADC_RU_LVB       (AdcbResultRegs.ADCRESULT0)
+
+/*C相高压侧电压。WY*/
+#define ADC_RU_HVC       (AdccResultRegs.ADCRESULT3)
+
+/*C相低压侧电压。WY*/
+#define ADC_RU_LVC       (AdcaResultRegs.ADCRESULT4)
+
+/*T1温度。WY*/
+#define ADC_RU_TEMP0     (AdcbResultRegs.ADCRESULT3)
+
+/*T2温度。WY*/
+#define ADC_RU_TEMP1     (AdcdResultRegs.ADCRESULT2)
+
+/*T3温度。WY*/
+#define ADC_RU_TEMP2     (AdccResultRegs.ADCRESULT2)
 
 
 inline float CLAPhaseLimit(float x){

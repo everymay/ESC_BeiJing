@@ -82,9 +82,13 @@ float quarterPeriod = 0;  // spwm /2= 3750/2=1875
 float GridVoltAF = 0;
 float GridVoltBF = 0;
 float GridVoltCF = 0;
-float DccapVoltA = 0;
-float DccapVoltB = 0;
-float DccapVoltC = 0;
+
+float DccapVoltA = 0; //A相直流电容电压。WY
+
+float DccapVoltB = 0; //B相直流电容电压。WY
+
+float DccapVoltC = 0; //C相直流电容电压。WY
+
 float GridBPCurrAF = 0;
 float GridBPCurrBF = 0;
 float GridBPCurrCF = 0;
@@ -464,7 +468,9 @@ float GV_RMS_OVER  = 460;  // 400*1.15 = 460
 float GV_RMS_UNDER = 340;  // 400*0.85 = 340   试验设定20
 float GF_OVER      = 63 ;  // 50*1.1 = 55
 float GF_UNDER     = 40 ;  // 50*0.9 = 45
-float ESCDCVOLITLIMIT     = 800;  // 380*1.414*1.15 + 100 = 718
+
+float ESCDCVOLITLIMIT = 800; //直流电容电压上限值。WY  // 380*1.414*1.15 + 100 = 718
+
 float VoltFallResponseLimit    = 200;  // 380*1.414*0.8 = 456    欠压值过长可能导致逆变器失控 设置为0.8倍
 float GV_NEGTIVE_UP     = 60;  // 暂定不对称50% ；待定？？？ 装置在何种不对称电网工况下，无法连续运行，则设定为故障位
 float VoltHarmOver = 0;

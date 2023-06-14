@@ -83,7 +83,6 @@ int TESTVALAUE = 500;
 
 /*
  * 功能：主路和旁路磁保持继电器状态检测。WY
- *
  * 说明：此函数在AD-ISR中被调用。
  */
 void StateFeedBackJudge(void)
@@ -190,13 +189,15 @@ void StateFeedBackJudge(void)
 }
 
 /*
- * 功能：故障判定
- * 输入参数SoeName：触控屏上显示的故障类型名称。WY
+ * 功能：故障判定。WY
+ * 输入参数SoeName：触控屏上显示的故障类型名称
  * 输入参数counterName：故障类型。
  * 输入参数FaultDelayTime：检测到的故障信号次数。
    当检测到的故障信号次数低于该值时，不作故障判定；
    当检测到的故障信号次数超过该值时，执行故障判定。
- * 输入参数ESCPHASE：待判定故障类型的相序。
+ * 输入参数ESCPHASE：待判定故障类型的相。
+   取值范围：A相、B相或C相。
+ * 返回值：0，不存在故障；1，存在故障。
  */
 int16 FaultDetect(Uint16 SoeName, Uint16 counterName, Uint16 FaultDelayTime, Uint16 ESCPHASE)
 {
@@ -223,7 +224,7 @@ int16 FaultDetect(Uint16 SoeName, Uint16 counterName, Uint16 FaultDelayTime, Uin
 		/*处理A相*/
 		if ((ESCFlagA.FAULTCONFIRFlag == 1) //存在故障信号。WY
 				&& (ESCPHASE == 1) //A相。WY
-				&& (ESCBYRelayCNTA != 1)) //A相磁保持继电器状态正常。WY
+				&& (ESCBYRelayCNTA != 1)) //A相旁路磁保持继电器状态正常。WY
 		{
 			StateEventFlag_A = STATE_EVENT_FAULT_A; //切转状态机至：A相故障停机。WY
 			ESCFlagA.faultFlag = 1; //A相存在故障。WY
@@ -637,46 +638,14 @@ void SetFaultDelayCounterLong(Uint16 counterName,Uint32 mode)
 		CntFaultDelayLong[counterName] = 0;
 }
 
-void FaultDetectInInt(void)                  // 放置于中断，紧急保护,每次AD中断运行一次,如果更改位置.需更改IGBTFAULT_DLYTIME的定义
+/*该函数未定义。WY*/
+void FaultDetectInInt(void)
 {}
   /********************* Ecap中断  ******************************/
 void EcapINT1(void)
 {
     //--------------- ESC 快速硬件过流保护A--------------//
-//    TIMER1 = ECap1Regs.CAP1;
-//    TIMER2 = ECap1Regs.CAP2;
-//    TIMER3 = ECap1Regs.CAP3;
-//    TIMER4 = ECap1Regs.CAP4;
-//        if(StateEventFlag == STATE_EVENT_RUN){
-//            if(ECap1Regs.ECFLG.bit.CEVT2 != 0){
-//                if(TIMER2 > TIMER1){
-//                    TIMERPERIODVAL1 = TIMER2 - TIMER1;
-//                }else{
-//                    TIMERPERIODVAL1 = (0xFFFFFFFF - TIMER1) + TIMER2;   //注意运算顺序,防止溢出!
-//                }
-//                if((ECap1Regs.ECFLG.bit.CEVT3 != 0)&&(ECap1Regs.ECFLG.bit.CEVT4 == 0)){
-//                    CAPTIEMRFlag = 1;
-//                }else if((ECap1Regs.ECFLG.bit.CEVT3 != 0)&&(ECap1Regs.ECFLG.bit.CEVT4 != 0)){
-//                    if(TIMER4 > TIMER3){
-//                        TIMERPERIODVAL2 = TIMER4 - TIMER3;
-//                    }else{
-//                        TIMERPERIODVAL2 = (0xFFFFFFFF - TIMER3) + TIMER4;   //注意运算顺序,防止溢出!
-//                    }
-//                    if((TIMERPERIODVAL1 > 100*CAPPERIODVAL)||(TIMERPERIODVAL2 > 100*CAPPERIODVAL))   CAPTIEMRFlag = 1;
-//                    else                      CAPTIEMRFlag = 0;
-//                }else{
-//                    if(TIMERPERIODVAL1 > 100*CAPPERIODVAL)   CAPTIEMRFlag = 1;
-//                    else                      CAPTIEMRFlag = 0;
-//                }`
-//            }else{
-//                CAPTIEMRFlag = 1;
-//            }
-//            if((softwareFaultWord1.B.hardwareOverCurrentFlag == 0)/*&&(CAPTIEMRFlag != 0)*/){
-//                CAPTIEMRFlag = 0;
-//                SET_IGBT_EN1(IGBT_FAULT);                           //关闭IGBT的使能信号输出  IO信号拉高
-//            softwareFaultWord1.B.hardwareOverCurrentFlag = FaultDetect(SOE_GP_FAULT+9,CNT_HW_OVER_CUR,0);
-//        }
-//    }
+
     if(StateEventFlag_A == STATE_EVENT_RUN_A){
         ESCFlagA.FAULTCONFIRFlag = 1;
         if((softwareFaultWord1.B.ESCFastHardwareOverCurFlagA == 0)/*&&(CAPTIEMRFlag != 0)*/){
@@ -686,15 +655,15 @@ void EcapINT1(void)
     }else{
         SetFaultDelayCounter(CNT_HW_OVER_CUR_A,0);
     }
-//   ECap1Regs.ECCTL2.bit.REARM = 1;
+
     ECap1Regs.ECCLR.bit.CEVT4 = 1;
     ECap1Regs.ECCLR.bit.CEVT3 = 1;
     ECap1Regs.ECCLR.bit.CEVT2 = 1;
     ECap1Regs.ECCLR.bit.CEVT1 = 1;
     ECap1Regs.ECCLR.bit.INT = 1;
-//    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
-//    ECap1Regs.ECCLR.all=0xFFFF;                //clare all flag
+
 }
 void EcapINT2(void)
 {
@@ -735,15 +704,25 @@ void EcapINT3(void)
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
 }
 
-void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
+/*
+ * 功能：故障快速检测。WY
+ * 说明：此函数在ADC-1的中断服务函数中被调用。
+ */
+void FaultFastDetectInInt(void)
 {
 //由于该故障判断是放在中断中,而上电进行零偏校准的时间较长,所以要加上状态判断,防止在零偏校准时,进入该故障,使状态位ESCFlagA.FAULTCONFIRFlag置1;
+
+	/*检测瞬时值过流故障。WY*/
 	if (PhaseControl == 1)
 	{
-		if (((GridCurrAF > OUTCUR_OVER_INS) || (GridBPCurrAF > OUTCUR_OVER_INS)) && (StateEventFlag_A != STATE_EVENT_STANDBY_A))
+		/*处理A相。WY*/
+		if (((GridCurrAF > OUTCUR_OVER_INS)
+				|| (GridBPCurrAF > OUTCUR_OVER_INS)) //？？
+				&& (StateEventFlag_A != STATE_EVENT_STANDBY_A))
 		{
-			ESCFlagA.FAULTCONFIRFlag = 1;
-			if (softwareFaultWord1.B.ESCInsOverCurFlagA == 0)
+			ESCFlagA.FAULTCONFIRFlag = 1; //存在故障信号。WY
+
+			if (softwareFaultWord1.B.ESCInsOverCurFlagA == 0) //不存在瞬时值过流故障。WY
 			{
 				ESCFlagA.ESCCntMs.StartDelay = 0;
 				softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT + 4, CNT_INS_OVER_CUR_A, 3, ESCFlagA.PHASE);
@@ -753,7 +732,11 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 		{
 			SetFaultDelayCounter(CNT_INS_OVER_CUR_A, 0);
 		}
-		if (((GridCurrBF > OUTCUR_OVER_INS) || (GridBPCurrBF > OUTCUR_OVER_INS)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
+
+		/*处理B相。WY*/
+		if (((GridCurrBF > OUTCUR_OVER_INS)
+				|| (GridBPCurrBF > OUTCUR_OVER_INS)) //？？
+				&& (StateEventFlag_B != STATE_EVENT_STANDBY_B))
 		{
 			ESCFlagB.FAULTCONFIRFlag = 1;
 			if (softwareFaultWord1.B.ESCInsOverCurFlagB == 0)
@@ -766,7 +749,11 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 		{
 			SetFaultDelayCounter(CNT_INS_OVER_CUR_B, 0);
 		}
-		if (((GridCurrCF > OUTCUR_OVER_INS) || (GridBPCurrCF > OUTCUR_OVER_INS)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
+
+		/*处理C相。WY*/
+		if (((GridCurrCF > OUTCUR_OVER_INS)
+				|| (GridBPCurrCF > OUTCUR_OVER_INS))
+				&& (StateEventFlag_C != STATE_EVENT_STANDBY_C))
 		{
 			ESCFlagC.FAULTCONFIRFlag = 1;
 			if (softwareFaultWord1.B.ESCInsOverCurFlagC == 0)
@@ -795,6 +782,7 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 		{
 			SetFaultDelayCounter(CNT_INS_OVER_CUR_A, 0);
 		}
+
 		if (((GridCurrBF < OUTCUR_OVER_INS_NEG) || (GridBPCurrBF < OUTCUR_OVER_INS_NEG)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
 		{
 			ESCFlagB.FAULTCONFIRFlag = 1;
@@ -808,6 +796,7 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 		{
 			SetFaultDelayCounter(CNT_INS_OVER_CUR_B, 0);
 		}
+
 		if (((GridCurrCF < OUTCUR_OVER_INS_NEG) || (GridBPCurrCF < OUTCUR_OVER_INS_NEG)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
 		{
 			ESCFlagC.FAULTCONFIRFlag = 1;
@@ -825,7 +814,10 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 	else if (PhaseControl == 0)
 	{
 //--------------- ESC瞬时值输出过流A ------------------//
-		if (((GridCurrAF > OUTCUR_OVER_INS) || (GridCurrAF < OUTCUR_OVER_INS_NEG) || (GridBPCurrAF > OUTCUR_OVER_INS) || (GridBPCurrAF < OUTCUR_OVER_INS_NEG))
+		if (((GridCurrAF > OUTCUR_OVER_INS)
+				|| (GridCurrAF < OUTCUR_OVER_INS_NEG)
+				|| (GridBPCurrAF > OUTCUR_OVER_INS)
+				|| (GridBPCurrAF < OUTCUR_OVER_INS_NEG))
 				&& (StateEventFlag_A != STATE_EVENT_STANDBY_A))
 		{
 			ESCFlagA.FAULTCONFIRFlag = 1;
@@ -870,11 +862,13 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 			SetFaultDelayCounter(CNT_INS_OVER_CUR_C, 0);
 		}
 	}
-//------------------直流电容电压过压故障A-----------------//
+
+	/*检测A相直流电容电压过压故障。WY*/
 	if (DccapVoltA > ESCDCVOLITLIMIT)
 	{
-		ESCFlagA.FAULTCONFIRFlag = 1;
-		if (softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA == 0)
+		ESCFlagA.FAULTCONFIRFlag = 1; //存在故障信号。WY
+
+		if (softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA == 0)//A相直流电容不存在故障。WY
 		{
 			ESCFlagA.ESCCntMs.StartDelay = 0;
 			softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA = FaultDetect(SOE_GP_FAULT + 7, CNT_DC_NEUTRAL_OVER_VOLT_A, 10, ESCFlagA.PHASE);
@@ -884,7 +878,8 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 	{
 		SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_A, 0);
 	}
-//------------------直流电容电压过压故障B-----------------//
+
+	/*检测B相直流电容电压过压故障。WY*/
 	if (DccapVoltB > ESCDCVOLITLIMIT)
 	{
 		ESCFlagB.FAULTCONFIRFlag = 1;
@@ -898,7 +893,8 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 	{
 		SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_B, 0);
 	}
-//------------------直流电容电压过压故障C-----------------//
+
+	/*检测B相直流电容电压过压故障。WY*/
 	if (DccapVoltC > ESCDCVOLITLIMIT)
 	{
 		ESCFlagC.FAULTCONFIRFlag = 1;
@@ -913,8 +909,9 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 		SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_C, 0);
 	}
 
-//--------------- 电网电压有效值过压故障位A--------------//
-	if (((VoltOutA_rms >= GV_RMS_OVER) || (VoltInA_rms >= GV_RMS_OVER)) && (StateEventFlag_A != STATE_EVENT_STANDBY_A))
+	/*检测A相电网电压有效值过压故障。WY*/
+	if (((VoltOutA_rms >= GV_RMS_OVER)
+			|| (VoltInA_rms >= GV_RMS_OVER)) && (StateEventFlag_A != STATE_EVENT_STANDBY_A))
 	{
 		ESCFlagA.FAULTCONFIRFlag = 1;
 		if (softwareFaultWord1.B.ESCGridRMSOverVoltFlagA == 0)
@@ -927,8 +924,10 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 	{
 		SetFaultDelayCounter(CNT_RMS_OVER_VOLT_A, 0);
 	}
-//--------------- 电网电压有效值过压故障位B--------------//
-	if (((VoltOutB_rms >= GV_RMS_OVER) || (VoltInB_rms >= GV_RMS_OVER)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
+
+	/*检测B相电网电压有效值过压故障。WY*/
+	if (((VoltOutB_rms >= GV_RMS_OVER)
+			|| (VoltInB_rms >= GV_RMS_OVER)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
 	{
 		ESCFlagB.FAULTCONFIRFlag = 1;
 		if (softwareFaultWord1.B.ESCGridRMSOverVoltFlagB == 0)
@@ -941,8 +940,10 @@ void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 	{
 		SetFaultDelayCounter(CNT_RMS_OVER_VOLT_B, 0);
 	}
-//--------------- 电网电压有效值过压故障位C--------------//
-	if (((VoltOutC_rms >= GV_RMS_OVER) || (VoltInC_rms >= GV_RMS_OVER)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
+
+	/*检测C相电网电压有效值过压故障。WY*/
+	if (((VoltOutC_rms >= GV_RMS_OVER)
+			|| (VoltInC_rms >= GV_RMS_OVER)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
 	{
 		ESCFlagC.FAULTCONFIRFlag = 1;
 		if (softwareFaultWord1.B.ESCGridRMSOverVoltFlagC == 0)
@@ -1119,11 +1120,7 @@ void FaultDetectInMainLoop(void)
     }else{
         SetFaultDelayCounter(CNT_BYRelay_B,0);
     }
-//    if((ESCBYRelayCNTB == 1)&&(fabs(gridCurB_rms-gridCurrBYBF_rms)>20)){   //判断高压端磁保持继电器损坏
-//        DisablePWMB();
-//        SET_IGBT_ENB(IGBT_DISABLE);
-//        SET_MAIN_CONTACT_ACTION_B(ESC_ACTION_DISABLE);
-//    }
+
     //----------------ESC C相旁路磁保持继电器未合闸-----------------//
     if((fabs(VoltInC_rms-VoltOutC_rms) > 20)&&(StateEventFlag_C == STATE_EVENT_WAIT_C))
     {
@@ -1228,15 +1225,6 @@ void FaultDetectInMainLoop(void)
         }
     }
 
-//	//--------------- 电网相序检测 ---------仅在停机的时候检测-----------//
-//	if((!StateFlag.SequenceAutoFlag)&&(StateEventFlag == STATE_EVENT_STANDBY))
-//		GridPhaseSequTest(1);
-//
-//	if(!StateFlag.startOnecRec &&  CntMs.StartDelay >= CNT_MS(100)){
-//		StateFlag.startOnecRec=1;
-//		SoeRecData(SOE_GP_EVENT+7);		//装置上电事件
-//	}
-
     //--------------- 散热片温度过温 ------------------------//   //散热器温度(出风口温度)  80
     if(TempData[0] > WindCold.BOARD_OVER_TEMP)
     {
@@ -1268,16 +1256,6 @@ void FaultDetectInMainLoop(void)
 		SetFaultDelayCounter(CNT_SET_BOARD_OVER_TEMP,1);
 	}
 
-    //--------------- ESC 安装反馈故障位--------------//  //未使用
-//    if(GET_UnitSUCCESS() == 1/*&&((StateEventFlag == STATE_EVENT_RUN)||(StateEventFlag == STATE_EVENT_WAIT))*/){
-//        if(softwareFaultWord1.B.contractNoOpen == 0){
-//            softwareFaultWord1.B.contractNoOpen = FaultDetect(SOE_GP_FAULT+16,CNT_BY_FEEDBACK_FAULT,20);
-//        }
-//    }else{
-//        SetFaultDelayCounter(CNT_BY_FEEDBACK_FAULT,0);
-//    }
-//
-
     //--------------- ESC 防雷故障位--------------//
 	if(windColdCtr != 0){     //使用该参数, 设置为0 是为了在不装入整机机柜的时候,防止报该故障;设置为1是为了 等到装入整机之后再考虑该故障;
         if(GET_FLback == 1){
@@ -1295,37 +1273,7 @@ void FaultDetectInMainLoop(void)
         }
 	}
 
-	//电抗器过温保护
-//	if(0/*(TEMP1 == 1)||(TEMP2 == 0)*/){	//(inductanceTemLc > INDUCE_OVER_TEMP) //cntForInduceOverTemp
-//		if(softwareFaultWord2.B.induceOverTempFlag == 0){
-//			softwareFaultWord2.B.induceOverTempFlag = FaultDetect(SOE_GP_FAULT+19,CNT_INDUCTANCE_OVER_TEMP,4000);
-//		}
-//	}else{
-//		SetFaultDelayCounter(CNT_INDUCTANCE_OVER_TEMP,0);
-//	}
-
 	ZeroOffsetJudgment();// 定标算法的执行时间为 888.0*0.006667 =5.920296
-
-	//吉林特纳普
-//	if( ((HarmTHD[TotalHarmDistorionVoltA].THD>VoltHarmOver)&&(gpVoltA_rms > 380*0.7f))||\
-//		((HarmTHD[TotalHarmDistorionVoltB].THD>VoltHarmOver)&&(gpVoltB_rms > 380*0.7f))||\
-//		((HarmTHD[TotalHarmDistorionVoltC].THD>VoltHarmOver)&&(gpVoltC_rms > 380*0.7f)) ){
-//			if(EnCapSwitch.B.overVoltHarmFaltEn == 0){
-//			if(softwareFaultWord2.B.overVoltHarm == 0){
-//				softwareFaultWord2.B.overVoltHarm = FaultDetect(SOE_GP_FAULT+32,31,4000);
-//			}
-//		}
-//	}else{
-//		SetFaultDelayCounter( ,0);
-//	}
-
-//	if(BYIOin4 == 0){		//出风口过温
-//		if(softwareFaultWord2.B.airOverTemp == 0){
-//			softwareFaultWord2.B.airOverTemp = FaultDetect(SOE_GP_FAULT+27,27,2000);
-//		}
-//	}else{
-//		SetFaultDelayCounter(27,0);
-//	}
 
 	//--------------- 谐振 -------------------//
 	if(ResonProtcABCRms > 5)
@@ -1365,7 +1313,6 @@ void FaultReset(void)
 {
 	if(((ESCFlagA.faultFlag == 0)||(ESCFlagB.faultFlag == 0)||(ESCFlagC.faultFlag == 0)) && (StateFlag.resetFaultOnceTime == 0))
 	{
-	//-	resetFaultOnceTime = 1;
 		softwareFaultWord1.all = 0;
 		softwareFaultWord2.all = 0;
 		softwareFaultWord3.all = 0;
@@ -1414,14 +1361,6 @@ void GridPhaseSequTest(Uint16 i)
 			tmp1 = theta_c - theta_c_Prior;
 
 			if(i){
-//				if(tmp1 < 0)
-//				{
-//					if(softwareFaultWord1.B.gridVoltPhaseSeqFaultFlag == 0){
-//						softwareFaultWord1.B.gridVoltPhaseSeqFaultFlag = FaultDetect(SOE_GP_FAULT+4,CNT_PHASE_SEQUENCE,1000);
-//					}
-//				}else{
-//					SetFaultDelayCounter(CNT_PHASE_SEQUENCE,10);
-//				}
 			}else{
 			    if(tmp1 < 0){
 			    	cntGridVoltPhaseSeqFault++;
@@ -1444,11 +1383,4 @@ void GridPhaseSequTest(Uint16 i)
 		}
 	}
 }
-
-
-// -----------------------NO MORE-----------------------------//
-
-
-
-
 

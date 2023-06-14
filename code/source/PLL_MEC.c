@@ -66,7 +66,6 @@ PIcalc PIIvrC							= PI_Cur;
 PIcalc PIIvrQ							= PI_Cur;
 PIcalc PIIvrND							= PI_Cur;
 PIcalc PIIvrNQ							= PI_Cur;
-//PIcalc FFTPICtrl[2][CALIBRATION_COEFF_LEN]     =FFT_PI_CTRL_DEFAULT;
 int Esc_NUM[32];
 int i = 0;
 
@@ -804,13 +803,9 @@ void PLLrun(void)
 const DF22BLOCK PRCtrlSrcBK[41]         = PRCTRL_BLOCK_DEFAULT;
 const float PRCtrlSrcFulc[41*2]         = PRCTRL_BLOCK_FULC;
 const int PRCtrlEn[PRCTRL_COEFF_LEN]    =PRCTRL_COEFF_EN;
-//#pragma DATA_SECTION(PRCtrlFulcFirst,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlBKFirst,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlABK,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlBBK,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlCBK,"EBSS3");
+
 float PRCtrlFulcFirst[PRCTRL_COEFF_LEN*2],PRCtrlBKFirst[PRCTRL_COEFF_LEN*2];
-//DF22 PRCtrlA[(PRCTRL_COEFF_LEN)],PRCtrlB[(PRCTRL_COEFF_LEN)],PRCtrlC[(PRCTRL_COEFF_LEN)];
+
 DF22BLOCK PRCtrlABK[(PRCTRL_COEFF_LEN)],PRCtrlBBK[(PRCTRL_COEFF_LEN)],PRCtrlCBK[(PRCTRL_COEFF_LEN)];
 #pragma CODE_SECTION(AdjustFulkPRcoeff, "ram2func");
 void AdjustFulkPRcoeff(void)
@@ -839,16 +834,6 @@ void AdjustFulkPRcoeff(void)
                 *pC=*pB=*pA=        (*pFluc++ * PRFreq)+*pSrc++;
                 pC+=5;pB+=5;pA+=5;
             }
-
-//-         for(i=0;i<PRCTRL_COEFF_LEN;i++){
-//-             pA=&PRCtrlABK[i].b1;                            //将要被修改的运行中的PR系数地址
-//-             pB=&PRCtrlBBK[i].b1;
-//              pC=&PRCtrlCBK[i].b1;
-//              pSrc =&PRCtrlSrcBK[PRCtrlEn[i]-1].b1;           //PR系数
-//              pFluc=&PRCtrlSrcFulc[(PRCtrlEn[i]-1)<<1];       //PR随电网频率变化系数
-//              *pC++=*pB++=*pA++=(*pFluc++ * PRFreq)+*pSrc++;  //运行中PR系数地址=PR随电网频率变化系数+PR系数
-//              *pC=*pB=*pA=(*pFluc * PRFreq)+*pSrc;
-//          }
         }
     }
     //-AdjustRCoeff=PRFreq/(12.1-11.7)//51&49Hz 2.4@117 50&2.4@121

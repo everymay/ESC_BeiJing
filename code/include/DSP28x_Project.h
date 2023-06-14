@@ -29,8 +29,9 @@ extern "C" {
 // 故障字管理，共用体
 typedef union
 {
-    Uint16                       all;
-    struct                                         //软件故障字位描述
+    Uint16 all;
+
+    struct
     {
     	Uint16 ESCFastHardwareOverCurFlagA   : 1;   // 0位，ESC快速硬件过流故障A
     	Uint16 ESCFastHardwareOverCurFlagB   : 1;   // 1位，ESC快速硬件过流故障B
@@ -51,29 +52,29 @@ typedef union
     }B;
 }SOFT_FAULT_BIT1;
 
-		typedef union
-		{
-			Uint16 all;
-			struct
-			{
-				Uint16 ESCOverLoadFlagA :1;// 0位，ESC输出过载故障A
-				Uint16 ESCOverLoadFlagB :1;// 1位，ESC输出过载故障B
-				Uint16 ESCOverLoadFlagC :1;// 2位，ESC输出过载故障C
-				Uint16 ESCRmsOverCurrentFlagA :1;// 3位，ESC有效值输出过流故障A
-				Uint16 ESCRmsOverCurrentFlagB :1;// 4位，ESC有效值输出过流故障B
-				Uint16 ESCRmsOverCurrentFlagC :1;// 5位，ESC有效值输出过流故障C
-				Uint16 ESCOverTemperatureFlagA :1;// 6位，ESC散热片温度过温故障A
-				Uint16 ESCOverTemperatureFlagB :1;// 7位，ESC散热片温度过温故障B
-				Uint16 ESCOverTemperatureFlagC :1;// 8位，ESC散热片温度过温故障C
-				Uint16 ESCFangLeiFaultFlag :1;// 9位，ESC防雷器故障
-				Uint16 ESCBypassContNoCloseFlagA :1; //A相旁路磁保持继电器闭合故障标志位。0，正常；1，故障。WY
-				Uint16 ESCBypassContNoCloseFlagB :1; //B相旁路磁保持继电器闭合故障标志位。0，正常；1，故障。WY
-				Uint16 ESCBypassContNoCloseFlagC :1; //C相旁路磁保持继电器闭合故障标志位。0，正常；1，故障。WY
-				Uint16 ESCChassisOverTempFlag :1;//13位，ESC单元过温(机壳)
-				Uint16 rsvd1 :1;//14位，保留
-				Uint16 rsvd2 :1;//15位，保留
-			} B;
-		} SOFT_FAULT_BIT2;
+typedef union
+{
+	Uint16 all;
+	struct
+	{
+		Uint16 ESCOverLoadFlagA :1;// 0位，ESC输出过载故障A
+		Uint16 ESCOverLoadFlagB :1;// 1位，ESC输出过载故障B
+		Uint16 ESCOverLoadFlagC :1;// 2位，ESC输出过载故障C
+		Uint16 ESCRmsOverCurrentFlagA :1;// 3位，ESC有效值输出过流故障A
+		Uint16 ESCRmsOverCurrentFlagB :1;// 4位，ESC有效值输出过流故障B
+		Uint16 ESCRmsOverCurrentFlagC :1;// 5位，ESC有效值输出过流故障C
+		Uint16 ESCOverTemperatureFlagA :1;// 6位，ESC散热片温度过温故障A
+		Uint16 ESCOverTemperatureFlagB :1;// 7位，ESC散热片温度过温故障B
+		Uint16 ESCOverTemperatureFlagC :1;// 8位，ESC散热片温度过温故障C
+		Uint16 ESCFangLeiFaultFlag :1;// 9位，ESC防雷器故障
+		Uint16 ESCBypassContNoCloseFlagA :1; //A相旁路磁保持继电器闭合故障标志位。0，正常；1，故障。WY
+		Uint16 ESCBypassContNoCloseFlagB :1; //B相旁路磁保持继电器闭合故障标志位。0，正常；1，故障。WY
+		Uint16 ESCBypassContNoCloseFlagC :1; //C相旁路磁保持继电器闭合故障标志位。0，正常；1，故障。WY
+		Uint16 ESCChassisOverTempFlag :1;//13位，ESC单元过温(机壳)
+		Uint16 rsvd1 :1;//14位，保留
+		Uint16 rsvd2 :1;//15位，保留
+	} B;
+} SOFT_FAULT_BIT2;
 
 //---BGMODLE_3P_CURR_SOURCE模式下,装置现在状态{1.	主界面显示数据读(0x30,01)->表1-5 逆变电流源(场景6)->故障字3}
 typedef union

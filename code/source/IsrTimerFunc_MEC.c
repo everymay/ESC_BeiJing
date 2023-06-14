@@ -90,119 +90,143 @@ void getFFTData(void)
     if(++FFTSrcBufp >= ADTEMPBUFLEN) FFTSrcBufp=0;
 }
 
-//float inBuff[10],outBuff[10];
 inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
 {
 #if TEST_VIRTUALSOURCE == 0
-    VirtulADStruVAL *pAD = &VirtulADVAL;
-    VirtulADStruval *pID = &VirtulADval;            //零偏初始值
-    float Buff[15];
-    float *pBuff=Buff;
-    if(StateFlag.VoltageModeFlag == 1){             //降压
-        *pBuff++ = (*pAD->GridHVoltA      - pID->gridHVoltA)*gridVoltRatio;          //电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridHVoltB      - pID->gridHVoltB)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridHVoltC      - pID->gridHVoltC)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridLVoltA      - pID->gridLVoltA)*loadVoltRatio;          //负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridLVoltB      - pID->gridLVoltB)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridLVoltC      - pID->gridLVoltC)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridMainCurA    - pID->gridMainCurA)*outputCurRatioCurrA;     //电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
-        *pBuff++ = (*pAD->GridMainCurB    - pID->gridMainCurB)*outputCurRatioCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridMainCurC    - pID->gridMainCurC)*outputCurRatioCurrC;
-        *pBuff++ = (*pAD->GridBypassCurA  - pID->gridBypassCurA)*outputCurBypassCurrA;     //旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
-        *pBuff++ = (*pAD->GridBypassCurB  - pID->gridBypassCurB)*outputCurBypassCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridBypassCurC  - pID->gridBypassCurC)*outputCurBypassCurrC;
-        *pBuff++ = (*pAD->ADCUDCA         - pID->aDCUDCA)*dcCapVoltRatio;                  //直流电容电压,电压采样系数
-        *pBuff++ = (*pAD->ADCUDCB         - pID->aDCUDCB)*dcCapVoltRatio;
-        *pBuff++ = (*pAD->ADCUDCC         - pID->aDCUDCC)*dcCapVoltRatio;
-    }else if(StateFlag.VoltageModeFlag == 0){       //升压
-        *pBuff++ = (*pAD->GridLVoltA      - pID->gridLVoltA)*loadVoltRatio;          //负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridLVoltB      - pID->gridLVoltB)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridLVoltC      - pID->gridLVoltC)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridHVoltA      - pID->gridHVoltA)*gridVoltRatio;          //电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridHVoltB      - pID->gridHVoltB)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridHVoltC      - pID->gridHVoltC)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridMainCurA    - pID->gridMainCurA)*outputCurRatioCurrA;     //电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
-        *pBuff++ = (*pAD->GridMainCurB    - pID->gridMainCurB)*outputCurRatioCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridMainCurC    - pID->gridMainCurC)*outputCurRatioCurrC;
-        *pBuff++ = (*pAD->GridBypassCurA  - pID->gridBypassCurA)*outputCurBypassCurrA;     //旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
-        *pBuff++ = (*pAD->GridBypassCurB  - pID->gridBypassCurB)*outputCurBypassCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridBypassCurC  - pID->gridBypassCurC)*outputCurBypassCurrC;
-        *pBuff++ = (*pAD->ADCUDCA         - pID->aDCUDCA)*dcCapVoltRatio;                  //直流电容电压,电压采样系数
-        *pBuff++ = (*pAD->ADCUDCB         - pID->aDCUDCB)*dcCapVoltRatio;
-        *pBuff++ = (*pAD->ADCUDCC         - pID->aDCUDCC)*dcCapVoltRatio;
-    }
 
-    DCL_runDF22Group(VolAndInvCurrFilter,Buff,Buff,15);       //滤波
+	VirtulADStruVAL *pAD = &VirtulADVAL;
+	VirtulADStruval *pID = &VirtulADval;//零偏初始值
 
-    pBuff=Buff;
-    float *pOutSrc = VoltSlid[VoltPrvPos];  //实时采样波形
-    if(StateFlag.VoltageModeFlag == 1){
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        pOutSrc = VoltSlid[VoltPos];     //进行电压校正
-        GridVoltAF = *pOutSrc++;         //电网电压
-        GridVoltBF = *pOutSrc++;
-        GridVoltCF = *pOutSrc++;
-        LoadVoltUF = *pBuff++;           //负载电压
-        LoadVoltVF = *pBuff++;
-        LoadVoltWF = *pBuff++;
-    }else if(StateFlag.VoltageModeFlag == 0){
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        pOutSrc = VoltSlid[VoltPos];     //进行电压校正
-        LoadVoltUF = *pOutSrc++;         //电网电压
-        LoadVoltVF = *pOutSrc++;
-        LoadVoltWF = *pOutSrc++;
-        GridVoltAF = *pBuff++;           //负载电压
-        GridVoltBF = *pBuff++;
-        GridVoltCF = *pBuff++;
-    }
-    GridCurrAF = *pBuff++;     //电抗主电流
-    GridCurrBF = *pBuff++;
-    GridCurrCF = *pBuff++;
-    GridBPCurrAF = *pBuff++;   //旁路电流
-    GridBPCurrBF = *pBuff++;
-    GridBPCurrCF = *pBuff++;
-    DccapVoltA = *pBuff++;     //直流电容电压
-    DccapVoltB = *pBuff++;
-    DccapVoltC = *pBuff;
+	float Buff[15];
+	float *pBuff = Buff;
 
-    if(StateFlag.VoltageModeFlag == 1){ //降压
-        VoltInAF = GridVoltAF;   VoltInBF = GridVoltBF;   VoltInCF = GridVoltCF;
-        VoltOutAF = LoadVoltUF;  VoltOutBF = LoadVoltVF;  VoltOutCF = LoadVoltWF;
-    } else if(StateFlag.VoltageModeFlag == 0){   //升压
-        VoltInAF = LoadVoltUF;   VoltInBF = LoadVoltVF;   VoltInCF = LoadVoltWF;
-        VoltOutAF = GridVoltAF;  VoltOutBF = GridVoltBF;  VoltOutCF = GridVoltCF;
-    }
+	/*降压模式。WY*/
+	if (StateFlag.VoltageModeFlag == 1)
+	{
+		*pBuff++ = (*pAD->GridHVoltA - pID->gridHVoltA) * gridVoltRatio;//电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff++ = (*pAD->GridHVoltB - pID->gridHVoltB) * gridVoltRatio;
+		*pBuff++ = (*pAD->GridHVoltC - pID->gridHVoltC) * gridVoltRatio;
+		*pBuff++ = (*pAD->GridLVoltA - pID->gridLVoltA) * loadVoltRatio;//负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff++ = (*pAD->GridLVoltB - pID->gridLVoltB) * loadVoltRatio;
+		*pBuff++ = (*pAD->GridLVoltC - pID->gridLVoltC) * loadVoltRatio;
+		*pBuff++ = (*pAD->GridMainCurA - pID->gridMainCurA) * outputCurRatioCurrA;//电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
+		*pBuff++ = (*pAD->GridMainCurB - pID->gridMainCurB) * outputCurRatioCurrB;//A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff++ = (*pAD->GridMainCurC - pID->gridMainCurC) * outputCurRatioCurrC;
+		*pBuff++ = (*pAD->GridBypassCurA - pID->gridBypassCurA) * outputCurBypassCurrA;//旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
+		*pBuff++ = (*pAD->GridBypassCurB - pID->gridBypassCurB) * outputCurBypassCurrB;//A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff++ = (*pAD->GridBypassCurC - pID->gridBypassCurC) * outputCurBypassCurrC;
+		*pBuff++ = (*pAD->ADCUDCA - pID->aDCUDCA) * dcCapVoltRatio;//直流电容电压,电压采样系数
+		*pBuff++ = (*pAD->ADCUDCB - pID->aDCUDCB) * dcCapVoltRatio;
+		*pBuff++ = (*pAD->ADCUDCC - pID->aDCUDCC) * dcCapVoltRatio;
+	}
+	else if (StateFlag.VoltageModeFlag == 0) //升压模式。WY
+	{
+		*pBuff++ = (*pAD->GridLVoltA - pID->gridLVoltA) * loadVoltRatio;//负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff++ = (*pAD->GridLVoltB - pID->gridLVoltB) * loadVoltRatio;
+		*pBuff++ = (*pAD->GridLVoltC - pID->gridLVoltC) * loadVoltRatio;
+		*pBuff++ = (*pAD->GridHVoltA - pID->gridHVoltA) * gridVoltRatio;//电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff++ = (*pAD->GridHVoltB - pID->gridHVoltB) * gridVoltRatio;
+		*pBuff++ = (*pAD->GridHVoltC - pID->gridHVoltC) * gridVoltRatio;
+		*pBuff++ = (*pAD->GridMainCurA - pID->gridMainCurA) * outputCurRatioCurrA;//电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
+		*pBuff++ = (*pAD->GridMainCurB - pID->gridMainCurB) * outputCurRatioCurrB;//A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff++ = (*pAD->GridMainCurC - pID->gridMainCurC) * outputCurRatioCurrC;
+		*pBuff++ = (*pAD->GridBypassCurA - pID->gridBypassCurA) * outputCurBypassCurrA;//旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
+		*pBuff++ = (*pAD->GridBypassCurB - pID->gridBypassCurB) * outputCurBypassCurrB;//A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff++ = (*pAD->GridBypassCurC - pID->gridBypassCurC) * outputCurBypassCurrC;
+		*pBuff++ = (*pAD->ADCUDCA - pID->aDCUDCA) * dcCapVoltRatio;//直流电容电压,电压采样系数
+		*pBuff++ = (*pAD->ADCUDCB - pID->aDCUDCB) * dcCapVoltRatio;
+		*pBuff++ = (*pAD->ADCUDCC - pID->aDCUDCC) * dcCapVoltRatio;
+	}
 
-    //延时90度构造Beta    单相锁相
+	DCL_runDF22Group(VolAndInvCurrFilter, Buff, Buff, 15); //滤波。WY
 
-    VoltSlidA[MeanHalfPos]  = VoltInAF;                //grid real value
-    VoltSlidB[MeanHalfPos]  = VoltInBF;
-    VoltSlidC[MeanHalfPos]  = VoltInCF;
-    GridCurrSlidA[MeanHalfPos] = GridCurrAF;
-    GridCurrSlidB[MeanHalfPos] = GridCurrBF;
-    GridCurrSlidC[MeanHalfPos] = GridCurrCF;
+	pBuff = Buff;
+	float *pOutSrc = VoltSlid[VoltPrvPos];//实时采样波形
+	if (StateFlag.VoltageModeFlag == 1)
+	{
+		*pOutSrc++ = *pBuff++;
+		*pOutSrc++ = *pBuff++;
+		*pOutSrc++ = *pBuff++;
+		pOutSrc = VoltSlid[VoltPos];//进行电压校正
+		GridVoltAF = *pOutSrc++;//电网电压
+		GridVoltBF = *pOutSrc++;
+		GridVoltCF = *pOutSrc++;
+		LoadVoltUF = *pBuff++;//负载电压
+		LoadVoltVF = *pBuff++;
+		LoadVoltWF = *pBuff++;
+	}
+	else if (StateFlag.VoltageModeFlag == 0)
+	{
+		*pOutSrc++ = *pBuff++;
+		*pOutSrc++ = *pBuff++;
+		*pOutSrc++ = *pBuff++;
+		pOutSrc = VoltSlid[VoltPos];//进行电压校正
+		LoadVoltUF = *pOutSrc++;//电网电压
+		LoadVoltVF = *pOutSrc++;
+		LoadVoltWF = *pOutSrc++;
+		GridVoltAF = *pBuff++;//负载电压
+		GridVoltBF = *pBuff++;
+		GridVoltCF = *pBuff++;
+	}
+	GridCurrAF = *pBuff++;//电抗主电流
+	GridCurrBF = *pBuff++;
+	GridCurrCF = *pBuff++;
+	GridBPCurrAF = *pBuff++;//旁路电流
+	GridBPCurrBF = *pBuff++;
+	GridBPCurrCF = *pBuff++;
+	DccapVoltA = *pBuff++;//直流电容电压
+	DccapVoltB = *pBuff++;
+	DccapVoltC = *pBuff;
 
-    if(MeanHalfPos == (MEANPOINTHALF - 1)){
-        VoltInAF_Beta=VoltSlidA[0];
-        VoltInBF_Beta=VoltSlidB[0];
-        VoltInCF_Beta=VoltSlidC[0];
-        GridCurrAF_Beta = GridCurrSlidA[0];
-        GridCurrBF_Beta = GridCurrSlidB[0];
-        GridCurrCF_Beta = GridCurrSlidC[0];
+	if (StateFlag.VoltageModeFlag == 1)
+	{//降压
+		VoltInAF = GridVoltAF;
+		VoltInBF = GridVoltBF;
+		VoltInCF = GridVoltCF;
+		VoltOutAF = LoadVoltUF;
+		VoltOutBF = LoadVoltVF;
+		VoltOutCF = LoadVoltWF;
+	}
+	else if (StateFlag.VoltageModeFlag == 0)
+	{//升压
+		VoltInAF = LoadVoltUF;
+		VoltInBF = LoadVoltVF;
+		VoltInCF = LoadVoltWF;
+		VoltOutAF = GridVoltAF;
+		VoltOutBF = GridVoltBF;
+		VoltOutCF = GridVoltCF;
+	}
 
-    }else{
-        VoltInAF_Beta=VoltSlidA[MeanHalfPos+1];
-        VoltInBF_Beta=VoltSlidB[MeanHalfPos+1];
-        VoltInCF_Beta=VoltSlidC[MeanHalfPos+1];
-        GridCurrAF_Beta = GridCurrSlidA[MeanHalfPos+1];
-        GridCurrBF_Beta = GridCurrSlidB[MeanHalfPos+1];
-        GridCurrCF_Beta = GridCurrSlidC[MeanHalfPos+1];
-    }
-    if(++MeanHalfPos >= MEANPOINTHALF)   MeanHalfPos = 0;
+//延时90度构造Beta    单相锁相
+
+	VoltSlidA[MeanHalfPos] = VoltInAF;//grid real value
+	VoltSlidB[MeanHalfPos] = VoltInBF;
+	VoltSlidC[MeanHalfPos] = VoltInCF;
+	GridCurrSlidA[MeanHalfPos] = GridCurrAF;
+	GridCurrSlidB[MeanHalfPos] = GridCurrBF;
+	GridCurrSlidC[MeanHalfPos] = GridCurrCF;
+
+	if (MeanHalfPos == (MEANPOINTHALF - 1))
+	{
+		VoltInAF_Beta = VoltSlidA[0];
+		VoltInBF_Beta = VoltSlidB[0];
+		VoltInCF_Beta = VoltSlidC[0];
+		GridCurrAF_Beta = GridCurrSlidA[0];
+		GridCurrBF_Beta = GridCurrSlidB[0];
+		GridCurrCF_Beta = GridCurrSlidC[0];
+
+	}
+	else
+	{
+		VoltInAF_Beta = VoltSlidA[MeanHalfPos + 1];
+		VoltInBF_Beta = VoltSlidB[MeanHalfPos + 1];
+		VoltInCF_Beta = VoltSlidC[MeanHalfPos + 1];
+		GridCurrAF_Beta = GridCurrSlidA[MeanHalfPos + 1];
+		GridCurrBF_Beta = GridCurrSlidB[MeanHalfPos + 1];
+		GridCurrCF_Beta = GridCurrSlidC[MeanHalfPos + 1];
+	}
+	if (++MeanHalfPos >= MEANPOINTHALF)
+		MeanHalfPos = 0;
 
 #if 0
     VirtulADStru *pAD = &VirtulAD;
@@ -243,9 +267,6 @@ inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
     ApfOutCurBD= *pBuff++;
     ApfOutCurCD= *pBuff++;
     ResonProtcABC=  DCL_runDF22(&ResonancePortectABC[1],DCL_runDF22(&ResonancePortectABC[0],*pBuff)); //谐振检测
-//    ApfOutCurA = tmp1;//使用滤波前的电流做运算
-//    ApfOutCurB = tmp2;
-//    ApfOutCurC = tmp3;
 #endif
 
 #if TEST_DEBUGFFT
@@ -287,16 +308,8 @@ inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
     xPhaseC2=PhaseLimitI( (DbgStepPhaC*5 )*(PI2_SINE_LOOKTABLE/PI2) );
 
     GridVoltAF= pSineLookTab(xPhaseA) *311 + pSineLookTab(xPhaseA1) *(311*0.2) + pSineLookTab(xPhaseA2) *(311*0.3); //matrix realA*realB-imagA*imagB
-//  if(debugUnbVol==0){
-        GridVoltBF= pSineLookTab(xPhaseB) *311 + pSineLookTab(xPhaseB1) *(311*0.2) + pSineLookTab(xPhaseB2) *(311*0.3);
-        GridVoltCF= pSineLookTab(xPhaseC) *311 + pSineLookTab(xPhaseC1) *(311*0.2) + pSineLookTab(xPhaseC2) *(311*0.3);
-//  }else if(debugUnbVol==1){
-//      GridVoltBF= pSineLookTab(xPhaseB) *311 + pSineLookTab(xPhaseB1) *(311*0.2) + pSineLookTab(xPhaseB2) *(311*0.3);
-//      GridVoltCF=0;
-//  }else{
-//      GridVoltBF=0;
-//      GridVoltCF=0;
-//  }
+	GridVoltBF= pSineLookTab(xPhaseB) *311 + pSineLookTab(xPhaseB1) *(311*0.2) + pSineLookTab(xPhaseB2) *(311*0.3);
+	GridVoltCF= pSineLookTab(xPhaseC) *311 + pSineLookTab(xPhaseC1) *(311*0.2) + pSineLookTab(xPhaseC2) *(311*0.3);
 
     ApfOutCurA=TestLoadCurS(0);
     ApfOutCurB=TestLoadCurS(1);
@@ -311,10 +324,6 @@ inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
         testDcVoltF=10;
     else
         testDcVoltF=dcVoltF;
-
-//    DbgStepPhaA=PhaseLimit(GridVoltTheta);
-//    DbgStepPhaB=PhaseLimit(GridVoltTheta+D2R(240));
-//    DbgStepPhaC=PhaseLimit(GridVoltTheta+D2R(120));
     DbgStepPhaA+=PI2/(2*PWMFREQUENCY/50);
     DbgStepPhaA=PhaseLimit(DbgStepPhaA);
     DbgStepPhaB+=PI2/(2*PWMFREQUENCY/50);

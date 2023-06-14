@@ -10,28 +10,7 @@
 #include "CoreCtrl.h"
 #include "F2837xS_device.h"
 
-//#define EEPROM_USER_PARAM 			0x00	//0x00~0x1D	0x1E	用户	用户基本设置写数据(0x31,50~5F),每块存储区均包含16bit的CRC
-//#define EEPROM_USERHMI_PARAM		0x20	//0x20~0x3E		0x20	用户保留1,界面电流源人机参数
-//#define EEPROM_REMOTE_PARAM			0x40	//0x40~0x86		0x46	MODBUS485	调光器MODBUS用,表4-7逆变电流源后台写ModbusRTU标准规约的0x10 ,读参数DSP(00~12+3*5+1)
-//#define EEPROM_0x90					0x90	//0x90~0xFF		0x70	CAN ,MODBUS485保留2	调光器CAN用
-//#define EEPROM_CAPPARAM				0x100	//0x100~0x14F	0x50	电容器组	用户自定义下发(0x67,9000~9037)
-//#define EEPROM_0x150				0x150	//0x150~0x15F	0x10	电容器组保留3
-//#define EEPROM_HARMNOIC_EN			0x160	//00x160~0x1C2	0x62	谐波使能	48*2+2=96+2=0x62
-//#define EEPROM_HARMNOIC_PARAM		0x1D0	//00x1D0~0x4D1	0x302	谐波3	(组*成员*2+1)=48*8*2=512+2=0x302
-//#define EEPROM_Rvsd4				0x1D2	//00x1D2~0x4FF	0x2D	谐波3保留4
-//#define EEPROM_FAULT_PARAM			0x500	//00x500~0x533	0x34	厂家,保护	厂家设置写数据(0x31,BA~C9)
-//#define EEPROM_FACTORY_PARAM		0x540	//00x540~0x56F	0x30	厂家1	厂家设置写数据(0x31,60~8D)
-//											//00x570~0x59F	0x2C	厂家2	厂家设置写数据(0x31,60~8D)
-//#define EEPROM_COMMUNI_PARAM		0x5A0	//00x5A0~0x5BF	0x20	特殊	多机并联(0x32)中的场景设置
-//#define EEPROM_Rvsd5				0x5C0	//00x5C0~0x5FF	0x40	特殊保留5
-//#define EEPROM_PREPOWER_ENVIR_PARAM	0x600	//00x600~0x602	0x02	调光器断电前状态	仅调光器断电前状态0x02+2
-//#define EEPROM_0x603				0x603	//00x603~0x61F	0x1D	调光器断电前状态保留6
-//#define EEPROM_0x620				0x620	//00x620~0x66D	0x4E	调光器电流校正系数	仅调光器界面电流源的电流校正系数0x4C+2
-//#define Record_Groud_ADDR			0x670	//00x670~0x79D	0x12E	SOE_调光器后台	仅调光器后台用,5*30组*2+2=302=0x12E
-//#define EEPROM_0x7A0				0x7A0	//00x7A0~0x805	0x66	SOE_调光器后台传输缓冲区	仅调光器后台用,5*10组*2+2=102=0x66
-//#define EEPROM_Rvsd7				0x806	//0x806~0x8DF	0xd9	保留7
-//#define EEPROM_RECORD_INDEX			0x8E0	//0x8E0~0x907	0x28	SOE索引	SOE读取(0x6A) 40
-//#define EEPROM_RECORD				0x908	//0x908~0x1FFF	0x16F8	SOE数据块	SOE读取(0x6A) 42*2*故障条数(70)
+/*微型断路器。WY*/
 
 #define EEPROM_FACTORY_PARAMETER		0x0		//0x00~0x1FF
 #define EEPROM_USER_PREFERENCES			0x200	//0x200~0x2CF
@@ -92,12 +71,25 @@
 #define CNT_HW_OVER_CUR_A               0   //
 #define CNT_HW_OVER_CUR_B               1   //
 #define CNT_HW_OVER_CUR_C               2   //
-#define CNT_INS_OVER_CUR_A              3   //
-#define CNT_INS_OVER_CUR_B              4   //
-#define CNT_INS_OVER_CUR_C              5   //
-#define CNT_DC_NEUTRAL_OVER_VOLT_A      6   //
-#define CNT_DC_NEUTRAL_OVER_VOLT_B      7   //
-#define CNT_DC_NEUTRAL_OVER_VOLT_C      8   //
+
+/*已检测到的A相瞬时值过流次数？WY*/
+#define CNT_INS_OVER_CUR_A              3
+
+/*已检测到的B相瞬时值过流次数？WY*/
+#define CNT_INS_OVER_CUR_B              4
+
+/*已检测到的C相瞬时值过流次数？WY*/
+#define CNT_INS_OVER_CUR_C              5
+
+/*已检测到的A相直流电容电压过压信号的次数。WY*/
+#define CNT_DC_NEUTRAL_OVER_VOLT_A      6
+
+/*已检测到的B相直流电容电压过压信号的次数。WY*/
+#define CNT_DC_NEUTRAL_OVER_VOLT_B      7
+
+/*已检测到的C相直流电容电压过压信号的次数。WY*/
+#define CNT_DC_NEUTRAL_OVER_VOLT_C      8
+
 #define CNT_RMS_OVER_VOLT_A             9   //
 #define CNT_RMS_OVER_VOLT_B             10  //
 #define CNT_RMS_OVER_VOLT_C             11  //
@@ -1110,22 +1102,26 @@ typedef struct{
 }VirtulADStru;
 extern VirtulADStru VirtulAD;
 
-typedef struct{                  //int16型指针
-    int16 *GridHVoltA;           //GridHVoltA指针指向AdcaResultRegs.ADCRESULT2存储器的内存地址
-    int16 *GridHVoltB;
-    int16 *GridHVoltC;
-    int16 *GridLVoltA;
-    int16 *GridLVoltB;
-    int16 *GridLVoltC;
-    int16 *GridMainCurA;
-    int16 *GridMainCurB;
-    int16 *GridMainCurC;
-    int16 *GridBypassCurA;
-    int16 *GridBypassCurB;
-    int16 *GridBypassCurC;
-    int16 *ADCUDCA;
-    int16 *ADCUDCB;
-    int16 *ADCUDCC;
+typedef struct{
+    int16 *GridHVoltA; //A相高压侧电压。WY
+    int16 *GridHVoltB; //B相高压侧电压。WY
+    int16 *GridHVoltC; //C相高压侧电压。WY
+
+    int16 *GridLVoltA; //A相低压侧电压。WY
+    int16 *GridLVoltB; //B相低压侧电压。WY
+    int16 *GridLVoltC; //C相低压侧电压。WY
+
+    int16 *GridMainCurA; //A相低压侧电流。WY
+    int16 *GridMainCurB; //B相低压侧电流。WY
+    int16 *GridMainCurC; //C相低压侧电流。WY
+
+    int16 *GridBypassCurA; //A相高压侧电流。WY
+    int16 *GridBypassCurB; //B相高压侧电流。WY
+    int16 *GridBypassCurC; //C相高压侧电流。WY
+
+    int16 *ADCUDCA; //A相直流电容电压。WY
+    int16 *ADCUDCB; //B相直流电容电压。WY
+    int16 *ADCUDCC; //C相直流电容电压。WY
 }VirtulADStruVAL;
 extern VirtulADStruVAL VirtulADVAL;
 
@@ -1133,15 +1129,19 @@ typedef struct{                  //程序当中使用的零偏值,和界面下发的零偏值差一个
     float gridHVoltA;
     float gridHVoltB;
     float gridHVoltC;
+
     float gridLVoltA;
     float gridLVoltB;
     float gridLVoltC;
+
     float gridMainCurA;
     float gridMainCurB;
     float gridMainCurC;
+
     float gridBypassCurA;
     float gridBypassCurB;
     float gridBypassCurC;
+
     float aDCUDCA;
     float aDCUDCB;
     float aDCUDCC;
@@ -1167,7 +1167,7 @@ struct ESC_STRU_CNT_SEC{
     int RelayDISDelay;   //ESC山东鲁软现场单独外加继电器控制
     int PRECHARGEDelayBY; //预充电时，用于对旁路磁保持继电器状态检测的延时。WY //防止上电因运输工程中磁保持误动作而炸机
     int PRECHARGEDelay; //预充电时，用于对主路磁保持继电器状态检测的延时。WY //防止上电因运输工程中磁保持误动作而炸机
-    int HWPowerSupDelay; //15V电源开启时长（单位：s）。WY
+    int HWPowerSupDelay; //关闭15V电源所必要的时长（单位：s）。WY
     int HWPowerStopDelay;
     int HWPowerFaultDelay;
     int UNCurrDelay1;
@@ -1190,8 +1190,8 @@ typedef struct
 	Uint16 FaultskipFlag :1; //故障跳转标志位。0，无需跳转至故障停机状态（上电默认）；1，需要跳转至故障停机状态。WY
 	Uint16 faultFlag :1; //设备故障标志位。0，不存在故障（上电默认）；1，存在故障。WY
 	Uint16 resetFlag :1;
-	Uint16 stopFlag :1; //设备停机标志位。0，已执行停机操作；1，等待执行停机操作。WY
-	Uint16 startFlag :1; //设备启动标志位。0，已执行启动操作；1，等待执行启动操作。WY
+	Uint16 stopFlag :1; //设备停机标志位。0，设备应当处于未停机状态；1，设备应当处于停机状态。WY
+	Uint16 startFlag :1; //设备启动标志位。0，设备应当处于未运行状态；1，设备应当处于运行状态。WY
 	Uint16 autoStFlag :4; //自动重启的次数？WY
 	Uint16 realFaultFlag :1;
 	Uint16 FunContDelayFlag :1; //保留,.WY

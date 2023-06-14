@@ -17,6 +17,7 @@ extern Event_Handle Event_SetStartSM;
 extern Event_Handle Event_FMspiWriteCtrl;
 extern Event_Handle Event_Outside;
 
+
 /* 电气上启动和停止控制 0725
 *  状态机切换机制： StateEventFlag
 *  状态事件0 ： 控制电源取自电网，假设手动模式，。
@@ -211,7 +212,7 @@ void ESCSTANDBYEVENT(ESCCTRLVALFLAG *ESCFlag)
  */
 void ESCPRECHARGEEVENT(ESCCTRLVALFLAG *ESCFlag)
 {
-	ESCFlag->EscStandyDelayCnt1 = 0; //标志位代表什么意思？与待机状态相关？WY
+	ESCFlag->EscStandyDelayCnt1 = 0;
 	ESCFlag->EscStandyDelayCnt2 = 0;
 
 	if (ESCFlag->ESCCntSec.ChargingTime >= CNT_SEC(3)) //充电时长满足条件。WY
@@ -481,7 +482,7 @@ void ESCRUNTURNWAIT(ESCCTRLVALFLAG *ESCFlag)
 					SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE); //闭合A相旁路磁保持继电器。WY
 					SET_IGBT_ENA(IGBT_DISABLE); //失能A相PWM。WY
 					DisablePWMA(); //封锁A相PWM。WY
-					ESCFlag->StateSkipFlag = 1; //置位跳转标志位。为【待机状态】做准备。WY
+					ESCFlag->StateSkipFlag = 1; //置位跳转标志位。在【待机状态】中被使用。WY
 					StateEventFlag_A = STATE_EVENT_WAIT_A; //切换状态机至：A相待机状态。WY
 					ESCFlag->ESCCntSec.HWPowerSupDelay = 0;
 				}
@@ -611,9 +612,9 @@ void ESCWAITTURNRUN(ESCCTRLVALFLAG *ESCFlag)
 				SET_POWER_CTRL(1); //15V电源上电。WY
 				Delayus(TIME_WRITE_15VOLT_REDAY); //延时2ms。WY
 
-				ESCFlagA.ESCCntSec.HWPowerSupDelay = 0; //开始计算A相15V电源开启时长。WY
-				ESCFlagB.ESCCntSec.HWPowerSupDelay = 0; //开始计算B相15V电源开启时长。WY
-				ESCFlagC.ESCCntSec.HWPowerSupDelay = 0; //开始计算C相15V电源开启时长。WY
+				ESCFlagA.ESCCntSec.HWPowerSupDelay = 0; //无需关闭15V电源。WY
+				ESCFlagB.ESCCntSec.HWPowerSupDelay = 0; //。WY
+				ESCFlagC.ESCCntSec.HWPowerSupDelay = 0; //。WY
 
 				if (ESCFlag->ESCCntSec.S_RSwiTiDelay >= CNT_SEC(S_RSwitchTime)) //电网电压欠压时长超过设定值。WY
 				{//任意一相的欠压持续5000个点//约4S
@@ -1368,7 +1369,6 @@ void SetStartCtrl(void)
 			{//随时可停机逻辑
 				ESCFlagC.stopFlag = 0;
 				ESCFlagC.startFlag = FALSE;
-//                ESCFlagC.PWMcurrDirFlag = 0;                //debuggg
 				ESCFlagC.PeakStopFlag = 1;
 				StateEventFlag_C = STATE_EVENT_STOP_C;
 				SoeRecData(SOE_GP_EVENT + 1);
@@ -1393,7 +1393,6 @@ void SetStartCtrl(void)
 			{
 				ESCFlagC.stopFlag = 0;
 				ESCFlagC.startFlag = 0;
-//                ESCFlagC.PWMcurrDirFlag = 0;                //debuggg
 				ESCFlagC.PeakStopFlag = 1;
 				SET_SCRC_ENABLE(ESC_ACTION_ENABLE);
 				StateEventFlag_C = STATE_EVENT_STOP_C;//停机逻辑
@@ -1412,14 +1411,12 @@ void SetStartCtrl(void)
 #endif
 			StateEventFlag_C = STATE_EVENT_STANDBY_C;
 			SoeRecData(SOE_GP_EVENT + 1);//soe中有阻塞代码,故放在IO操作之后
-//            ESCFlagC.HWPowerSupFlag = 0;
 			ESCFlagC.ESCCntSec.HWPowerStopDelay = 0;
 			ESCFlagC.ESCCntSec.HWPowerFaultDelay = 0;
 			break;
 
 		case STATE_EVENT_WAIT_C://小于电压设定值且无故障
 			ESCWAITTURNRUN(&ESCFlagC);
-//            SET_FAULT_LED(0);
 			SET_RUNNING_LED(1);
 			if (ESCFlagC.stopFlag == 1)
 			{
@@ -1427,7 +1424,6 @@ void SetStartCtrl(void)
 				Delayus(TIME_WRITE_15VOLT_REDAY);
 				ESCFlagC.stopFlag = 0;
 				ESCFlagC.startFlag = 0;
-//                ESCFlagC.PWMcurrDirFlag = 0;                //debuggg
 				ESCFlagC.PeakStopFlag = 1;
 				StateEventFlag_C = STATE_EVENT_STOP_C;
 				SoeRecData(SOE_GP_EVENT + 1);
@@ -1473,6 +1469,7 @@ void SetStartCtrl(void)
 		{
 			ESCFlagA.resetFlag = 0;
 		}
+
 		if ((ESCFlagB.resetFlag == 1) && (StateEventFlag_B == STATE_EVENT_FAULT_B))// 软件检测故障，而非硬件反馈故障，可排查后手动复位
 		{
 			StateEventFlag_B = STATE_EVENT_STOP_B;
@@ -1496,6 +1493,7 @@ void SetStartCtrl(void)
 		{
 			ESCFlagB.resetFlag = 0;
 		}
+
 		if ((ESCFlagC.resetFlag == 1) && (StateEventFlag_C == STATE_EVENT_FAULT_C))// 软件检测故障，而非硬件反馈故障，可排查后手动复位
 		{
 			StateEventFlag_C = STATE_EVENT_STOP_C;
@@ -1775,18 +1773,15 @@ void Delayus(int16 i)
 
 #define LMT84_TEMPERATURE_COEFF_K			1.313f
 #define LMT84_TEMPERATURE_COEFF_B			1853.0f
+
 void OutsideIsrProg(void)
 {
     UInt events;
     static Uint32 OutPro=0;
     while(1)
     {
-        // Wait for ANY of the ISR events to be posted *
         events = Event_pend(Event_Outside, Event_Id_NONE,Event_Id_00 ,BIOS_WAIT_FOREVER);
         static int cntForRunEach=0;
-//        float tempT2=0,tempT3=0,tempOnBoard=0;
-//        int  temperature2,temperature3;
-
 
         OutPro++;
         if(++cntForRunEach >= 4)  // 这个位置是N，就表示main函数里轮询N-1次
@@ -1897,22 +1892,7 @@ void OutsideIsrProg(void)
                         ESCFlagC.HWPowerSTOPFlag = 0;
                     }
                 }
-///************加这个判断是为了在整机测试时,误操作旁路机械开关后,15V供电会先断开,然后在60s之后会再次和15V供电,而这时已经不能自动启动了,
-// ************所以防止停机时,设备15V供电一直有,会有损耗,加上该函数判断,会在一定时间后再断开15V供电.************/
-//                if(    (StateFlag.startingMethod == 0)&&\
-//                       (GET_POWER_CTRL == 1)&&\
-//                       (StateEventFlag_A == STATE_EVENT_STANDBY_A)&&\
-//                       (StateEventFlag_B == STATE_EVENT_STANDBY_B)&&\
-//                       (StateEventFlag_C == STATE_EVENT_STANDBY_C)   ){
-//                    if(CntSec.StopDelay > CNT_SEC(60)){
-//                        if((ESCBYRelayCNTA != 1)&&\
-//                                (ESCBYRelayCNTB != 1)&&\
-//                                (ESCBYRelayCNTC != 1)){
-//                            SET_POWER_CTRL(0);
-//                        }
-//                        CntSec.StopDelay = 0;
-//                    }
-//                }
+
                 if((ESCBYRelayCNTA == 1)||(ESCSicFaultCNTA == 1)){  //高低压磁保持继电器/sic管子损坏故障计数次数达到5次即5次之上,设备不在自动启动
                     ESCFlagA.ESCCntMs.StartDelay = 0;
                     ESCFlagA.resetFlag = 0;
@@ -1925,62 +1905,6 @@ void OutsideIsrProg(void)
                     ESCFlagC.ESCCntMs.StartDelay = 0;
                     ESCFlagC.resetFlag = 0;
                 }
-//该判断是用来设备在运行时发生故障,切换旁路时,旁路磁保持继电器未动作,然后检测负载电流小于1A300MS,然后使高低压磁保持继电器合闸,管子直通来保持负载不长时间断流;
-//该判断使用了负载电流的判断,不知道精不精准,如果有负载本身电流就小的情况,该判断就有问题了????
-//                if((gridCurrBYAF_rms < 1.0f)&&(StateEventFlag_A == STATE_EVENT_FAULT_A)){
-//                    if(ESCFlagA.ESCCntMs.CutCurrDelay > CNT_MS(300)){
-//                        ESCFlagA.PWM_ins_index = 1;
-//                        ESCFlagA.ESC_DutyData = 1.0;
-//                        SET_SCRA_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-//                        SET_MAIN_CONTACT_ACTION_A(ESC_ACTION_ENABLE);
-//                        SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE);     //切旁路
-//                        Delayus(TIME_WRITE_15VOLT_REDAY);
-//                        EnablePWMA();
-//                        Delayus(100);                                                      //需要加个延时时间,否则PWM的寄存器会来不及动作
-//                        SET_IGBT_ENA(IGBT_ENABLE);                                         //开IGBT使能
-//                        EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//                        EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//                        EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//                        EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//                        ESCBYRelayCNTA = 1;
-//                    }
-//                }
-//                if((gridCurrBYBF_rms < 1.0f)&&(StateEventFlag_B == STATE_EVENT_FAULT_B)){
-//                    if(ESCFlagB.ESCCntMs.CutCurrDelay > CNT_MS(300)){
-//                        ESCFlagB.PWM_ins_index = 1;
-//                        ESCFlagB.ESC_DutyData = 1.0;
-//                        SET_SCRB_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-//                        SET_MAIN_CONTACT_ACTION_B(ESC_ACTION_ENABLE);
-//                        SET_BYPASS_CONTACT_ACTION_B(ESC_ACTION_ENABLE);     //切旁路
-//                        Delayus(TIME_WRITE_15VOLT_REDAY);
-//                        EnablePWMB();
-//                        Delayus(100);                                                      //需要加个延时时间,否则PWM的寄存器会来不及动作
-//                        SET_IGBT_ENB(IGBT_ENABLE);                                         //开IGBT使能
-//                        EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//                        EPwm5Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//                        EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//                        EPwm6Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//                        ESCBYRelayCNTB = 1;
-//                    }
-//                }
-//                if((gridCurrBYCF_rms < 1.0f)&&(StateEventFlag_C == STATE_EVENT_FAULT_C)){
-//                    if(ESCFlagC.ESCCntMs.CutCurrDelay > CNT_MS(300)){
-//                        ESCFlagC.PWM_ins_index = 1;
-//                        ESCFlagC.ESC_DutyData = 1.0;
-//                        SET_SCRC_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-//                        SET_MAIN_CONTACT_ACTION_C(ESC_ACTION_ENABLE);
-//                        SET_BYPASS_CONTACT_ACTION_C(ESC_ACTION_ENABLE);     //切旁路
-//                        Delayus(TIME_WRITE_15VOLT_REDAY);
-//                        EnablePWMC();
-//                        Delayus(100);                                                      //需要加个延时时间,否则PWM的寄存器会来不及动作
-//                        SET_IGBT_ENC(IGBT_ENABLE);                                         //开IGBT使能
-//                        EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//                        EPwm7Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//                        EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//                        EPwm8Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//                        ESCBYRelayCNTC = 1;
-//                    }
-//                }
 
                 OverTempLimitCur();
                 break;
@@ -2061,7 +1985,6 @@ void OutsideIsrProg(void)
                 Monitor_Message();
                 RemoteParamerRefresh();
 			    RemoteParamerRefresh2();
-//                Multiple_Parallel_Message();
             }
 
             if(PWM_address == 0){						//相序校正初始化
@@ -2143,20 +2066,6 @@ void OutsideIsrProg(void)
 
                 if(UserSetting.WordMode.B.StandbyModeFlag)                                  //待机功能开启
                 {
-//                    switch(CurrentProperty){
-//                        case 0:
-//                            if(MatchCondition)  AutoJudgeRms_F = MU_LCD_RATIO*Min(CurrRefARms,CurrRefBRms,CurrRefCRms);
-//                            else                AutoJudgeRms_F = MU_LCD_RATIO*Max(CurrRefARms,CurrRefBRms,CurrRefCRms);
-//                        break;
-//                        case 1:
-//                            if(MatchCondition)  AutoJudgeRms_F = Min(loadCurA_rms,loadCurB_rms,loadCurC_rms);
-//                            else                AutoJudgeRms_F = Max(loadCurA_rms,loadCurB_rms,loadCurC_rms);
-//                        break;
-//                case 2:
-//                    AutoJudgeRms_F = MU_LCD_RATIO*Max(CurrRefARms,CurrRefBRms,CurrRefCRms);
-//                break;
-//                        default:    AutoJudgeRms_F = CurrRefRms_F;      break;
-//                    }
                 }
                 break;
             default:break;
@@ -2407,13 +2316,7 @@ void AutoStartInFault(void)
                     Delayus(TIME_WRITE_15VOLT_REDAY);
                     CntSec.StopDelay = 0;
                     ESCFlagA.autoStFlag = AUTO_DETECTION_STATE_A;
-//                    SET_RUNNING_LED(0);
-//                    if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
-//                         (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
-//                         (StateEventFlag_C != STATE_EVENT_FAULT_C)  )
-//                    {
-//                        SET_FAULT_LED(0);
-//                    }
+
                 }
              }
         }else if(ESCFlagA.VoltageModeFlag == 1){
@@ -2434,13 +2337,6 @@ void AutoStartInFault(void)
                         Delayus(TIME_WRITE_15VOLT_REDAY);
                         CntSec.StopDelay = 0;
                         ESCFlagA.autoStFlag = AUTO_DETECTION_STATE_A;
-//                        SET_RUNNING_LED(0);
-//                        if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
-//                             (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
-//                             (StateEventFlag_C != STATE_EVENT_FAULT_C)  )
-//                        {
-//                            SET_FAULT_LED(0);
-//                        }
                     }
              }
         }
@@ -2532,13 +2428,7 @@ void AutoStartInFault(void)
                     Delayus(TIME_WRITE_15VOLT_REDAY);
                     CntSec.StopDelay = 0;
                     ESCFlagB.autoStFlag = AUTO_DETECTION_STATE_B;
-//                        SET_RUNNING_LED(0);
-//                        if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
-//                             (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
-//                             (StateEventFlag_C != STATE_EVENT_FAULT_C)  )
-//                        {
-//                            SET_FAULT_LED(0);
-//                        }
+
                 }
              }
         }else if(ESCFlagB.VoltageModeFlag == 1){
@@ -2559,13 +2449,7 @@ void AutoStartInFault(void)
                     Delayus(TIME_WRITE_15VOLT_REDAY);
                     CntSec.StopDelay = 0;
                     ESCFlagB.autoStFlag = AUTO_DETECTION_STATE_B;
-//                    SET_RUNNING_LED(0);
-//                    if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
-//                         (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
-//                         (StateEventFlag_C != STATE_EVENT_FAULT_C)  )
-//                    {
-//                        SET_FAULT_LED(0);
-//                    }
+
                 }
             }
          }
@@ -2643,13 +2527,6 @@ void AutoStartInFault(void)
                      Delayus(TIME_WRITE_15VOLT_REDAY);
                      CntSec.StopDelay = 0;
                      ESCFlagC.autoStFlag = AUTO_DETECTION_STATE_C;
-//                     SET_RUNNING_LED(0);
-//                     if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
-//                          (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
-//                          (StateEventFlag_C != STATE_EVENT_FAULT_C)  )
-//                     {
-//                         SET_FAULT_LED(0);
-//                     }
                  }
               }
          }else if(ESCFlagC.VoltageModeFlag == 1){
@@ -2670,13 +2547,7 @@ void AutoStartInFault(void)
                      Delayus(TIME_WRITE_15VOLT_REDAY);
                      CntSec.StopDelay = 0;
                      ESCFlagC.autoStFlag = AUTO_DETECTION_STATE_C;
-//                     SET_RUNNING_LED(0);
-//                     if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
-//                          (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
-//                          (StateEventFlag_C != STATE_EVENT_FAULT_C)  )
-//                     {
-//                         SET_FAULT_LED(0);
-//                     }
+
                  }
               }
          }
@@ -2823,39 +2694,50 @@ void SetResetExecute(void)
 	StateEventFlag_C = STATE_EVENT_STANDBY_C;
 }
 
+/*
+ * 功能：获取电压数据。WY
+ */
 void CorrectingAD(void)
 {
-        VirtulADStruVAL *pAD = &VirtulADVAL;
-        pAD->GridHVoltA = (int16 *)&ADC_RU_HVA;   //GridHVoltA指针指向AdcaResultRegs.ADCRESULT2存储器的内存地址
-        pAD->GridHVoltB = (int16 *)&ADC_RU_HVB;
-        pAD->GridHVoltC = (int16 *)&ADC_RU_HVC;
-        pAD->GridLVoltA = (int16 *)&ADC_RU_LVA;
-        pAD->GridLVoltB = (int16 *)&ADC_RU_LVB;
-        pAD->GridLVoltC = (int16 *)&ADC_RU_LVC;
-        pAD->ADCUDCA    = (int16 *)&ADC_DC_UA;
-        pAD->ADCUDCB    = (int16 *)&ADC_DC_UB;
-        pAD->ADCUDCC    = (int16 *)&ADC_DC_UC;
+	VirtulADStruVAL *pAD = &VirtulADVAL;
+	pAD->GridHVoltA = (int16*) &ADC_RU_HVA; //A相高压侧电压。WY
+	pAD->GridHVoltB = (int16*) &ADC_RU_HVB; //B相高压侧电压。WY
+	pAD->GridHVoltC = (int16*) &ADC_RU_HVC; //C相高压侧电压。WY
 
-		pPwmV1  = &PwmVa;
-		pPwmV2  = &PwmVb;
-		pPwmV3  = &PwmVc;
-		pPwmVN1 = &PwmVaN;
-		pPwmVN2 = &PwmVbN;
-		pPwmVN3 = &PwmVcN;
+	pAD->GridLVoltA = (int16*) &ADC_RU_LVA; //A相低压侧电压。WY
+	pAD->GridLVoltB = (int16*) &ADC_RU_LVB; //B相低压侧电压。WY
+	pAD->GridLVoltC = (int16*) &ADC_RU_LVC; //C相低压侧电压。WY
 
+	pAD->ADCUDCA = (int16*) &ADC_DC_UA; //A相直流电容电压。WY
+	pAD->ADCUDCB = (int16*) &ADC_DC_UB; //B相直流电容电压。WY
+	pAD->ADCUDCC = (int16*) &ADC_DC_UC; //C相直流电容电压。WY
+
+	pPwmV1 = &PwmVa;
+	pPwmV2 = &PwmVb;
+	pPwmV3 = &PwmVc;
+	pPwmVN1 = &PwmVaN;
+	pPwmVN2 = &PwmVbN;
+	pPwmVN3 = &PwmVcN;
 }
 
+/*
+ * 功能：获取电流数据。WY
+ */
 void CorrectingCT(void)
 {
-    VirtulADStruVAL *pAD = &VirtulADVAL;
-    pAD->GridMainCurA    = (int16 *)&ADC_RU_IMA;
-    pAD->GridMainCurB    = (int16 *)&ADC_RU_IMB;
-    pAD->GridMainCurC    = (int16 *)&ADC_RU_IMC;
-    pAD->GridBypassCurA  = (int16 *)&ADC_RU_IBYA;
-    pAD->GridBypassCurB  = (int16 *)&ADC_RU_IBYB;
-    pAD->GridBypassCurC  = (int16 *)&ADC_RU_IBYC;
+	VirtulADStruVAL *pAD = &VirtulADVAL;
+
+	pAD->GridMainCurA = (int16*) &ADC_RU_IMA; //A相低压侧电流。WY
+	pAD->GridMainCurB = (int16*) &ADC_RU_IMB; //B相低压侧电流。WY
+	pAD->GridMainCurC = (int16*) &ADC_RU_IMC; //C相低压侧电流。WY
+
+	pAD->GridBypassCurA = (int16*) &ADC_RU_IBYA; //A相高压侧电流。WY
+	pAD->GridBypassCurB = (int16*) &ADC_RU_IBYB; //B相高压侧电流。WY
+	pAD->GridBypassCurC = (int16*) &ADC_RU_IBYC; //C相高压侧电流。WY
 
 }
+
+
 
 void DirectionCT(void)
 {
@@ -3334,7 +3216,7 @@ void PowerReactStateRefresh(void)
 			|shift(0,4)	|shift(0,5)	|shift(0,6)	|shift(0,7)\
 			|shift(0,8)		|shift(0,9)	|shift(0,10)					|shift(0,11)\
 			|shift(0,12)					|shift(0,13)				|shift(0,14)					|shift(0,15);
-//	Choose5=(int)(DccapVoltA*10);//备用5始终显示 主板温度
+
 	switch(debugDispFlag){
 	  case  0:
 		  Choose1=GpioDataRegs.GPCDAT.bit.GPIO79;		Choose2=GpioDataRegs.GPCDAT.bit.GPIO78;        //A相高低压磁保持 旁路磁保持
@@ -3604,16 +3486,6 @@ void RemoteWriteControl(Uint16 usAddress) //0x06  0x05
     if((StateFlag.RemoteWriteHoldFlag)&&(RecordFlash.FlashState.B.RemoteControlEn)){  //0x06
         switch(usAddress){
             case 0x0000:
-//                if((StateFlag.constantQFlag==0)&&(StateFlag.AVCPrCompFlag))
-//                    reactPowerGiven = RemoteInstructCtrl.ReactpowerOrder*0.1;
-//                if((StateFlag.constantQFlag==1)&&(StateFlag.AVCPrCompFlag))
-//                    restantReactCurrent = RemoteInstructCtrl.ReactpowerOrder*0.1;
-//                if((StateFlag.constantQFlag==2)&&(StateFlag.AVCPrCompFlag)){
-//                    if((((fabs(RemoteInstructCtrl.ReactpowerOrder))<=100))&&(RemoteInstructCtrl.ReactpowerOrder!=0)){
-//                        constantCosFai = RemoteInstructCtrl.ReactpowerOrder*0.01;
-//                        PFConsin = sqrt(1 - constantCosFai*constantCosFai)/constantCosFai;
-//                    }
-//                }
                     VolttargetA = RemoteInstructCtrl.VolttargetA*0.001;
                 break;
             case 0x0001:
