@@ -19,8 +19,8 @@
 #pragma	CODE_SECTION(EPWM7INT ,"ram2func")
 
 /*
- * 文件版本：V2023.6.14
- * 修改日期：2023年6月14日
+ * 文件版本：V2023.6.15
+ * 修改日期：2023年6月15日
  */
 
 void main(void)

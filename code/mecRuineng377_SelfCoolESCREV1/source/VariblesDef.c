@@ -418,9 +418,9 @@ int ESCSicFaultCNTA = 0; //A相SiC管状态标志位。0，正常；1，异常。WY
 int ESCSicFaultCNTB = 0; //B相SiC管状态标志位。0，正常；1，异常。WY
 int ESCSicFaultCNTC = 0; //C相SiC管状态标志位。0，正常；1，异常。WY
 
-int ESCBYRelayCNTA = 0; //A相旁路磁保持继电器状态标志位。0，正常（上电默认）；1，异常。WY
-int ESCBYRelayCNTB = 0; //B相旁路磁保持继电器状态标志位。0，正常（上电默认）；1，异常。WY
-int ESCBYRelayCNTC = 0; //C相旁路磁保持继电器状态标志位。0，正常（上电默认）；1，异常。WY
+int ESCBYRelayCNTA = 0; //A相旁路磁保持继电器状态。0，正常（上电默认）；1，异常。WY
+int ESCBYRelayCNTB = 0; //B相旁路磁保持继电器状态。0，正常（上电默认）；1，异常。WY
+int ESCBYRelayCNTC = 0; //C相旁路磁保持继电器状态。0，正常（上电默认）；1，异常。WY
 
 int TurnOffPeakFaultFlagA = 0,TurnOffPeakFaultFlagB = 0,TurnOffPeakFaultFlagC = 0;
 long tempbuff = 0;

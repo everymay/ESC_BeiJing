@@ -22,9 +22,7 @@ Uint16 FFTSrcBufp=0;
 Uint16 ADGROUP_NUM=8;
 Uint16 ADGROUP_MODE=2;
 Uint16 WAVE_REC_FFT_MODE_DATA2=4;
-//Uint16 debugPIVolChSel= 0;
-//Uint16 flagA,flagB,flagC;
-//float ESC_DutyDataA = 1.0f,ESC_DutyDataB = 1.0f,ESC_DutyDataC = 1.0f;
+
 
 float VoltSlid[VOLT_FUNDPOINT][3];
 float VoltSlidA[MEANPOINTHALF],VoltSlidB[MEANPOINTHALF],VoltSlidC[MEANPOINTHALF];
@@ -32,10 +30,7 @@ float GridCurrSlidA[MEANPOINTHALF],GridCurrSlidB[MEANPOINTHALF],GridCurrSlidC[ME
 float GridCurrAF_Beta,GridCurrBF_Beta,GridCurrCF_Beta;
 float GridRealCurDA2,GridRealCurDB2,GridRealCurDC2,GridRealCurQA2,GridRealCurQB2,GridRealCurQC2;
 float GridRealCurErrA,GridRealCurErrB,GridRealCurErrC;
-//float VoltSlidU[MEANPOINTHALF],VoltSlidV[MEANPOINTHALF],VoltSlidW[MEANPOINTHALF];
-//float GcurSlidA[MEANPOINT_QUARTER],GcurSlidB[MEANPOINT_QUARTER],GcurSlidC[MEANPOINT_QUARTER];
-//float LoadSlidA[MEANPOINT_QUARTER],LoadSlidB[MEANPOINT_QUARTER],LoadSlidC[MEANPOINT_QUARTER];
-//float IverSlidA[MEANPOINT_QUARTER],IverSlidB[MEANPOINT_QUARTER],IverSlidC[MEANPOINT_QUARTER];
+
 extern const Swi_Handle RMSstart;
 //int16 ZCPJudgeA(float VoltIn,float VoltOut,float Esc_Phase,float CurrIn,Uint16 TBCTR);
 
@@ -43,41 +38,24 @@ extern const Swi_Handle RMSstart;
     float32 DbgStepPhaA=D2R(0),DbgStepPhaB=D2R(240),DbgStepPhaC=D2R(120);
 #endif
 
-//#pragma CODE_SECTION(PRController           ,"ram2func")
+
 #pragma	CODE_SECTION(ADCD1INT               ,"ram2func")
 #if PWM_FREQUENCE_16KHZ
 #pragma CODE_SECTION(PIController           ,"ram2func")
 #endif
-//#pragma	CODE_SECTION(StartCaluFFT           ,"ram2func")
-//#pragma	CODE_SECTION(CurrRefCaul            ,"ram2func")
+
 #pragma	CODE_SECTION(RMSDutyLimit            ,"ram2func")
 #pragma CODE_SECTION(ReactivePowerComFUN     ,"ram2func")
 #pragma CODE_SECTION(UnCurrCompFUN           ,"ram2func")
-//#pragma	CODE_SECTION(DcVoltDiv2Loop         ,"ram2func")
+
 #pragma	CODE_SECTION(FaultRecordSel       ,"ram2func")
 #pragma CODE_SECTION(AdRegeditOffset       ,"ram2func")
-//#pragma CODE_SECTION(testFunction           ,"ram2func")
-//#pragma	CODE_SECTION(getFFTData             ,"ram2func")
-//#pragma CODE_SECTION(InverseTransformF      ,"ram2func")
-#pragma CODE_SECTION(RMSswi                 ,"ram2func")
-//#pragma   CODE_SECTION(GenModulation      ,"ram2func")
-//#pragma   CODE_SECTION(GetFFTData         ,"ram2func")
-//#pragma   CODE_SECTION(GetVolAndInvCurr   ,"ram2func")
-//#pragma   CODE_SECTION(GetGridLoadcurr    ,"ram2func")
-//#pragma   CODE_SECTION(GetUdc               ,"ram2func")
-//#pragma   CODE_SECTION(GetGridLoadcurrAD    ,"ram2func")
-//#pragma   CODE_SECTION(GetGridLoadcurr      ,"ram2func")
-//#pragma   CODE_SECTION(ADPosCnt           ,"ram2func")
-//int ZCPJudgeA_ovsample(volatile Uint16 *ADResult,int ADoffset,int NumPort);
 
-//inline void SpwmGeneration(float sa,float sb,float sc);
+#pragma CODE_SECTION(RMSswi                 ,"ram2func")
+
 Uint16 MeanHalfPos = 0;
 inline void FaultRecordSel(void);
 
-//inline void StartCaluFFT()
-//{
-//    DMACH1ConfigAndRun(&ADBuff[FFTCalcChan][0],FFTSrcBufp); //start FFT
-//}
 
 void getFFTData(void)
 {
@@ -90,7 +68,6 @@ void getFFTData(void)
     if(++FFTSrcBufp >= ADTEMPBUFLEN) FFTSrcBufp=0;
 }
 
-//float inBuff[10],outBuff[10];
 inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
 {
 #if TEST_VIRTUALSOURCE == 0
@@ -625,158 +602,6 @@ void GetUdc(void)
 //#endif
 }
 
-/*inline void DcVoltLoop2(void)
-{
-	// 初始给定电网峰值+40即可。
-	if(StateFlag.dcBusVtIncStart==TRUE){
-		if(dcBusVtInc < dcBusVoltGiven)
-			dcBusVtInc +=1000*CTRLSTEP_ALGORITHM;	//Increase per second 500V
-		else{
-			dcBusVtInc = dcBusVoltGiven;
-			StateFlag.dcBusVtIncStart=FALSE;
-		}
-	}else{
-		dcBusVtInc = dcBusVoltGiven;
-	}
-
-	currentRefD = (DCL_runPI(&UdcPICtrl,dcBusVtInc,dcVoltF));
-}
-*/
-/*　 裂相电容控制策略
- * 之前两个电压霍尔的电路板，采样为直流电压正负和N负。
- *　1、直流侧N负和直流Dc/2做比较，通过PI调节输出至PWM控制电压输入，用来补偿中间电流。
- *  2、输出方向：因采集的N负电压，当电压高于0.5倍的直流电压，需要流入电流，给正N充电
- *              充电，则PWM给定负向减小，输出到比较值上应为“-”。
- *  C2-C1 = deltaV， 滤波去除1000Hz以上的谐波，输出结果进行限幅，纯比例调节。
- *  限幅：大于0.05*Vref = 0.05*700 = 35
- *  不加积分的后果：中点电压有偏移，不能完全调节回去。
- */
-
-/*inline void DcVoltDiv2Loop(void)
-{
-	#if PROJ_OUYAJIXIE == 1
-	UdcBalanceCurr = -DCL_runPI(&UdcPIBalance, 0,dcVoltDiv2Err);	//欧亚机械660V的带负号
-	#else
-	UdcBalanceCurr = DCL_runPI(&UdcPIBalance, 0,(dcVoltUpF - dcVoltDnF));		//2电平400V,120A400V定型的小单元不带负号,杭州正华及家中的三电平40A不带负号
-	#endif
-}*/
-/*inline void testFunction(void)
-{
-    if((StateEventFlag == STATE_EVENT_RUN)||(StateEventFlag == STATE_EVENT_WAIT)){
-        if(StateFlag.apfWiringmethod == 0){     //0：三相四线制  1：三相三线制
-            DcVoltDiv2Loop();       //裂相电压的控制
-        }else{
-            UdcBalanceCurr = 0;
-        }
-        DcVoltLoop2();              //直流电压的控制
-        ErrorRecord.B.REC_DC_START = StateFlag.dcBusVtIncStart;
-    }else{
-        UdcBalanceCurr=0;
-        currentRefD=0;                                              //停机后清零,因为自动启动也需要用到逆变侧电流
-    }
-}*/
-//inline void	ReactPowerComput(void)
-//{
-//	if((StateEventFlag == STATE_EVENT_RUN)||(StateEventFlag == STATE_EVENT_WAIT)){  //
-////		if(StateFlag.apfWiringmethod == 0){ 	//0：三相四线制  1：三相三线制
-////			DcVoltDiv2Loop();  		//裂相电压的控制
-////		}else{
-////			UdcBalanceCurr = 0;
-////		}
-////		DcVoltLoop2();     			//直流电压的控制
-////		ErrorRecord.B.REC_DC_START = StateFlag.dcBusVtIncStart;
-//		if(CntSec.cntForOutputCur >= 6){// 等待5秒投入补偿
-//			if(I_ins_index < 1)     I_ins_index += 0.0005; 				//启动程序，切记切记，位置勿动
-//			else 					I_ins_index=1;
-//		}
-//
-//		if(StateFlag.reactPrCompFlag == 1){				//无功补偿功能代码段
-//		    ReactLoadCompCurQ = reactPowerCompCurQ*CapaReactCorr*outCurTempLimit*ReactivePowerCurrCalib;
-//		    ReactLoadCompCurA = ReactPowerCurQPA*CapaReactCorrA*outCurTempLimit*ReactivePowerCurrCalib;
-//		    ReactLoadCompCurB = ReactPowerCurQPB*CapaReactCorrB*outCurTempLimit*ReactivePowerCurrCalib;
-//		    ReactLoadCompCurC = ReactPowerCurQPC*CapaReactCorrC*outCurTempLimit*ReactivePowerCurrCalib;
-//			currentRefQ = ReactLoadCompCurQ*ReactivePowerCurrCalibQ;
-//			currentRefA = ReactLoadCompCurA*ReactivePowerCurrCalibA;
-//			currentRefB = ReactLoadCompCurB*ReactivePowerCurrCalibB;
-//			currentRefC = ReactLoadCompCurC*ReactivePowerCurrCalibC;
-//			if(currentRefQ > REACTPOWERLIMIT)		currentRefQ = REACTPOWERLIMIT;
-//			if(currentRefQ < -REACTPOWERLIMIT)		currentRefQ = -REACTPOWERLIMIT;
-//			if(currentRefA > REACTPOWERLIMITPH)		currentRefA = REACTPOWERLIMITPH;
-//			if(currentRefA < -REACTPOWERLIMITPH)	currentRefA = -REACTPOWERLIMITPH;
-//			if(currentRefB > REACTPOWERLIMITPH)		currentRefB = REACTPOWERLIMITPH;
-//			if(currentRefB < -REACTPOWERLIMITPH)	currentRefB = -REACTPOWERLIMITPH;
-//			if(currentRefC > REACTPOWERLIMITPH)		currentRefC = REACTPOWERLIMITPH;
-//			if(currentRefC < -REACTPOWERLIMITPH)	currentRefC = -REACTPOWERLIMITPH;
-//		}else{
-//			currentRefQ=0;
-//			currentRefA = currentRefB = currentRefC = 0;
-//		}
-//
-//		if(StateFlag.VolSurTimeFlag == 1){
-//			currentRefQ=0;
-//			currentRefQa = reactPowerCompCurQa;
-//			if(currentRefQa > REACTPOWERLIMIT)	currentRefQa = REACTPOWERLIMIT;
-//			if(currentRefQa < -REACTPOWERLIMIT)	currentRefQa = -REACTPOWERLIMIT;
-//			currentRefQb = reactPowerCompCurQb;
-//			if(currentRefQb > REACTPOWERLIMIT)	currentRefQb = REACTPOWERLIMIT;
-//			if(currentRefQb < -REACTPOWERLIMIT)	currentRefQb = -REACTPOWERLIMIT;
-//			currentRefQc = reactPowerCompCurQc;
-//			if(currentRefQc > REACTPOWERLIMIT)	currentRefQc = REACTPOWERLIMIT;
-//			if(currentRefQc < -REACTPOWERLIMIT)	currentRefQc = -REACTPOWERLIMIT;
-//		}else{
-//			currentRefQa=0;
-//			currentRefQb=0;
-//			currentRefQc=0;
-//		}
-//		if(StateFlag.apfWiringmethod == 0)  currentRefQ+=ActivePowerCurrCalib;		//基波电流静差	//0：三相四线制  1：三相三线制
-//		else 					            currentRefQ+=ActivePowerCurrCalib;
-//		currentRefA += ActivePowerCurrCalibPH;
-//		currentRefB += ActivePowerCurrCalibPH;
-//		currentRefC += ActivePowerCurrCalibPH;
-//
-//		if(StateFlag.negCurCompFlag == 1){ 				//不平衡补偿功能代码段
-//		    UbanCompLoadCurND = -LoadFundaCurND*negCurCompPerc*NegaDPowerCalib;
-//		    UbanCompLoadCurNQ = -LoadFundaCurNQ*negCurCompPerc*NegaQPowerCalib;
-//			negCurCompD = -UbanCompLoadCurND*NegaDPowerCalibD*MU_MultRatio;	// 有功负序分量
-//			negCurCompQ = -UbanCompLoadCurNQ*NegaQPowerCalibQ*MU_MultRatio; 	// 无功负序分量
-//			if(negCurCompD > NegCurLimit)		negCurCompD = NegCurLimit;
-//			if(negCurCompD < -NegCurLimit)		negCurCompD = -NegCurLimit;
-//			if(negCurCompQ > NegCurLimit)		negCurCompQ = NegCurLimit;
-//			if(negCurCompQ < -NegCurLimit)		negCurCompQ = -NegCurLimit;
-//		}else{
-//			negCurCompD = 0;
-//			negCurCompQ = 0;
-//		}
-//		}else{
-////		if(MeanInitChan==NEUTRAL_LINE_VOLT){					//Note that if you delete this statement, the initialization will fail and all mean calculation errors will occur;注意,如果删掉此语句,会出现初始化不能完成而导致所有的mean计算错误.
-////			dcVoltDiv2Err =MeanInit(NEUTRAL_LINE_VOLT);
-////		}
-//
-//		if(I_ins_index > 0.02) I_ins_index -= 0.02;    			//软关机部分，主要是用来软关除了支撑直流母线的有功电流以外的其他电流。
-//
-////		UdcBalanceCurr=0;
-////		currentRefD=0;												//停机后清零,因为自动启动也需要用到逆变侧电流
-//		currentRefQ=0;
-//		currentRefQa=0;
-//		currentRefQb=0;
-//		currentRefQc=0;
-//		negCurCompD = 0;
-//		negCurCompQ = 0;
-//	}
-//	FaultRecordSel();
-////-	TimerCounter();   				//-1.37us
-////	if(++MeanPos>=MEANPOINT) MeanPos=0;	//Sliding window pointer
-//	if(CntMs.StartDelay > CNT_MS(1000)){			//Power on calibration delay, thus avoiding momentary sampling error on DSP power.
-//		if((StateFlag.autoAdcOffsetFlag == 1)&&(StateEventFlag != STATE_EVENT_RUN)){	//Execute only when the event state is not equal to STATE_EVENT_RUN
-//			StateFlag.onceTimeAdcAutoAdjust = true;
-//			StateFlag.autoAdcOffsetFlag = 0;
-//		}
-//
-//		if(StateFlag.onceTimeAdcAutoAdjust){	//上电后自动运行一次
-//			AdRegeditOffset();
-//		}
-//    }
-//}
 
 inline void FaultRecordSel(void)
 {
@@ -965,10 +790,6 @@ void PRController(void)
 }
 }
 
-/*void LineFitLeastSquares*/
-//float ratio = 0, offset = 0;
-//float xAxis[10] = {0,1,2,3,4,5,6,7,8,9};
-//float yAxis[10] = {100,101,102,103,104,105,106,107,108,109};
 #define AD_FITING_N 3
 #define FITING_A (5.0f)       //0*0+1*1+...(N-1)*(N-1)
 #define FITING_B (3.0f)        //0+1+...+(N-1)
@@ -1044,35 +865,6 @@ inline ZCPJudgeA_ovsample(volatile Uint16 *ADResult,int ADoffset,int NumPort,Uin
     VolforwardC += V_dq2Ualpha*(-SQRT_2DIV3_DIV2) + V_dq2Ubeta *(-SQRT2_DIV2);
 float escdebugpll=0,escdebugdata;
 #define LooktablePower2Amplitude 0.05f
-/*float ReactivePowerComFUN(float Esc_VoltPLL,float Q)  //ESC无功补偿函数
-{
-    float tmp,tmp2,pll;
-    while(Esc_VoltPLL > PI){
-        Esc_VoltPLL -= PI;
-    }
-    if(Q<0){
-    tmp= sinf((2.5f/2.0f)*Esc_VoltPLL);
-//        tmp2=sinf((7.0f/2.0f)*Esc_VoltPLL);
-//        tmp+=tmp2*0.15;
-    if(tmp<0)tmp=0;
-    }else{
-        //180/(2.5/2.0)=144.故超前校正的区间为0~144度.则滞后校正为36~180度.转为弧度值为0.2PI
-        pll=Esc_VoltPLL-(0.2*PI);
-        if(pll > 0){
-            tmp= sinf((2.5f/2.0f)*pll);
-//            tmp2=sinf((7.0f/2.0f)*pll);
-        }else{
-            tmp=0;
-        }
-//        tmp+=tmp2*0.15;
-        if(tmp<0)tmp=0;
-    }
-
-    if(ConstantReactivePower<0.001 && ConstantReactivePower>-0.001) //界面设置为0,则开启无功补偿模式后自动补偿.
-        return (tmp)*fabsf(Q);
-    else    //界面下发值作为补偿
-    return (tmp)*ConstantReactivePower*LooktablePower2Amplitude;
-}*/
 
 float ReactivePowerComFUN(float Esc_VoltPLL,float Q)  //ESC无功补偿函数
 {
@@ -1304,11 +1096,6 @@ float StepSize = 0.703125;
 float ESC_FeedForward_DutyA = 0,ESC_FeedForward_DutyB = 0,ESC_FeedForward_DutyC = 0;
 float PIOutVoltValueA = 0,PIOutVoltValueB = 0,PIOutVoltValueC = 0;
 int ESCLowCurrFlagA = 0,ESCLowCurrFlagB = 0,ESCLowCurrFlagC = 0;
-//float dbg_ESC_DutyDataA=0.95,dbg_ESC_DutyDataB=0.95,dbg_ESC_DutyDataC=0.95;
-//float dbg_negCurCompPerc =0.025;
-//int dbg_endatagen =1;
-//#define LEAD_SAMPLE_INCREMENT_DUTY  0.12f
-//#define LEAD_SAMPLE_DECREMENT_DUTY -0.12f
 
 #define LEAD_SAMPLE_INCREMENT_DUTY  0.0f
 #define LEAD_SAMPLE_DECREMENT_DUTY  0.0f
@@ -1565,27 +1352,7 @@ float RMSDutyLimit(float RMSGridInVAL, float INSGridIn, float target, float PIer
     }
     return dutytmp1;
 }
-//float GridCurr1 = 0;
-//float ConCurDutyLimit(float GridCurrF)
-//{
-//
-//    if((GridCurrF > 106) && (GridCurrF <= 130)){
-//        if(GridCurrF>GridCurr1)  GridCurr1 = GridCurrF;
-//    }
-//    if(GridCurr1 > 0){
-//        GridCurr1 = GridCurr1-0.001;
-//    }else{
-//        GridCurr1 = 0;
-//    }
-//    VolttargetCorrA = Duty[(Uint16)(GridCurr1-106)];
-//
-//    if(GridCurrF > 130){
-//        VolttargetCorrA = 0.5;
-//    }
-//    if(GridCurrF <= 106){
-//        VolttargetCorrA = 1.0;
-//    }
-//}
+
 
 float dbg_reactive;
 int WUGONGlinshitest = 0,BUPINGHENGlinshitest = 0;
@@ -1595,39 +1362,6 @@ float VoltInF = 0,CurrInF = 0;
 float DEBUGESC_DutyDataA = 0,DEBUGESC_DutyDataB = 0,DEBUGESC_DutyDataC = 0,DEBUGESC_DutyDataD = 0;
 int UnCurrCompCnt=0;
 int cntaaa=2;
-
-//#define TAB_CONSTANT_CURR_TEMP_30_1     45.0
-//#define TAB_CONSTANT_CURR_TEMP_30_K     0.001
-//#define TAB_CONSTANT_CURR_TEMP_30_END   53.0
-//
-//#define TAB_CONSTANT_CURR_TEMP_50_1     45.0
-//#define TAB_CONSTANT_CURR_TEMP_50_K     0.001
-//#define TAB_CONSTANT_CURR_TEMP_50_END   53.0
-//
-//#define TAB_CONSTANT_CURR_TEMP_70_1     45.0
-//#define TAB_CONSTANT_CURR_TEMP_70_K     0.001
-//#define TAB_CONSTANT_CURR_TEMP_70_END   53.0
-
-//ConstantCurr[0].RMS_CONSTANT_CURRENT_DIFF
-
-////表格计算错误检查
-//#if (CurTarget[2][19])>1)
-//#error CurTarget_30 table comput error
-//#endif
-//#if ((TAB_CONSTANT_CURR_TEMP_50_1+TAB_CONSTANT_CURR_TEMP_50_K*19-TAB_CONSTANT_CURR_TEMP_50_END)>0.1)
-//#error CurTarget_50 table comput error
-//#endif
-//#if ((TAB_CONSTANT_CURR_TEMP_70_1+TAB_CONSTANT_CURR_TEMP_70_K*19-TAB_CONSTANT_CURR_TEMP_70_END)>0.1)
-//#error CurTarget_70 table comput error
-//#endif
-
-//const SMconstantCurr ConstantCurrDefault[3]={{VOLT_TARGET_CORR_DEFAULT,0.0f,TAB_CONSTANT_CURR_TEMP_30_END+5,13.0f,TAB_CONSTANT_CURR_TEMP_30_1,82.0f,0,0,0},\
-//                                             {VOLT_TARGET_CORR_DEFAULT,0.0f,93.0f,18.0f,75.0f,132.0f,0,0,0},\
-//                                             {VOLT_TARGET_CORR_DEFAULT,0.0f,140.0f,23.0f,114.0f,198.0f,0,0,0}}; //分设备容量(存在于flash里面,是const常数,不可修改)
-//
-//SMconstantCurr ConstantCurr[3]={{VOLT_TARGET_CORR_DEFAULT,0.0f,TAB_CONSTANT_CURR_TEMP_30_END+5,13.0f,TAB_CONSTANT_CURR_TEMP_30_1,82.0f,0,0,0},\
-//                                {VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0},\
-//                                {VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0}};  //分A/B/C三相(存在于内存中,可修改)
 
 const SMconstantCurr ConstantCurrDefault[3]={{VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0},\
                                              {VOLT_TARGET_CORR_DEFAULT,0.0f,93.0f,18.0f,75.0f,135.0f,0,0,0},\
@@ -2793,862 +2527,74 @@ inline void GenModulation(void)
 //        }
 }
 
+/*
+ * ADCD-1的中断服务函数。WY
+ */
 void ADCD1INT(void)     //ADC interrupt function   //50us
 {
-    FaultFastDetectInInt();             //20K
-//    CurrRefCaul();                      //2.3us
-//    PRController();
-    VoltSlidPosCnt();                   //20K
-    GenModulation();                    //20K
-    ADPosCnt();
-    GetVolAndInvCurr();                 //20K
+	FaultFastDetectInInt();//20K
+	VoltSlidPosCnt();//20K
+	GenModulation();//20K
+	ADPosCnt();
+	GetVolAndInvCurr();//20K
 
-
-    switch(T1PRPwmFrequency){
-    case 0:
-        switch(ADBufPos){
-        case 0:
-            SetHeatPulse();                 //心跳  10K
-            PLLrun();                       //锁相  10K
-            SigPhDQComput();                //无功计算 10k
-            break;
-        case 1:
-            Swi_post(RMSstart);
-            RmsCalcIn();                    //10K
-            FirstRmsCalc();                 //5K
-            break;
-        case 2:
-            StateFeedBackJudge();
-            SetHeatPulse();                 //心跳
-            PLLrun();                       //锁相
-            SigPhDQComput();
-            break;
-        case 3:
-            RmsCalcIn();
-            break;
-        case 4:
-            SetHeatPulse();                 //心跳
-            PLLrun();                       //锁相
-            SigPhDQComput();
-            break;
-        case 5:
-            Swi_post(RMSstart);
-            FirstRmsCalc();                 //
+	switch (T1PRPwmFrequency)
+	{
+		case 0:
+			switch (ADBufPos)
+			{
+				case 0:
+					SetHeatPulse();//心跳  10K
+					PLLrun();//锁相  10K
+					SigPhDQComput();//无功计算 10k
+					break;
+				case 1:
+					Swi_post(RMSstart);
+					RmsCalcIn();//10K
+					FirstRmsCalc();//5K
+					break;
+				case 2:
+					StateFeedBackJudge();
+					SetHeatPulse();//心跳
+					PLLrun();//锁相
+					SigPhDQComput();
+					break;
+				case 3:
+					RmsCalcIn();
+					break;
+				case 4:
+					SetHeatPulse();//心跳
+					PLLrun();//锁相
+					SigPhDQComput();
+					break;
+				case 5:
+					Swi_post(RMSstart);
+					FirstRmsCalc();//
 //            SigPhDQinput();                 //2.5K
-            RmsCalcIn();
-            break;
-        case 6:
-            SetHeatPulse();                 //心跳
-            PLLrun();                       //锁相
-            SigPhDQComput();
-            break;
-        case 7:
-            RmsCalcIn();
-            break;
-        }
-        break;
-    }
-    FaultRecordProg();                  //20K
-//    if(ESCFlagA.TurnOffPeakFaultFlag == 1){
-//        if(ESCFlagA.ESCCntMs.FaultDelayFlag >= CNT_MS(15)){
-//            ESCFlagA.ESCCntMs.FaultDelayFlag = 0;
-//            ESCFlagA.TurnOffPeakFaultFlag = 0;
-//            SET_IGBT_ENA(IGBT_FAULT);  //整体关断               //关闭IGBT的使能信号输出  IO信号拉高
-//            DisablePWMA();
-//            SET_MAIN_CONTACT_ACTION_A(ESC_ACTION_DISABLE);      //IGBT接触器断开(如果存在15ms延时的话,高低压磁保持继电器需要最后再关)
-//            ESCFlagA.PeakStopFlag = 0;
-//            ESCFlagA.FaultJudgeFlag = 0;
-//            ESCFlagA.HWPowerFAULTFlag = 1;
-//            ESCFlagA.HWPowerSTOPFlag = 1;
-//        }
-//    }
-//    if(ESCFlagB.TurnOffPeakFaultFlag == 1){
-//        if(ESCFlagB.ESCCntMs.FaultDelayFlag >= CNT_MS(15)){
-//            ESCFlagB.ESCCntMs.FaultDelayFlag = 0;
-//            ESCFlagB.TurnOffPeakFaultFlag = 0;
-//            SET_IGBT_ENB(IGBT_FAULT);  //整体关断               //关闭IGBT的使能信号输出  IO信号拉高
-//            DisablePWMB();
-//            SET_MAIN_CONTACT_ACTION_B(ESC_ACTION_DISABLE);
-//            ESCFlagB.PeakStopFlag = 0;
-//            ESCFlagB.FaultJudgeFlag = 0;
-//            ESCFlagB.HWPowerFAULTFlag = 1;
-//            ESCFlagB.HWPowerSTOPFlag = 1;
-//        }
-//    }
-//    if(ESCFlagC.TurnOffPeakFaultFlag == 1){
-//        if(ESCFlagC.ESCCntMs.FaultDelayFlag >= CNT_MS(15)){
-//            ESCFlagC.ESCCntMs.FaultDelayFlag = 0;
-//            ESCFlagC.TurnOffPeakFaultFlag = 0;
-//            SET_IGBT_ENC(IGBT_FAULT);  //整体关断               //关闭IGBT的使能信号输出  IO信号拉高
-//            DisablePWMC();
-//            SET_MAIN_CONTACT_ACTION_C(ESC_ACTION_DISABLE);
-//            ESCFlagC.PeakStopFlag = 0;
-//            ESCFlagC.FaultJudgeFlag = 0;
-//            ESCFlagC.HWPowerFAULTFlag = 1;
-//            ESCFlagC.HWPowerSTOPFlag = 1;
-//        }
-//    }
-
-//	if(cladbg1 >= 4)   Cla1ForceTask1();     //仅测试用,TASK1现在已用ADCAINT1触发
-//	SET_DBG_IO2(0);
-//	AdcRegs.ADCST.bit.INT_SEQ1_CLR=1; 			//清除AD中断的标志位
-//	AdcRegs.ADCTRL2.bit.RST_SEQ1 = 1;			//复位序列发生器
-    AdcaRegs.ADCINTFLGCLR.bit.ADCINT1=1;
-//  PieCtrlRegs.PIEACK.all |= PIEACK_GROUP1;  	//由BIOS响应PIE同组中断
+					RmsCalcIn();
+					break;
+				case 6:
+					SetHeatPulse();//心跳
+					PLLrun();//锁相
+					SigPhDQComput();
+					break;
+				case 7:
+					RmsCalcIn();
+					break;
+			}
+			break;
+	}
+	FaultRecordProg();//20K
+	AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1;
 }
+
 void RMSswi(void)
 {
-//    SET_DBG_IO2(1);
-//    SigPhDQCal();                   //us@19channel,singleDQ()
-    //SlowRmsCalc();                  //4.70 or 0.2us
-//    FirstRmsCalc();                 //1.67us
-//    RMSLimit();                     //2.43us
     FaultDetectInInt();             //0.61us
-//    ReactivePowerGiven();           //0.46us,reactive Power
-//    ReactPowerComput();             //1.37us
     FaultRecordSel();
     if(StateFlag.onceTimeAdcAutoAdjust){    //上电后自动运行一次
       AdRegeditOffset();
     }
-//    SET_DBG_IO2(0);
 }
 
-//  Funda3sTo2rTransf();            //2.1us,用单相dq函数取代.The positive and negative d,q,zero axis of Load current and inverter Current
 
-//----- END OF ISRFUNC -------------//
-/*
-#if PWM_FREQUENCE_12p8KHZ
-//    switch(ADBufPos){   //Operation of Load Distribution and Coordinated
-//    case 0:
-//    case 4:
-//        RmsCalc();           //-5.33us
-//        RMSLimit();                     //1.59us
-//        SET_DBG_IO1(0);
-//        break;
-//
-//    case 1:
-//    case 5:
-//        SigPhDQCal();                   //7us@18channel,df22()
-//        Funda3sTo2rTransf();            //2.1us,The positive and negative d,q,zero axis of Load current and inverter Current
-//        varMean_step();                 //6.5us@12channel
-//        break;
-//
-//    case 2:
-//    case 6:
-//        FaultDetectInInt();             //0.61us
-//        ReactivePowerGiven();           //0.46us,reactive Power
-//        ReactPowerComput();             //1.37us
-//        break;
-//
-//    case 3:
-//    case 7:
-//        break;
-
-//  default:ADPosCnt();break;
-
-#elif PWM_FREQUENCE_16KHZ
-    GetVolAndInvCurr();                 //-2.3us
-
-    switch(ADBufPos){   //Operation of Load Distribution and Coordinated
-    case 0:
-        SET_DBG_IO1(0);
-        GetGridLoadcurr();
-        GetFFTData();
-        IFFTCalcu();                    //10us
-        SET_DBG_IO1(1);
-        break;
-
-    case 1:
-        SetHeatPulse();
-        PLL();                          //-3.41us
-        CurrRefCaul();                  //2.3
-        break;
-
-    case 2:
-        GetGridLoadcurrAD();
-        GetUdc();
-        IFFTCalcu();                    //-9.5us
-        break;
-
-    case 3:
-        SetHeatPulse();
-        GetGridLoadcurr();
-        GetFFTData();
-        PLL();
-        CurrRefCaul();
-        break;
-
-    case 4:
-        FFTDataReduction(FFTCalcChan);  //-6.87
-        IFFTCalcu();
-        break;
-
-    case 5:
-        SetHeatPulse();
-        GetGridLoadcurr();
-        GetFFTData();
-        PLL();
-        Funda3sTo2rTransf();            //The positive and negative d,q,zero axis of Load current and inverter Current
-        CurrRefCaul();
-        break;
-
-    case 6:
-        ReactivePowerGiven();           //reactive Power
-        RmsCalc();           //-5.33us
-        IFFTCalcu();
-        break;
-
-    case 7:
-        SetHeatPulse();
-        GetGridLoadcurrAD();
-        PLL();
-        CurrRefCaul();
-        SigPhDQCal();
-        break;
-
-    case 8:
-        GetGridLoadcurr();
-        GetFFTData();
-        StartCaluFFT();         //You need to start this DMA and then start the DMA of the fault recorder after a period of time. Otherwise, the recording may not be correct
-        GetUdc();
-        IFFTCalcu();
-        ReactPowerComput();
-        FaultDetectInInt();
-        break;
-
-    case 9:
-        SetHeatPulse();
-        PLL();
-        RMSLimit();
-        CurrRefCaul();
-        break;
-    default:ADPosCnt();break;
-    }
-
-
-
-#elif PWM_FREQUENCE_9p6KHZ
-    SetHeatPulse();
-    GetVolAndInvCurr();                 //-2.3us
-    PLL();                          //-3.41us
-    IFFTCalcu();                    //10us
-
-    switch(ADBufPos){   //Operation of Load Distribution and Coordinated
-    case 0:
-        SET_DBG_IO1(0);
-        GetGridLoadcurr();
-        GetFFTData();
-        StartCaluFFT();
-        SET_DBG_IO1(1);
-        break;
-
-    case 1:
-        GetUdc();
-        GetGridLoadcurrAD();
-        break;
-
-    case 2:
-        GetGridLoadcurr();
-        GetFFTData();
-        break;
-
-    case 3:
-        GetGridLoadcurr();
-        GetFFTData();
-        FFTDataReduction(FFTCalcChan);  //-6.87
-        FaultDetectInInt();
-        break;
-
-    case 4:
-        GetUdc();
-        GetGridLoadcurrAD();
-        Funda3sTo2rTransf();            //The positive and negative d,q,zero axis of Load current and inverter Current
-        ReactivePowerGiven();           //reactive Power
-        RmsCalc();           //-5.33us
-        RMSLimit();
-        break;
-
-    case 5:
-        GetGridLoadcurr();
-        GetFFTData();
-        ReactPowerComput();
-        SigPhDQCal();
-    break;
-
-    default:ADPosCnt();break;
-    }
-
-    CurrRefCaul();
-
-#elif PWM_FREQUENCE_8KHZ
-    GetVolAndInvCurr();                 //-2.3us
-
-    switch(ADBufPos){   //Operation of Load Distribution and Coordinated
-    case 0:                 //注意,case0是没有break的;
-        SetHeatPulse();
-        DBG_IOOUT(DBG_IO1,0);
-        GetGridLoadcurr();
-        GetFFTData();
-        StartCaluFFT();
-        PLL();                          //-3.41us
-        IFFTCalcu();                    //10us
-        CurrRefCaul();                  //2.3
-        PRController();                 //-11.8us
-        DBG_IOOUT(DBG_IO1,1);
-        break;
-
-    case 1:
-        SetHeatPulse();
-        GetUdc();
-        PLL();
-        IFFTCalcu();
-        CurrRefCaul();
-        PRController();
-        break;
-
-    case 2:
-        SetHeatPulse();
-        FFTDataReduction(FFTCalcChan);  //-6.87
-        IFFTCalcu();
-        CurrRefCaul();
-        PLL();
-        PLLAGC();
-        GetGridLoadcurr();
-        GetFFTData();
-        Funda3sTo2rTransf();            //The positive and negative d,q,zero axis of Load current and inverter Current
-        PRController();
-        break;
-
-    case 3:
-        SetHeatPulse();
-        ReactivePowerGiven();           //reactive Power
-        RmsCalc();           //-5.33us
-        IFFTCalcu();
-        CurrRefCaul();
-        PLL();
-        RMSLimit();
-        PRController();
-        break;
-
-    case 4:
-        SetHeatPulse();
-        IFFTCalcu();
-        GetUdc();
-        ReactPowerComput();
-        CurrRefCaul();
-        PLL();
-        AdjustFulkPRcoeff();            //Frequency conversion algorithm controlled by PR
-        FaultDetectInInt();
-        PRController();
-        break;
-
-    default:ADPosCnt();break;
-    }
-#endif //endif PWM_FREQUENCE
-*/
-//        if(gridCurA_rms > 6)
-//        {
-//            if((fabs(Esczct_CNTA-Esc_PhaseA)) < 10)
-//            {
-//        if((Esc_PhaseA >= 0)&&(Esc_PhaseA <= PI))
-//            flagA=1;
-//            else if((Esc_PhaseA > PI)&&(Esc_PhaseA <= 2*PI))
-//            flagA=0;
-//            }else{
-//                if(GridCurrAF > 1)
-//                    flagA=1;
-//                else if(GridCurrAF < -1)
-//                    flagA=0;
-//            }
-//        }else{
-//            if((Esc_PhaseA >= 0)&&(Esc_PhaseA <= PI))
-//                flagA=1;
-//                else if((Esc_PhaseA > PI)&&(Esc_PhaseA <= 2*PI))
-//                flagA=0;
-//        }
-//        if((harmCompPerc > 0.69999) && (harmCompPerc < 1.0001))
-//        {
-//            if(ESC_DutyDataA > harmCompPerc)       //  初始状态必须设置成100%占空比
-//            {
-//                ESC_DutyDataA = ESC_DutyDataA - 0.00001;
-//            }
-//            else if(ESC_DutyDataA < harmCompPerc)
-//            {
-//                ESC_DutyDataA = ESC_DutyDataA + 0.00001;
-//            }
-//            else ESC_DutyDataA = harmCompPerc;
-//        }
-//        else if(harmCompPerc > 1.0)
-//        {
-//            harmCompPerc = 1.0;
-//        }
-//        else{
-//            harmCompPerc = 0.7;
-//        }
-//
-//            if(flagA)
-//            {
-//                EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataA + negCurCompPerc));
-//                EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataA);//(quarterPeriod*(sa+1));//PwmVa;
-//        }else{
-//                EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataA);
-//                EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataA + negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-//        }
-//
-//        if(gridCurC_rms > 6)
-//        {
-//            if((fabs(Esczct_CNTC-Esc_PhaseC)) < 10)
-//            {
-//                if((Esc_PhaseC >= 0)&&(Esc_PhaseC <= PI))
-//                    flagC=1;
-//                    else if((Esc_PhaseC > PI)&&(Esc_PhaseC <= 2*PI))
-//                    flagC=0;
-//            }else{
-//                if(GridCurrCF > 1)
-//                    flagC=1;
-//                else if(GridCurrCF < -1)
-//                    flagC=0;
-//            }
-//        }else{
-//        if((Esc_PhaseC >= 0)&&(Esc_PhaseC <= PI))
-//            flagC=1;
-//            else if((Esc_PhaseC > PI)&&(Esc_PhaseC <= 2*PI))
-//            flagC=0;
-//        }
-//        if((harmCompPerc > 0.69999) && (harmCompPerc < 1.0001))
-//        {
-//            if(ESC_DutyDataC > harmCompPerc)
-//            {
-//                ESC_DutyDataC = ESC_DutyDataC - 0.00001;
-//            }
-//            else if(ESC_DutyDataC < harmCompPerc)
-//            {
-//                ESC_DutyDataC = ESC_DutyDataC + 0.00001;
-//            }
-//            else ESC_DutyDataC = harmCompPerc;
-//        }
-//        else if(harmCompPerc > 1)
-//        {
-//            harmCompPerc = 1;
-//        }
-//        else{
-//            harmCompPerc = 0.7;
-//        }
-//        if(flagC){
-//                EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataC + negCurCompPerc));
-//                EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataC);//(quarterPeriod*(sa+1));//PwmVa;
-//        }else{
-//                EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataC);
-//                EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataC + negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-//        }
-//
-//        if(gridCurB_rms > 6)
-//        {
-//            if((fabs(Esczct_CNTB-Esc_PhaseB)) < 10)
-//            {
-//                if((Esc_PhaseB >= 0)&&(Esc_PhaseB <= PI))
-//                    flagB=1;
-//                    else if((Esc_PhaseB > PI)&&(Esc_PhaseB <= 2*PI))
-//                    flagB=0;
-//            }else{
-//                if(GridCurrBF > 1)
-//                    flagB=1;
-//                else if(GridCurrBF < -1)
-//                    flagB=0;
-//            }
-//        }else{
-//        if((Esc_PhaseB >= 0)&&(Esc_PhaseB <= PI))
-//            flagB=1;
-//            else if((Esc_PhaseB > PI)&&(Esc_PhaseB <= 2*PI))
-//            flagB=0;
-//        }
-//        if((harmCompPerc > 0.69999) && (harmCompPerc < 1.0001))
-//        {
-//            if(ESC_DutyDataB > harmCompPerc)
-//            {
-//                ESC_DutyDataB = ESC_DutyDataB - 0.00001;
-//            }
-//            else if(ESC_DutyDataB < harmCompPerc)
-//            {
-//                ESC_DutyDataB = ESC_DutyDataB + 0.00001;
-//            }
-//            else ESC_DutyDataB = harmCompPerc;
-//        }
-//        else if(harmCompPerc > 1)
-//        {
-//            harmCompPerc = 1;
-//        }
-//        else{
-//            harmCompPerc = 0.7;
-//        }
-//        if(flagB){
-//                EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataB + negCurCompPerc));
-//                EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataB);//(quarterPeriod*(sa+1));//PwmVa;
-//        }else{
-//                EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataB);
-//                EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataB + negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-//        }
-
-//    pwmVa = (Uint16)(T1PR*Sa);pwmVaN = (Uint16)(T1PR*SaN);
-//    pwmVb = (Uint16)(T1PR*Sb);pwmVbN = (Uint16)(T1PR*SbN);
-//    pwmVc = (Uint16)(T1PR*Sc);pwmVcN = (Uint16)(T1PR*ScN);
-
-//    EPwm4Regs.CMPB.bit.CMPB =  T1PR*0.5;//pwmVa;
-//    EPwm4Regs.CMPA.bit.CMPA =  T1PR*0.38;//pwmVaN;
-//    EPwm6Regs.CMPB.bit.CMPB =  T1PR*0.5;//pwmVb;
-//    EPwm6Regs.CMPA.bit.CMPA =  T1PR*0.38;//pwmVbN;
-//    EPwm5Regs.CMPB.bit.CMPB =  T1PR*0.5;//pwmVc;
-//    EPwm5Regs.CMPA.bit.CMPA =  T1PR*0.38;//pwmVcN;
-
-//    if(GridCurrAF<(-1))
-//    {
-//        Esczct_CNTA = 0;
-//    }
-//    else if(GridCurrAF>1)
-//    {
-//        Esczct_CNTA = PI;
-//    }
-//    Esczct_CNTA = Esczct_CNTA + StepSize;
-//    if(Esczct_CNTA >= 2*PI)
-//    {
-//        Esczct_CNTA = 2*PI;
-//    }
-//
-//    if(GridCurrBF<(-1))
-//    {
-//        Esczct_CNTB = 0;
-//    }
-//    else if(GridCurrBF>1)
-//    {
-//        Esczct_CNTB = PI;
-//    }
-//    Esczct_CNTB = Esczct_CNTB + StepSize;
-//    if(Esczct_CNTB >= 2*PI)
-//    {
-//        Esczct_CNTB = 2*PI;
-//    }
-//
-//    if(GridCurrCF<(-1))
-//    {
-//        Esczct_CNTC = 0;
-//    }
-//    else if(GridCurrCF>1)
-//    {
-//        Esczct_CNTC = PI;
-//    }
-//    Esczct_CNTC = Esczct_CNTC + StepSize;
-//    if(Esczct_CNTC >= 2*PI)
-//    {
-//        Esczct_CNTC = 2*PI;
-//    }
-
-//    ESC_FeedForward_DutyCYCA = 1-(1-gpVoltA_rms/VolCorU);
-//    ESC_FeedForward_DutyCYCB = 1-(1-gpVoltB_rms/VolCorV);
-//    ESC_FeedForward_DutyCYCC = 1-(1-gpVoltC_rms/VolCorW);
-//
-//    PIOutVoltValueA = ESC_FeedForward_DutyCYCA - VolPIOutPwmVa;
-//    PIOutVoltValueB = ESC_FeedForward_DutyCYCB - VolPIOutPwmVb;
-//    PIOutVoltValueC = ESC_FeedForward_DutyCYCC - VolPIOutPwmVc;
-//    if(GridVoltAF > (gpVoltA_rms * 1.5))
-//    {
-//        PIOutVoltValueA = 1.0f;
-//    }
-//    if(GridVoltBF > (gpVoltB_rms * 1.5))
-//    {
-//        PIOutVoltValueB = 1.0f;
-//    }
-//    if(GridVoltCF > (gpVoltC_rms * 1.5))
-//    {
-//        PIOutVoltValueC = 1.0f;
-//    }
-
-/*
-for(i=0;i<AD_FITING_N;i++){          //缓冲区copy
-     *pBuf++ = (float)(*pAD++);
-  }
-
- //最多做3遍正态分布判断
- for(j=0;j<2;j--){
-     sum = 0;
-     pBuf=buff;
-     FITING_N=AD_FITING_N-j;                     //本轮计算方差的数据个数
-     for(i=0;i<FITING_N;i++){
-         sum += *pBuf++;                          //求和
-     }
-     sum/=(FITING_N);                            //求均值
-     *pBuf=buff;
-     for(i=0;i<FITING_N;i++){
-         deviate = *pBuf++ - sum;                  //计算全部的数的方差(各个数据分别与其和的平均数之差的平方的和的平均数)
-         Variance += deviate*deviate;
-     }
-     Variance/=FITING_N;
-     dStandardDeviation = 3.0f*sqrtf(Variance);  //求3sigma
-     for(i=0;i<FITING_N;i++){
-         if(buff[i]-sum > dStandardDeviation){   //坏值
-             for(k=i;k<FITING_N-1;k++){          //当前位置以后的数据开始前移一个值,总数量为FITING_N-1
-                 buff[k]= buff[k+1];             //即剔除坏值y.及x坐标
-                 xAxis[k]=xAxis[k+1];
-             }
-             flag = 1;   //得重新做一遍正态分布计算
-         }
-     }
-
-     *pBuf=buff;
-     flag = 0;
-     //根据正态分布去除极值
-     for(i=0;i<(FITING_N);i++){
-         if(*pBuf > uplimit || *pBuf < dnlimit){
-             flag = 1;   //得重新做一遍正态分布计算
-             *pBuf=0;    //剔除坏值
-             break;      //每次剔除一个坏值
-         }
-     }
-     if(flag)
-         for(i=0;i<(AD_FITING_N);i++){xAxis=i;} //剔除了坏值,恢复xAxis轴数据
-         break;    //本轮没有剔除坏值,认为剩下的数组内容正常
- }
- //得到符合正态分布的数组.做斜率拟合.
- */
-
-/*
-//    float Sa,SaN,Sb,SbN,Sc,ScN;
-//    float Esc_VolPIOutPwmVa=0,Esc_VolPIOutPwmVb=0,Esc_VolPIOutPwmVc=0;
-//    int16 ZCPJudgeVC,ZCPJudgeVB,ZCPJudgeVA;
-//    int Esc_CntA = 0,Esc_CntB = 0,Esc_CntC = 0,Esc_FlagA = 1,Esc_FlagB = 1,Esc_FlagC = 1;
-//    Uint16 pwmVa,pwmVaN,pwmVb,pwmVbN,pwmVc,pwmVcN;
-
-//    if((Esc_PhaseA>(PI*((10-0.5)/10)))&&(Esc_FlagA==1)){
-//        Esc_VolPIOutPwmVa = harmCompPerc*Esc_NUM[Esc_CntA++];
-//        if(Esc_CntA>=32){
-//            Esc_FlagA = 0;
-//            Esc_CntA = 0;
-//        }
-//    }
-//    if(Esc_PhaseA<(PI*((10-0.5)/10)))    Esc_FlagA = 1;
-//
-//    if((Esc_PhaseB>(PI*((10-0.5)/10)))&&(Esc_FlagB==1)){
-//        Esc_VolPIOutPwmVb = harmCompPerc*Esc_NUM[Esc_CntB++];
-//        if(Esc_CntB>=32){
-//            Esc_FlagB = 0;
-//            Esc_CntB = 0;
-//        }
-//    }
-//    if(Esc_PhaseB<(PI*((10-0.5)/10)))    Esc_FlagB = 1;
-//
-//    if((Esc_PhaseC>(PI*((10-0.5)/10)))&&(Esc_FlagC==1)){
-//        Esc_VolPIOutPwmVc = harmCompPerc*Esc_NUM[Esc_CntC++];
-//        if(Esc_CntC>=32){
-//            Esc_FlagC = 0;
-//            Esc_CntC = 0;
-//        }
-//    }
-//    if(Esc_PhaseC<(PI*((10-0.5)/10)))    Esc_FlagC = 1;
-
-//    Sa = (Esc_VolPIOutPwmVa+0.05);SaN = (Esc_VolPIOutPwmVa-0.05);//这里按实际模式改 ,
-//    Sb = (Esc_VolPIOutPwmVb+0.05);SbN = (Esc_VolPIOutPwmVb-0.05);
-//    Sc = (Esc_VolPIOutPwmVc+0.05);ScN = (Esc_VolPIOutPwmVc-0.05);
-//
-//    if(Sa>DEADLIMIT)    Sa= DEADLIMIT;
-//    if(Sa<0)            Sa= 0;
-//    if(Sb>DEADLIMIT)    Sb= DEADLIMIT;
-//    if(Sb<0)            Sb= 0;
-//    if(Sc>DEADLIMIT)    Sc= DEADLIMIT;
-//    if(Sc<0)            Sc= 0;
-//    if(SaN>DEADLIMIT)   SaN= DEADLIMIT;
-//    if(SaN<0)           SaN= 0;
-//    if(SbN>DEADLIMIT)   SbN= DEADLIMIT;
-//    if(SbN<0)           SbN= 0;
-//    if(ScN>DEADLIMIT)   ScN= DEADLIMIT;
-//    if(ScN<0)           ScN= 0;
-
-
-//    EPwm4Regs.CMPB.bit.CMPB =  T1PR*0.5;//pwmVa;
-//    EPwm4Regs.CMPA.bit.CMPA =  T1PR*0.38;//pwmVaN;
-//    EPwm6Regs.CMPB.bit.CMPB =  T1PR*0.5;//pwmVb;
-//    EPwm6Regs.CMPA.bit.CMPA =  T1PR*0.38;//pwmVbN;
-//    EPwm5Regs.CMPB.bit.CMPB =  T1PR*0.5;//pwmVc;
-//    EPwm5Regs.CMPA.bit.CMPA =  T1PR*0.38;//pwmVcN;
-
-//    if(GridCurrAF<(-1))
-//    {
-//        Esczct_CNTA = 0;
-//    }
-//    else if(GridCurrAF>1)
-//    {
-//        Esczct_CNTA = PI;
-//    }
-//    Esczct_CNTA = Esczct_CNTA + StepSize;
-//    if(Esczct_CNTA >= 2*PI)
-//    {
-//        Esczct_CNTA = 2*PI;
-//    }
-//
-//    if(GridCurrBF<(-1))
-//    {
-//        Esczct_CNTB = 0;
-//    }
-//    else if(GridCurrBF>1)
-//    {
-//        Esczct_CNTB = PI;
-//    }
-//    Esczct_CNTB = Esczct_CNTB + StepSize;
-//    if(Esczct_CNTB >= 2*PI)
-//    {
-//        Esczct_CNTB = 2*PI;
-//    }
-//
-//    if(GridCurrCF<(-1))
-//    {
-//        Esczct_CNTC = 0;
-//    }
-//    else if(GridCurrCF>1)
-//    {
-//        Esczct_CNTC = PI;
-//    }
-//    Esczct_CNTC = Esczct_CNTC + StepSize;
-//    if(Esczct_CNTC >= 2*PI)
-//    {
-//        Esczct_CNTC = 2*PI;
-//    }
-//    if(gpVoltA_rms < 5)    gpVoltA_rms = 5;
-//    if(gpVoltB_rms < 5)    gpVoltB_rms = 5;
-//    if(gpVoltC_rms < 5)    gpVoltC_rms = 5;
-
-
-
-
-
-       //ZCPJudgeVA = ZCPJudgeA(GridVoltAF,LoadVoltUF,Esc_PhaseA,GridCurrAF,EPwm6Regs.TBCTR);//,&CurrentRateA);
-        //210630 CSJ修改 电压角度参与续流     注意此时 negCurCompPerc 只能为 正值
-        ZCPJudgeA_ovsample(&AdcaResultRegs.ADCRESULT0,VirtulAD.loadCurrentA,0,&flagA);   //A
-        if(Esc_PhaseA < PI){    //从上往下 3 1 2 4管
-           if(flagA){    //电压正 且电流正,应该是 1管在关断之前4管先打开
-               EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataA); //1管set
-               EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataA + negCurCompPerc));//4管clear
-           }else{       //电压正 且电流--,应该是4<1 = 3>2
-               EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataA);
-               EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataA - negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-           }
-        }else{ //电压为负半波
-           if(flagA){    //电压-- 且电流+,应该是4<1 = 3>2
-               EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataA - negCurCompPerc));
-               EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataA);//(quarterPeriod*(sa+1));//PwmVa;
-           }else{       //电压-- 且电流--,应该是4>1 = 3<2
-               EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataA + negCurCompPerc)); //1管
-               EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataA);                    //4管
-           }
-        }
-
-       //flagB = ZCPJudge(GridVoltBF,LoadVoltVF,Esc_PhaseB,GridCurrBF,EPwm5Regs.TBCTR);//,&CurrentRateB);
-       //210630 CSJ修改 电压角度参与续流     注意此时 negCurCompPerc 只能为 负值
-        flagB = ZCPJudgeA_ovsample(&AdccResultRegs.ADCRESULT0,VirtulAD.loadCurrentB,1,&flagB);   //B
-        if(Esc_PhaseB < PI){    //从上往下 3 1 2 4管
-            if(flagB){    //电压正 且电流正,应该是4>1 = 3<2
-                EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataB); //1管set
-                EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataB + negCurCompPerc));//4管clear
-            }else{       //电压正 且电流--,应该是4<1 = 3>2
-                EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataB);
-                EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataB - negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-            }
-        }else{ //电压为负半波
-            if(flagB){    //电压-- 且电流+,应该是4<1 = 3>2
-                EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataB - negCurCompPerc));
-                EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataB);//(quarterPeriod*(sa+1));//PwmVa;
-            }else{       //电压-- 且电流--,应该是4>1 = 3<2
-                EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataB + negCurCompPerc)); //1管
-                EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataB);                    //4管
-            }
-        }
-
-        //flagC = ZCPJudge(GridVoltCF,LoadVoltWF,Esc_PhaseC,GridCurrCF,EPwm4Regs.TBCTR);//,&CurrentRateC);
-        //210630 CSJ修改 电压角度参与续流     注意此时 negCurCompPerc 只能为 负值
-        flagC = ZCPJudgeA_ovsample(&AdcbResultRegs.ADCRESULT0,VirtulAD.loadCurrentC,2,&flagC);   //C
-        if(Esc_PhaseC < PI){    //从上往下 3 1 2 4管
-            if(flagC){    //电压正 且电流正,应该是4>1 = 3<2
-                EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataC); //1管set
-                EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataC + negCurCompPerc));//4管clear
-            }else{       //电压正 且电流--,应该是4<1 = 3>2
-                EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataC);
-                EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataC - negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-            }
-        }else{ //电压为负半波
-            if(flagC){    //电压-- 且电流+,应该是4<1 = 3>2
-                EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataC - negCurCompPerc));
-                EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataC);//(quarterPeriod*(sa+1));//PwmVa;
-            }else{       //电压-- 且电流--,应该是4>1 = 3<2
-                EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataC + negCurCompPerc)); //1管
-                EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataC);                    //4管
-            }
-        }
-        */
-
-    /*
-    if(DCV_UNDER == 1)  //不采用电压判断触发逻辑, 暂未使用软启动
-    {
-        if(GridVoltAF>dcBusVoltGiven)
-            flagA=1;
-        if(GridVoltAF<-dcBusVoltGiven)
-            flagA=0;
-
-        if(ESC_DutyDataA > harmCompPerc)       //  初始状态必须设置成100%占空比
-        {
-            ESC_DutyDataA = ESC_DutyDataA - 0.00001;
-        }
-        else if(ESC_DutyDataA < harmCompPerc)
-        {
-            ESC_DutyDataA = ESC_DutyDataA + 0.00001;
-        }
-        else ESC_DutyDataA = harmCompPerc;
-        if(flagA)
-        {
-            EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataA + negCurCompPerc));
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataA);//(quarterPeriod*(sa+1));//PwmVa;
-    }else{
-            EPwm6Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataA);
-            EPwm6Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataA + negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-    }
-
-        if(GridVoltCF>dcBusVoltGiven)
-            flagC=1;
-        if(GridVoltCF<-dcBusVoltGiven)
-            flagC=0;
-        if(ESC_DutyDataC > harmCompPerc)
-         {
-             ESC_DutyDataC = ESC_DutyDataC - 0.00001;
-         }
-         else if(ESC_DutyDataC < harmCompPerc)
-         {
-             ESC_DutyDataC = ESC_DutyDataC + 0.00001;
-         }
-         else ESC_DutyDataC = harmCompPerc;
-     if(flagC){
-             EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataC + negCurCompPerc));
-             EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataC);//(quarterPeriod*(sa+1));//PwmVa;
-     }else{
-             EPwm4Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataC);
-             EPwm4Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataC + negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-     }
-
-        if(GridVoltBF>dcBusVoltGiven)
-            flagB=1;
-        if(GridVoltBF<-dcBusVoltGiven)
-            flagB=0;
-        if(ESC_DutyDataB > harmCompPerc)
-        {
-            ESC_DutyDataB = ESC_DutyDataB - 0.00001;
-        }
-        else if(ESC_DutyDataB < harmCompPerc)
-        {
-            ESC_DutyDataB = ESC_DutyDataB + 0.00001;
-        }
-        else ESC_DutyDataB = harmCompPerc;
-    if(flagB){
-            EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * (ESC_DutyDataB + negCurCompPerc));
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * ESC_DutyDataB);//(quarterPeriod*(sa+1));//PwmVa;
-    }else{
-            EPwm5Regs.CMPB.bit.CMPB = (Uint16)(T1PR * ESC_DutyDataB);
-            EPwm5Regs.CMPA.bit.CMPA = (Uint16)(T1PR * (ESC_DutyDataB + negCurCompPerc));//(quarterPeriod*(sa+1));//PwmVa;
-         }
-       }
-    }
-    */

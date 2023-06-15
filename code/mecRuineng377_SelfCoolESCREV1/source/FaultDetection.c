@@ -26,105 +26,56 @@
 // 进入故障位后，不可自动清除。只能经过上位机手动发送复位信号清除
 // 持续时间由9改为1或者2.这点后面调试完成后要注意
 
+/*
+ * 功能：故障停机预处理。WY
+ */
 void FirstFaultStop(Uint16 ESCPHASE)
 {
-    if((ESCFlagA.FAULTCONFIRFlag == 1)&&(ESCPHASE == 1))
-    {
-        SET_IGBT_ENA(IGBT_FAULT);
-        DisablePWMA();
-        SET_SCRA_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-        SET_MAIN_CONTACT_ACTION_A(ESC_ACTION_DISABLE);      //IGBT接触器断开(如果故障之后直接将IGBT使能关掉的话,则高低压磁保持继电器也需要立刻关断)
-        SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE);     //切旁路
-        ESCFlagA.FaultskipFlag = 1;
-        ESCFlagA.FAULTCONFIRFlag = 0;
-        ESCFlagA.ESCCntMs.StartDelay = 0;
-        ESCFlagA.HWPowerFAULTFlag = 1;
-        ESCFlagA.ESCCntSec.HWPowerFaultDelay = 0;
-    }
-    if((ESCFlagB.FAULTCONFIRFlag == 1)&&(ESCPHASE == 2))
-    {
-        SET_IGBT_ENB(IGBT_FAULT);
-        DisablePWMB();
-        SET_SCRB_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-        SET_MAIN_CONTACT_ACTION_B(ESC_ACTION_DISABLE);      //IGBT接触器断开
-        SET_BYPASS_CONTACT_ACTION_B(ESC_ACTION_ENABLE);     //切旁路
-        ESCFlagB.FaultskipFlag = 1;
-        ESCFlagB.FAULTCONFIRFlag = 0;
-        ESCFlagB.ESCCntMs.StartDelay = 0;
-        ESCFlagB.HWPowerFAULTFlag = 1;
-        ESCFlagB.ESCCntSec.HWPowerFaultDelay = 0;
-    }
-    if((ESCFlagC.FAULTCONFIRFlag == 1)&&(ESCPHASE == 3))
-    {
-        SET_IGBT_ENC(IGBT_FAULT);
-        DisablePWMC();
-        SET_SCRC_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-        SET_MAIN_CONTACT_ACTION_C(ESC_ACTION_DISABLE);      //IGBT接触器断开
-        SET_BYPASS_CONTACT_ACTION_C(ESC_ACTION_ENABLE);     //切旁路
-        ESCFlagC.FaultskipFlag = 1;
-        ESCFlagC.FAULTCONFIRFlag = 0;
-        ESCFlagC.ESCCntMs.StartDelay = 0;
-        ESCFlagC.HWPowerFAULTFlag = 1;
-        ESCFlagC.ESCCntSec.HWPowerFaultDelay = 0;
-    }
+	/*处理A相。WY*/
+	if ((ESCFlagA.FAULTCONFIRFlag == 1) //A相存在故障信号。WY
+			&& (ESCPHASE == 1)) //A相。WY
+	{
+		SET_IGBT_ENA(IGBT_FAULT); //失能A相PWM
+		DisablePWMA(); //封锁A相PWM
+		SET_SCRA_ENABLE(ESC_ACTION_ENABLE); //开通A相旁路晶闸管。WY
+		SET_MAIN_CONTACT_ACTION_A(ESC_ACTION_DISABLE); //断开A相主路磁保持继电器。WY
+		SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE); //闭合A相旁路磁保持继电器。WY
+		ESCFlagA.FaultskipFlag = 1;
+		ESCFlagA.FAULTCONFIRFlag = 0; //故障信号已得到处理。WY
+		ESCFlagA.ESCCntMs.StartDelay = 0;
+		ESCFlagA.HWPowerFAULTFlag = 1; //A相硬件存在故障。WY
+		ESCFlagA.ESCCntSec.HWPowerFaultDelay = 0;
+	}
 
-//    if((ESCFlagA.PWMcurrDirFlag == 0)&&(ESCFlagA.FaultJudgeFlag == 1)){
-//            if(GridCurrAF >= 0){    //电流为正
-//                EPwm3Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //1管开通
-//                EPwm3Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //2管关断
-//                Delayus(4);
-//                EPwm4Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //4管关断
-//                EPwm4Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //3管开通
-//                ESCFlagA.TurnOffPeakFaultFlag = 1;
-//                ESCFlagA.ESCCntMs.FaultDelayFlag = 0;
-//            }else if(GridCurrAF < 0){   //电流为负
-//                EPwm4Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //3管开通
-//                EPwm4Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //4管关断
-//                Delayus(4);
-//                EPwm3Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //2管关断
-//                EPwm3Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //1管开通
-//                ESCFlagA.TurnOffPeakFaultFlag = 1;
-//                ESCFlagA.ESCCntMs.FaultDelayFlag = 0;
-//            }
-//    }
-//    if((ESCFlagB.PWMcurrDirFlag == 0)&&(ESCFlagB.FaultJudgeFlag == 1)){
-//            if(GridCurrBF >= 0){    //电流为正
-//                EPwm5Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //1管开通
-//                EPwm5Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //2管关断
-//                Delayus(4);
-//                EPwm6Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //4管关断
-//                EPwm6Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //3管开通
-//                ESCFlagB.TurnOffPeakFaultFlag = 1;
-//                ESCFlagB.ESCCntMs.FaultDelayFlag = 0;
-//            }else if(GridCurrBF < 0){   //电流为负
-//                EPwm6Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //3管开通
-//                EPwm6Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //4管关断
-//                Delayus(4);
-//                EPwm5Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //2管关断
-//                EPwm5Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //1管开通
-//                ESCFlagB.TurnOffPeakFaultFlag = 1;
-//                ESCFlagB.ESCCntMs.FaultDelayFlag = 0;
-//            }
-//    }
-//    if((ESCFlagC.PWMcurrDirFlag == 0)&&(ESCFlagC.FaultJudgeFlag == 1)){
-//            if(GridCurrCF >= 0){    //电流为正
-//                EPwm7Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //1管开通
-//                EPwm7Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //2管关断
-//                Delayus(4);
-//                EPwm8Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //4管关断
-//                EPwm8Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //3管开通
-//                ESCFlagC.TurnOffPeakFaultFlag = 1;
-//                ESCFlagC.ESCCntMs.FaultDelayFlag = 0;
-//           }else if(GridCurrCF < 0){   //电流为负
-//                EPwm8Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //3管开通
-//                EPwm8Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //4管关断
-//                Delayus(4);
-//                EPwm7Regs.AQCSFRC.bit.CSFB = EPwmRegsAQCSFRCclear;  //2管关断
-//                EPwm7Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRC;       //1管开通
-//                ESCFlagC.TurnOffPeakFaultFlag = 1;
-//                ESCFlagC.ESCCntMs.FaultDelayFlag = 0;
-//            }
-//    }
+	/*处理B相。WY*/
+	if ((ESCFlagB.FAULTCONFIRFlag == 1) && (ESCPHASE == 2))
+	{
+		SET_IGBT_ENB(IGBT_FAULT);
+		DisablePWMB();
+		SET_SCRB_ENABLE(ESC_ACTION_ENABLE);
+		SET_MAIN_CONTACT_ACTION_B(ESC_ACTION_DISABLE);
+		SET_BYPASS_CONTACT_ACTION_B(ESC_ACTION_ENABLE);
+		ESCFlagB.FaultskipFlag = 1;
+		ESCFlagB.FAULTCONFIRFlag = 0;
+		ESCFlagB.ESCCntMs.StartDelay = 0;
+		ESCFlagB.HWPowerFAULTFlag = 1;
+		ESCFlagB.ESCCntSec.HWPowerFaultDelay = 0;
+	}
+
+	/*处理C相。WY*/
+	if ((ESCFlagC.FAULTCONFIRFlag == 1) && (ESCPHASE == 3))
+	{
+		SET_IGBT_ENC(IGBT_FAULT);
+		DisablePWMC();
+		SET_SCRC_ENABLE(ESC_ACTION_ENABLE);
+		SET_MAIN_CONTACT_ACTION_C(ESC_ACTION_DISABLE);
+		SET_BYPASS_CONTACT_ACTION_C(ESC_ACTION_ENABLE);
+		ESCFlagC.FaultskipFlag = 1;
+		ESCFlagC.FAULTCONFIRFlag = 0;
+		ESCFlagC.ESCCntMs.StartDelay = 0;
+		ESCFlagC.HWPowerFAULTFlag = 1;
+		ESCFlagC.ESCCntSec.HWPowerFaultDelay = 0;
+	}
 }
 
 int TESTVALAUE = 500;
@@ -199,58 +150,84 @@ void StateFeedBackJudge(void)
     }
 }
 
+/*
+ * 功能：检测故障
+ * 输入参数SoeName：触控屏上显示的故障类型索引。WY
+ * 输入参数counterName：故障信号计数器的索引。
+ * 输入参数FaultDelayTime：故障信号次数上限值。
+   故障信号计数器 < 故障信号次数上限值，不作故障判定；
+   故障信号计数器 > 故障信号次数上限值，执行故障判定。
+ * 输入参数ESCPHASE：待判定故障类型的相。
+ */
 int16 FaultDetect(Uint16 SoeName,Uint16 counterName,Uint16 FaultDelayTime,Uint16 ESCPHASE)
 {
-	if(CntFaultDelay[counterName]++ >= FaultDelayTime) //单元外接干扰太大造成误报
+	/*
+	 * 故障信号计数器 > 故障信号次数上限值，执行故障判定。WY
+	 * 目的：防止误测。
+	 */
+	if (CntFaultDelay[counterName]++ >= FaultDelayTime)
 	{
-	    DINT;
-	    if(CTRL24_POWERFlag == 1){
-	        EPwm1Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRCclear;  //0:去掉软件强制(占空比控制转速);1:软件强制置低(全速转速);2:软件强制置高(不转);
-	        CTRL24_POWERFlag = 0;
-	    }
-	    if((StateEventFlag_A == STATE_EVENT_WAIT_A)&&\
-	            (StateEventFlag_B == STATE_EVENT_WAIT_B)&&\
-	            (StateEventFlag_C == STATE_EVENT_WAIT_C))
-	    {
-	        SET_POWER_CTRL(1);
-	        Delayus(TIME_WRITE_15VOLT_REDAY);  //由于快速硬件过流故障在硬件电路中检测口与PWMEN/晶闸管使能关联起来了,所以不能加延时;否则当电流值小于检测电流时,使能会重新给上,这时若软件不能及时的关掉使能信号,会炸机.
-	    }
-	    if((ESCFlagA.FAULTCONFIRFlag == 1)&&(ESCPHASE == 1)&&(ESCBYRelayCNTA != 1)){     //确认是哪一相发生故障,进行故障逻辑切换
-//	        ESCFlagA.PWMcurrDirFlag = 0;
-//	        ESCFlagA.FaultJudgeFlag = 1;
-	        StateEventFlag_A = STATE_EVENT_FAULT_A;
-	        ESCFlagA.faultFlag = 1;
-            FirstFaultStop(ESCFlagA.PHASE);
-            ESCFlagA.ESCCntMs.CutCurrDelay = 0;
-	    }
-	    if((ESCFlagB.FAULTCONFIRFlag == 1)&&(ESCPHASE == 2)&&(ESCBYRelayCNTB != 1)){
-//	        ESCFlagB.PWMcurrDirFlag = 0;
-//	        ESCFlagB.FaultJudgeFlag = 1;
-	        StateEventFlag_B = STATE_EVENT_FAULT_B;
-	        ESCFlagB.faultFlag = 1;
-            FirstFaultStop(ESCFlagB.PHASE);
-            ESCFlagB.ESCCntMs.CutCurrDelay = 0;
-	    }
-	    if((ESCFlagC.FAULTCONFIRFlag == 1)&&(ESCPHASE == 3)&&(ESCBYRelayCNTC != 1)){
-//	        ESCFlagC.PWMcurrDirFlag = 0;
-//	        ESCFlagC.FaultJudgeFlag = 1;
-	        StateEventFlag_C = STATE_EVENT_FAULT_C;
-	        ESCFlagC.faultFlag = 1;
-            FirstFaultStop(ESCFlagC.PHASE);
-            ESCFlagC.ESCCntMs.CutCurrDelay = 0;
-	    }
-	    EINT;
-		SoeRecData(SoeName);
-		WriteFlashConfig(SoeName);
-		CntFaultDelay[counterName]=0;
+		DINT;
+
+		if (CTRL24_POWERFlag == 1)
+		{
+			EPwm1Regs.AQCSFRC.bit.CSFA = EPwmRegsAQCSFRCclear; //PWM强制持续输出高电平。风机全速运行？。WY
+			CTRL24_POWERFlag = 0;
+		}
+
+		if ((StateEventFlag_A == STATE_EVENT_WAIT_A) //A相处于待机状态。WY
+				&& (StateEventFlag_B == STATE_EVENT_WAIT_B) //B相处于待机状态。WY
+				&& (StateEventFlag_C == STATE_EVENT_WAIT_C)) //C相处于待机状态。WY
+		{
+			SET_POWER_CTRL(1); //15V电源上电。WY
+			Delayus(TIME_WRITE_15VOLT_REDAY);
+		}
+
+		/*处理A相*/
+		if ((ESCFlagA.FAULTCONFIRFlag == 1) //A相存在故障信号。WY
+				&& (ESCPHASE == 1) //A相。WY
+				&& (ESCBYRelayCNTA != 1)) //A相旁路磁保持继电器状态正常。WY
+		{
+			StateEventFlag_A = STATE_EVENT_FAULT_A;//切转状态机至：A相故障停机。WY
+			ESCFlagA.faultFlag = 1; //A相存在故障。WY
+			FirstFaultStop(ESCFlagA.PHASE); //故障停机预处理。WY
+			ESCFlagA.ESCCntMs.CutCurrDelay = 0;
+		}
+
+		/*处理B相*/
+		if ((ESCFlagB.FAULTCONFIRFlag == 1) && (ESCPHASE == 2) && (ESCBYRelayCNTB != 1))
+		{
+			StateEventFlag_B = STATE_EVENT_FAULT_B;
+			ESCFlagB.faultFlag = 1;
+			FirstFaultStop(ESCFlagB.PHASE);
+			ESCFlagB.ESCCntMs.CutCurrDelay = 0;
+		}
+
+		/*处理C相*/
+		if ((ESCFlagC.FAULTCONFIRFlag == 1) && (ESCPHASE == 3) && (ESCBYRelayCNTC != 1))
+		{
+			StateEventFlag_C = STATE_EVENT_FAULT_C;
+			ESCFlagC.faultFlag = 1;
+			FirstFaultStop(ESCFlagC.PHASE);
+			ESCFlagC.ESCCntMs.CutCurrDelay = 0;
+		}
+
+		EINT;
+
+		SoeRecData(SoeName); //生成日志。WY
+		WriteFlashConfig(SoeName); //向Flash写入故障录波。WY
+		CntFaultDelay[counterName] = 0; //清零故障信号计数器。WY
+
 		return 1;
-	}else{
-        ESCFlagA.ESCCntSec.HWPowerFaultDelay = 0;
-        ESCFlagA.ESCCntSec.HWPowerStopDelay =0;
-        ESCFlagB.ESCCntSec.HWPowerFaultDelay = 0;
-        ESCFlagB.ESCCntSec.HWPowerStopDelay =0;
-        ESCFlagC.ESCCntSec.HWPowerFaultDelay = 0;
-        ESCFlagC.ESCCntSec.HWPowerStopDelay =0;
+	}
+	else
+	{
+		ESCFlagA.ESCCntSec.HWPowerFaultDelay = 0;
+		ESCFlagA.ESCCntSec.HWPowerStopDelay = 0;
+		ESCFlagB.ESCCntSec.HWPowerFaultDelay = 0;
+		ESCFlagB.ESCCntSec.HWPowerStopDelay = 0;
+		ESCFlagC.ESCCntSec.HWPowerFaultDelay = 0;
+		ESCFlagC.ESCCntSec.HWPowerStopDelay = 0;
 
 		return 0;
 	}
@@ -710,212 +687,257 @@ void EcapINT3(void)
     ECap3Regs.ECCLR.bit.INT = 1;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
 }
+
+/*
+ * 功能：快速故障检测。WY
+ * 说明：该函数在ADC-1的中断服务函数中被调用。WY
+ */
 void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
 {
-    //由于该故障判断是放在中断中,而上电进行零偏校准的时间较长,所以要加上状态判断,防止在零偏校准时,进入该故障,使状态位ESCFlagA.FAULTCONFIRFlag置1;
-    if(PhaseControl == 1){
-        if(((GridCurrAF > OUTCUR_OVER_INS)||(GridBPCurrAF > OUTCUR_OVER_INS))&&\
-                (StateEventFlag_A != STATE_EVENT_STANDBY_A))
-        {
-            ESCFlagA.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagA == 0){
-                ESCFlagA.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT+4,CNT_INS_OVER_CUR_A,3,ESCFlagA.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_A,0);
-        }
-        if(((GridCurrBF > OUTCUR_OVER_INS)||(GridBPCurrBF > OUTCUR_OVER_INS))&&\
-                (StateEventFlag_B != STATE_EVENT_STANDBY_B))
-        {
-            ESCFlagB.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagB == 0){
-                ESCFlagB.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagB = FaultDetect(SOE_GP_FAULT+5,CNT_INS_OVER_CUR_B,3,ESCFlagB.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_B,0);
-        }
-        if(((GridCurrCF > OUTCUR_OVER_INS)||(GridBPCurrCF > OUTCUR_OVER_INS))&&\
-                (StateEventFlag_C != STATE_EVENT_STANDBY_C))
-        {
-            ESCFlagC.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagC == 0){
-                ESCFlagC.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagC = FaultDetect(SOE_GP_FAULT+6,CNT_INS_OVER_CUR_C,3,ESCFlagC.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_C,0);
-        }
-    }else if(PhaseControl == 2){
-        if(((GridCurrAF < OUTCUR_OVER_INS_NEG)||(GridBPCurrAF < OUTCUR_OVER_INS_NEG))&&\
-                (StateEventFlag_A != STATE_EVENT_STANDBY_A))
-        {
-            ESCFlagA.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagA == 0){
-                ESCFlagA.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT+4,CNT_INS_OVER_CUR_A,3,ESCFlagA.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_A,0);
-        }
-        if(((GridCurrBF < OUTCUR_OVER_INS_NEG)||(GridBPCurrBF < OUTCUR_OVER_INS_NEG))&&\
-                (StateEventFlag_B != STATE_EVENT_STANDBY_B))
-        {
-            ESCFlagB.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagB == 0){
-                ESCFlagB.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagB = FaultDetect(SOE_GP_FAULT+5,CNT_INS_OVER_CUR_B,3,ESCFlagB.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_B,0);
-        }
-        if(((GridCurrCF < OUTCUR_OVER_INS_NEG)||(GridBPCurrCF < OUTCUR_OVER_INS_NEG))&&\
-                (StateEventFlag_C != STATE_EVENT_STANDBY_C))
-        {
-            ESCFlagC.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagC == 0){
-                ESCFlagC.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagC = FaultDetect(SOE_GP_FAULT+6,CNT_INS_OVER_CUR_C,3,ESCFlagC.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_C,0);
-        }
-    }else if(PhaseControl == 0){
-        //--------------- ESC瞬时值输出过流A ------------------//
-        if(   ( (GridCurrAF > OUTCUR_OVER_INS)||\
-                (GridCurrAF < OUTCUR_OVER_INS_NEG)||\
-                (GridBPCurrAF > OUTCUR_OVER_INS)||\
-                (GridBPCurrAF < OUTCUR_OVER_INS_NEG) )&&(StateEventFlag_A != STATE_EVENT_STANDBY_A)  )
-        {
-            ESCFlagA.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagA == 0){
-                ESCFlagA.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT+4,CNT_INS_OVER_CUR_A,3,ESCFlagA.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_A,0);
-        }
-        //--------------- ESC瞬时值输出过流B ------------------//
-        if(   ( (GridCurrBF > OUTCUR_OVER_INS)||\
-                (GridCurrBF < OUTCUR_OVER_INS_NEG)||\
-                (GridBPCurrBF > OUTCUR_OVER_INS)||\
-                (GridBPCurrBF < OUTCUR_OVER_INS_NEG) )&&(StateEventFlag_B != STATE_EVENT_STANDBY_B)  )
-        {
-            ESCFlagB.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagB == 0){
-                ESCFlagB.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagB = FaultDetect(SOE_GP_FAULT+5,CNT_INS_OVER_CUR_B,3,ESCFlagB.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_B,0);
-        }
-        //--------------- ESC瞬时值输出过流C ------------------//
-        if(   ( (GridCurrCF > OUTCUR_OVER_INS)||\
-                (GridCurrCF < OUTCUR_OVER_INS_NEG)||\
-                (GridBPCurrCF > OUTCUR_OVER_INS)||\
-                (GridBPCurrCF < OUTCUR_OVER_INS_NEG) )&&(StateEventFlag_C != STATE_EVENT_STANDBY_C)  )
-        {
-            ESCFlagC.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCInsOverCurFlagC == 0){
-                ESCFlagC.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCInsOverCurFlagC = FaultDetect(SOE_GP_FAULT+6,CNT_INS_OVER_CUR_C,3,ESCFlagC.PHASE);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_INS_OVER_CUR_C,0);
-        }
-    }
-	//------------------直流电容电压过压故障A-----------------//
-    if(DccapVoltA > ESCDCVOLITLIMIT)
+//由于该故障判断是放在中断中,而上电进行零偏校准的时间较长,所以要加上状态判断,防止在零偏校准时,进入该故障,使状态位ESCFlagA.FAULTCONFIRFlag置1;
+	if (PhaseControl == 1)
 	{
-        ESCFlagA.FAULTCONFIRFlag = 1;
-        if(softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA == 0){
-            ESCFlagA.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA = FaultDetect(SOE_GP_FAULT+7,CNT_DC_NEUTRAL_OVER_VOLT_A,10,ESCFlagA.PHASE);
-        }
-	}else{
-        SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_A,0);
+		if (((GridCurrAF > OUTCUR_OVER_INS) || (GridBPCurrAF > OUTCUR_OVER_INS)) && (StateEventFlag_A != STATE_EVENT_STANDBY_A))
+		{
+			ESCFlagA.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagA == 0)
+			{
+				ESCFlagA.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT + 4, CNT_INS_OVER_CUR_A, 3, ESCFlagA.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_A, 0);
+		}
+		if (((GridCurrBF > OUTCUR_OVER_INS) || (GridBPCurrBF > OUTCUR_OVER_INS)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
+		{
+			ESCFlagB.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagB == 0)
+			{
+				ESCFlagB.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagB = FaultDetect(SOE_GP_FAULT + 5, CNT_INS_OVER_CUR_B, 3, ESCFlagB.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_B, 0);
+		}
+		if (((GridCurrCF > OUTCUR_OVER_INS) || (GridBPCurrCF > OUTCUR_OVER_INS)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
+		{
+			ESCFlagC.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagC == 0)
+			{
+				ESCFlagC.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagC = FaultDetect(SOE_GP_FAULT + 6, CNT_INS_OVER_CUR_C, 3, ESCFlagC.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_C, 0);
+		}
 	}
-    //------------------直流电容电压过压故障B-----------------//
-    if(DccapVoltB > ESCDCVOLITLIMIT)
-    {
-        ESCFlagB.FAULTCONFIRFlag = 1;
-        if(softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagB == 0){
-            ESCFlagB.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagB = FaultDetect(SOE_GP_FAULT+8,CNT_DC_NEUTRAL_OVER_VOLT_B,10,ESCFlagB.PHASE);
-        }
-    }else{
-        SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_B,0);
-    }
-    //------------------直流电容电压过压故障C-----------------//
-    if(DccapVoltC > ESCDCVOLITLIMIT)
-    {
-        ESCFlagC.FAULTCONFIRFlag = 1;
-        if(softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagC == 0){
-            ESCFlagC.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagC = FaultDetect(SOE_GP_FAULT+9,CNT_DC_NEUTRAL_OVER_VOLT_C,10,ESCFlagC.PHASE);
-        }
-    }else{
-        SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_C,0);
-    }
+	else if (PhaseControl == 2)
+	{
+		if (((GridCurrAF < OUTCUR_OVER_INS_NEG) || (GridBPCurrAF < OUTCUR_OVER_INS_NEG)) && (StateEventFlag_A != STATE_EVENT_STANDBY_A))
+		{
+			ESCFlagA.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagA == 0)
+			{
+				ESCFlagA.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT + 4, CNT_INS_OVER_CUR_A, 3, ESCFlagA.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_A, 0);
+		}
+		if (((GridCurrBF < OUTCUR_OVER_INS_NEG) || (GridBPCurrBF < OUTCUR_OVER_INS_NEG)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
+		{
+			ESCFlagB.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagB == 0)
+			{
+				ESCFlagB.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagB = FaultDetect(SOE_GP_FAULT + 5, CNT_INS_OVER_CUR_B, 3, ESCFlagB.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_B, 0);
+		}
+		if (((GridCurrCF < OUTCUR_OVER_INS_NEG) || (GridBPCurrCF < OUTCUR_OVER_INS_NEG)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
+		{
+			ESCFlagC.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagC == 0)
+			{
+				ESCFlagC.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagC = FaultDetect(SOE_GP_FAULT + 6, CNT_INS_OVER_CUR_C, 3, ESCFlagC.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_C, 0);
+		}
+	}
+	else if (PhaseControl == 0)
+	{
+//--------------- ESC瞬时值输出过流A ------------------//
+		if (((GridCurrAF > OUTCUR_OVER_INS) || (GridCurrAF < OUTCUR_OVER_INS_NEG) || (GridBPCurrAF > OUTCUR_OVER_INS) || (GridBPCurrAF < OUTCUR_OVER_INS_NEG))
+				&& (StateEventFlag_A != STATE_EVENT_STANDBY_A))
+		{
+			ESCFlagA.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagA == 0)
+			{
+				ESCFlagA.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagA = FaultDetect(SOE_GP_FAULT + 4, CNT_INS_OVER_CUR_A, 3, ESCFlagA.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_A, 0);
+		}
+//--------------- ESC瞬时值输出过流B ------------------//
+		if (((GridCurrBF > OUTCUR_OVER_INS) || (GridCurrBF < OUTCUR_OVER_INS_NEG) || (GridBPCurrBF > OUTCUR_OVER_INS) || (GridBPCurrBF < OUTCUR_OVER_INS_NEG))
+				&& (StateEventFlag_B != STATE_EVENT_STANDBY_B))
+		{
+			ESCFlagB.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagB == 0)
+			{
+				ESCFlagB.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagB = FaultDetect(SOE_GP_FAULT + 5, CNT_INS_OVER_CUR_B, 3, ESCFlagB.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_B, 0);
+		}
+//--------------- ESC瞬时值输出过流C ------------------//
+		if (((GridCurrCF > OUTCUR_OVER_INS) || (GridCurrCF < OUTCUR_OVER_INS_NEG) || (GridBPCurrCF > OUTCUR_OVER_INS) || (GridBPCurrCF < OUTCUR_OVER_INS_NEG))
+				&& (StateEventFlag_C != STATE_EVENT_STANDBY_C))
+		{
+			ESCFlagC.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCInsOverCurFlagC == 0)
+			{
+				ESCFlagC.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCInsOverCurFlagC = FaultDetect(SOE_GP_FAULT + 6, CNT_INS_OVER_CUR_C, 3, ESCFlagC.PHASE);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_INS_OVER_CUR_C, 0);
+		}
+	}
+//------------------直流电容电压过压故障A-----------------//
+	if (DccapVoltA > ESCDCVOLITLIMIT)
+	{
+		ESCFlagA.FAULTCONFIRFlag = 1;
+		if (softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA == 0)
+		{
+			ESCFlagA.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagA = FaultDetect(SOE_GP_FAULT + 7, CNT_DC_NEUTRAL_OVER_VOLT_A, 10, ESCFlagA.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_A, 0);
+	}
+//------------------直流电容电压过压故障B-----------------//
+	if (DccapVoltB > ESCDCVOLITLIMIT)
+	{
+		ESCFlagB.FAULTCONFIRFlag = 1;
+		if (softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagB == 0)
+		{
+			ESCFlagB.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagB = FaultDetect(SOE_GP_FAULT + 8, CNT_DC_NEUTRAL_OVER_VOLT_B, 10, ESCFlagB.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_B, 0);
+	}
+//------------------直流电容电压过压故障C-----------------//
+	if (DccapVoltC > ESCDCVOLITLIMIT)
+	{
+		ESCFlagC.FAULTCONFIRFlag = 1;
+		if (softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagC == 0)
+		{
+			ESCFlagC.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCDcCapVoltOverVoltFlagC = FaultDetect(SOE_GP_FAULT + 9, CNT_DC_NEUTRAL_OVER_VOLT_C, 10, ESCFlagC.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_DC_NEUTRAL_OVER_VOLT_C, 0);
+	}
 
-    //--------------- 电网电压有效值过压故障位A--------------//
-    if( ((VoltOutA_rms >= GV_RMS_OVER) || (VoltInA_rms >= GV_RMS_OVER))&&\
-            (StateEventFlag_A != STATE_EVENT_STANDBY_A) )
-    {
-        ESCFlagA.FAULTCONFIRFlag = 1;
-        if(softwareFaultWord1.B.ESCGridRMSOverVoltFlagA == 0){
-            ESCFlagA.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCGridRMSOverVoltFlagA = FaultDetect(SOE_GP_FAULT+10,CNT_RMS_OVER_VOLT_A,20,ESCFlagA.PHASE);
-        }
-    }else{
-        SetFaultDelayCounter(CNT_RMS_OVER_VOLT_A,0);
-    }
-    //--------------- 电网电压有效值过压故障位B--------------//
-    if( ((VoltOutB_rms >= GV_RMS_OVER) || (VoltInB_rms >= GV_RMS_OVER))&&\
-            (StateEventFlag_B != STATE_EVENT_STANDBY_B) )
-    {
-        ESCFlagB.FAULTCONFIRFlag = 1;
-        if(softwareFaultWord1.B.ESCGridRMSOverVoltFlagB == 0){
-            ESCFlagB.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCGridRMSOverVoltFlagB = FaultDetect(SOE_GP_FAULT+11,CNT_RMS_OVER_VOLT_B,20,ESCFlagB.PHASE);
-        }
-    }else{
-        SetFaultDelayCounter(CNT_RMS_OVER_VOLT_B,0);
-    }
-    //--------------- 电网电压有效值过压故障位C--------------//
-    if( ((VoltOutC_rms >= GV_RMS_OVER) || (VoltInC_rms >= GV_RMS_OVER))&&\
-            (StateEventFlag_C != STATE_EVENT_STANDBY_C) )
-    {
-        ESCFlagC.FAULTCONFIRFlag = 1;
-        if(softwareFaultWord1.B.ESCGridRMSOverVoltFlagC == 0){
-            ESCFlagC.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCGridRMSOverVoltFlagC = FaultDetect(SOE_GP_FAULT+12,CNT_RMS_OVER_VOLT_C,20,ESCFlagC.PHASE);
-        }
-    }else{
-        SetFaultDelayCounter(CNT_RMS_OVER_VOLT_C,0);
-    }
+//--------------- 电网电压有效值过压故障位A--------------//
+	if (((VoltOutA_rms >= GV_RMS_OVER) || (VoltInA_rms >= GV_RMS_OVER)) && (StateEventFlag_A != STATE_EVENT_STANDBY_A))
+	{
+		ESCFlagA.FAULTCONFIRFlag = 1;
+		if (softwareFaultWord1.B.ESCGridRMSOverVoltFlagA == 0)
+		{
+			ESCFlagA.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCGridRMSOverVoltFlagA = FaultDetect(SOE_GP_FAULT + 10, CNT_RMS_OVER_VOLT_A, 20, ESCFlagA.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_RMS_OVER_VOLT_A, 0);
+	}
+//--------------- 电网电压有效值过压故障位B--------------//
+	if (((VoltOutB_rms >= GV_RMS_OVER) || (VoltInB_rms >= GV_RMS_OVER)) && (StateEventFlag_B != STATE_EVENT_STANDBY_B))
+	{
+		ESCFlagB.FAULTCONFIRFlag = 1;
+		if (softwareFaultWord1.B.ESCGridRMSOverVoltFlagB == 0)
+		{
+			ESCFlagB.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCGridRMSOverVoltFlagB = FaultDetect(SOE_GP_FAULT + 11, CNT_RMS_OVER_VOLT_B, 20, ESCFlagB.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_RMS_OVER_VOLT_B, 0);
+	}
+//--------------- 电网电压有效值过压故障位C--------------//
+	if (((VoltOutC_rms >= GV_RMS_OVER) || (VoltInC_rms >= GV_RMS_OVER)) && (StateEventFlag_C != STATE_EVENT_STANDBY_C))
+	{
+		ESCFlagC.FAULTCONFIRFlag = 1;
+		if (softwareFaultWord1.B.ESCGridRMSOverVoltFlagC == 0)
+		{
+			ESCFlagC.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCGridRMSOverVoltFlagC = FaultDetect(SOE_GP_FAULT + 12, CNT_RMS_OVER_VOLT_C, 20, ESCFlagC.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_RMS_OVER_VOLT_C, 0);
+	}
 
-    //---------------15V掉电检测------------//
-    //TempEnvirProvalue==1时,是做温升实验,需要风机全部全速转,但是开关电源带不起来,会报掉电故障,所以在做温升实验的时候需要把该故障屏蔽掉.
-    if(TempEnvirProvalue != 1){
-        if(GET_CTRL24_POWER == 1)
-        {
-            CTRL24_POWERFlag = 1;
-            ESCFlagA.FAULTCONFIRFlag = 1;
-            ESCFlagB.FAULTCONFIRFlag = 1;
-            ESCFlagC.FAULTCONFIRFlag = 1;
-            if(softwareFaultWord1.B.ESCPowerFailDetectFlag == 0){
-                ESCFlagA.ESCCntMs.StartDelay = 0;
-                ESCFlagB.ESCCntMs.StartDelay = 0;
-                ESCFlagC.ESCCntMs.StartDelay = 0;
-                softwareFaultWord1.B.ESCPowerFailDetectFlag = PowerFailFaultDetect(SOE_GP_FAULT+13,CNT_CTRL_POWER_OFF,10);
-            }
-        }else{
-            SetFaultDelayCounter(CNT_CTRL_POWER_OFF,0);
-        }
-    }
+//---------------15V掉电检测------------//
+//TempEnvirProvalue==1时,是做温升实验,需要风机全部全速转,但是开关电源带不起来,会报掉电故障,所以在做温升实验的时候需要把该故障屏蔽掉.
+	if (TempEnvirProvalue != 1)
+	{
+		if (GET_CTRL24_POWER == 1)
+		{
+			CTRL24_POWERFlag = 1;
+			ESCFlagA.FAULTCONFIRFlag = 1;
+			ESCFlagB.FAULTCONFIRFlag = 1;
+			ESCFlagC.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord1.B.ESCPowerFailDetectFlag == 0)
+			{
+				ESCFlagA.ESCCntMs.StartDelay = 0;
+				ESCFlagB.ESCCntMs.StartDelay = 0;
+				ESCFlagC.ESCCntMs.StartDelay = 0;
+				softwareFaultWord1.B.ESCPowerFailDetectFlag = PowerFailFaultDetect(SOE_GP_FAULT + 13, CNT_CTRL_POWER_OFF, 10);
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_CTRL_POWER_OFF, 0);
+		}
+	}
 }
+
 void FaultDetectInMainLoop(void)
 {
     //--------------- 电网电压有效值欠压故障位A--------------//

@@ -78,282 +78,144 @@ void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr)
 
 #define ADC_usDELAY  10000L
 #define ADC_usDELAY2 40L
+
+/*
+ * 功能：配置AD外设。WY
+ *
+ * ADCINA0：A相高压侧电流（A相负载电流）
+ * ADCINA2：A相低压侧电流（A相电网电流）
+ * ADCINA4：C相低压侧电压（C相电网电压）
+ * ADCINA5：B相直流电容电压
+ * ADCINA15：A相高压侧电压（A相负载电压）
+ *
+ * ADCINB1：T1温度
+ * ADCINB2：B相高压侧电流（B相负载电流）
+ * ADCINB4：B相高压侧电压（B相负载电压）
+ * ADCINB5：B相低压侧电压（B相电网电压）
+ *
+ * ADCINC2：C相高压侧电压（C相负载电压）
+ * ADCINC3：B相低压侧电流（B相电网电流）
+ * ADCINC4：C相直流电容电压
+ * ADCINC5：T3温度
+ *
+ * ADCIND1：A相低压侧电压（A相电网电压）
+ * ADCIND2：T2温度
+ * ADCIND3：A相直流电容电压
+ * ADCIND4：C相高压侧电流（C相负载电流）
+ * ADCIND5：C相低压侧电流（C相电网电流）
+ */
 void InitAdc(void)
 {
-    extern void DSP28x_usDelay(Uint32 Count);
+	extern void DSP28x_usDelay(Uint32 Count);
 
-    // ADC校验，通过boot ROM自动调用ADC—cal来初始化ADCREFSEL和ADCOFFTRIM寄存器
-    // 运行中校验自动完成，不需要操作。
-    // 若禁止boot ROM，则需要手动配置这两个寄存器的初始化。
-    EALLOW;
-    CpuSysRegs.PCLKCR13.bit.ADC_A= 1;
-    CpuSysRegs.PCLKCR13.bit.ADC_B= 1;
-    CpuSysRegs.PCLKCR13.bit.ADC_C= 1;
-    CpuSysRegs.PCLKCR13.bit.ADC_D= 1;
-    //	ADC_Cal();
-    EDIS;
-    DELAY_US(ADC_usDELAY);
-    EALLOW;
-    /*┌───────────────────────────────────────────────┬──────────────────────────────────────────┬───────────────────────────────────────────────
-     *│ADCA,ADCC,ADCB,的14,15通道,用做电流续流方向判断,│ 14通道                                                                 │ 15通道
-     *│其触发源是                                                                   │ 11h BURSTTRIG17 - ePWM7, ADCSOCA          │ 12h BURSTTRIG18 - ePWM7, ADCSOCB
-     *│配置为                                                                          │ AdcaRegs.ADCSOC14CTL.bit.TRIGSEL=0x11     │ AdcaRegs.ADCSOC15CTL.bit.TRIGSEL=0x12,
-     *│转换完成后                                                                   │ EOC14 is trigger for ADCINT1              │ EOC15 is trigger for ADCINT2
-     *│转换完成后                                                                   │ AdcaRegs.ADCINTSEL1N2.bit.INT1SEL=0xE     │ AdcaRegs.ADCINTSEL1N2.bit.INT2SEL=0xF
-     *│触发CLA1,处理A相的增计数时的续流方向                      │ DmaClaSrcSelRegs.CLA1TASKSRCSEL1.bit.TASK1 = CLA_TRIG_ADCAINT1;
-     *│触发CLA2,处理A相的减计数时的续流方向                      │                                           │ DmaClaSrcSelRegs.CLA1TASKSRCSEL1.bit.TASK2 = CLA_TRIG_ADCAINT2;
-     *│其他                                                                             │                                           │
-     *└───────────────────────────────────────────────┴──────────────────────────────────────────┴────────────────────────────────────────────
-     */
-    //ADCA,ADCC,ADCB,的其他通道
-    /*************************************ADCA**************************************/
-    AdcaRegs.ADCCTL2.bit.SIGNALMODE=0;
-    AdcaRegs.ADCCTL2.bit.RESOLUTION=0;
-    AdcaRegs.ADCCTL2.bit.PRESCALE = 0x6;
-    AdcaRegs.ADCCTL1.bit.ADCPWDNZ=1;
+	EALLOW;
+	CpuSysRegs.PCLKCR13.bit.ADC_A = 1; //关闭ADC-A的时钟。WY
+	CpuSysRegs.PCLKCR13.bit.ADC_B = 1; //关闭ADC-B的时钟。WY
+	CpuSysRegs.PCLKCR13.bit.ADC_C = 1; //关闭ADC-C的时钟。WY
+	CpuSysRegs.PCLKCR13.bit.ADC_D = 1; //关闭ADC-D的时钟。WY
+	EDIS;
 
-    AdcaRegs.ADCSOC0CTL.bit.TRIGSEL=0x7;    //07h ADCTRIG7 - ePWM2, ADCSOCA   EPWM2触发AD中断源
-    AdcaRegs.ADCSOC1CTL.bit.TRIGSEL=0x7;    //同上
-    AdcaRegs.ADCSOC2CTL.bit.TRIGSEL=0x7;    //同上
-//    AdcaRegs.ADCSOC3CTL.bit.TRIGSEL=0x7;    //同上
-    AdcaRegs.ADCSOC4CTL.bit.TRIGSEL=0x7;    //同上
-    AdcaRegs.ADCSOC5CTL.bit.TRIGSEL=0x7;    //同上
+	DELAY_US(ADC_usDELAY);
 
-//    AdcaRegs.ADCSOC8CTL.bit.TRIGSEL =0x15;  //15h BURSTTRIG21 - ePWM9, ADCSOCA   //CLA
-//    AdcaRegs.ADCSOC10CTL.bit.TRIGSEL=0x16;  //16h BURSTTRIG22 - ePWM9, ADCSOCB
-//    AdcaRegs.ADCSOC13CTL.bit.TRIGSEL=0x15;  //15h BURSTTRIG21 - ePWM9, ADCSOCA
-//    AdcaRegs.ADCSOC15CTL.bit.TRIGSEL=0x16;  //16h BURSTTRIG22 - ePWM9, ADCSOCB
+	EALLOW;
 
-    AdcaRegs.ADCSOC0CTL.bit.CHSEL=2;        //IRO,ESC A相主电抗器输出电流(ISA)
-    AdcaRegs.ADCSOC0CTL.bit.ACQPS=0x18;
-    AdcaRegs.ADCSOC1CTL.bit.CHSEL=5;        //IBO,ESC B相直流电容电压 (IOV)
-    AdcaRegs.ADCSOC1CTL.bit.ACQPS=0x18;
-    AdcaRegs.ADCSOC2CTL.bit.CHSEL=15;       //UC,A相高压侧电网电压AUH
-    AdcaRegs.ADCSOC2CTL.bit.ACQPS=0x18;
-//    AdcaRegs.ADCSOC3CTL.bit.CHSEL=1;        //LMT87DCK,DSP温度
-//    AdcaRegs.ADCSOC3CTL.bit.ACQPS=0x18;
-    AdcaRegs.ADCSOC4CTL.bit.CHSEL=4;        //IAS1,ESC C相低压侧电压CUL
-    AdcaRegs.ADCSOC4CTL.bit.ACQPS=0x18;
-    AdcaRegs.ADCSOC5CTL.bit.CHSEL=0;        //UU,ESC A相旁路电流 ISU
-    AdcaRegs.ADCSOC5CTL.bit.ACQPS=0x18;
+	/*配置ADC-A。WY*/
+	AdcaRegs.ADCCTL2.bit.SIGNALMODE = 0; //单端模式。WY
+	AdcaRegs.ADCCTL2.bit.RESOLUTION = 0; //12位分辨率。WY
+	AdcaRegs.ADCCTL2.bit.PRESCALE = 0x6; //预分频。ADCCLK = InputCLK / 4。WY
+	AdcaRegs.ADCCTL1.bit.ADCPWDNZ = 1; //AD转换器上电。WY
 
-//    AdcaRegs.ADCSOC8CTL.bit.CHSEL =2;       //选择A2通道采A相主电抗电流,用来做预判算法
-//    AdcaRegs.ADCSOC8CTL.bit.ACQPS =0x30;    //采样脉宽长度
-//    AdcaRegs.ADCSOC10CTL.bit.CHSEL=2;       //ditto
-//    AdcaRegs.ADCSOC10CTL.bit.ACQPS=0x30;
-//    AdcaRegs.ADCSOC12CTL.bit.CHSEL=2;       //ditto
-//    AdcaRegs.ADCSOC12CTL.bit.ACQPS=0x30;
-//    AdcaRegs.ADCSOC14CTL.bit.CHSEL=2;       //ditto
-//    AdcaRegs.ADCSOC14CTL.bit.ACQPS=0x30;
-//    AdcaRegs.ADCSOC13CTL.bit.CHSEL=2;       //ditto
-//    AdcaRegs.ADCSOC13CTL.bit.ACQPS=0x30;
-//    AdcaRegs.ADCSOC15CTL.bit.CHSEL=2;       //ditto
-//    AdcaRegs.ADCSOC15CTL.bit.ACQPS=0x30;
+	AdcaRegs.ADCSOC0CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序0的触发源。WY
+	AdcaRegs.ADCSOC1CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序1的触发源。WY
+	AdcaRegs.ADCSOC2CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序2的触发源。WY
+	AdcaRegs.ADCSOC4CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序4的触发源。WY
+	AdcaRegs.ADCSOC5CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序5的触发源。WY
 
-//    AdcaRegs.ADCINTSEL1N2.bit.INT1E=1;      //中断1使能
-//    AdcaRegs.ADCINTSEL1N2.bit.INT1SEL=0xD;  //EOC13 is trigger for ADCINT1
-//    AdcaRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //
-//    AdcaRegs.ADCINTSEL1N2.bit.INT2E=1;      //中断2使能
-//    AdcaRegs.ADCINTSEL1N2.bit.INT2SEL=0xF;  //EOC15 is trigger for ADCINT2
-//    AdcaRegs.ADCINTSEL1N2.bit.INT2CONT = 1;
-//    AdcaRegs.ADCINTFLGCLR.all = 0x000F;
-//    AdcaRegs.ADCOFFTRIM.bit.OFFTRIM=0;
+	AdcaRegs.ADCSOC0CTL.bit.CHSEL = 2; //ADCINA2作为AD转换次序0的输入源。WY
+	AdcaRegs.ADCSOC0CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcaRegs.ADCSOC1CTL.bit.CHSEL = 5; //ADCINA5作为AD转换次序1的输入源。WY
+	AdcaRegs.ADCSOC1CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcaRegs.ADCSOC2CTL.bit.CHSEL = 15; //ADCINA15作为AD转换次序2的输入源。WY
+	AdcaRegs.ADCSOC2CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcaRegs.ADCSOC4CTL.bit.CHSEL = 4; //ADCINA4作为AD转换次序4的输入源。WY
+	AdcaRegs.ADCSOC4CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcaRegs.ADCSOC5CTL.bit.CHSEL = 0; //ADCINA0作为AD转换次序5的输入源。WY
+	AdcaRegs.ADCSOC5CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
 
-    /*************************************ADCB**************************************/
+	/*配置ADC-C。WY*/
+	AdccRegs.ADCCTL2.bit.SIGNALMODE = 0; //单端模式。WY
+	AdccRegs.ADCCTL2.bit.RESOLUTION = 0; //12位分辨率。WY
+	AdccRegs.ADCCTL2.bit.PRESCALE = 0x6; //预分频。ADCCLK = InputCLK / 4。WY
+	AdccRegs.ADCCTL1.bit.ADCPWDNZ = 1; //AD转换上电。WY
 
-    AdccRegs.ADCCTL2.bit.SIGNALMODE=0;
-    AdccRegs.ADCCTL2.bit.RESOLUTION=0;
-    AdccRegs.ADCCTL2.bit.PRESCALE = 0x6;
-    AdccRegs.ADCCTL1.bit.ADCPWDNZ=1;
+	AdccRegs.ADCSOC0CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序0的触发源。WY
+	AdccRegs.ADCSOC1CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序1的触发源。WY
+	AdccRegs.ADCSOC2CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序2的触发源。WY
+	AdccRegs.ADCSOC3CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序3的触发源。WY
 
-    AdccRegs.ADCSOC0CTL.bit.TRIGSEL=0x7;    //07h ADCTRIG7 - ePWM2, ADCSOCA   EPWM2触发AD中断源
-    AdccRegs.ADCSOC1CTL.bit.TRIGSEL=0x7;    //ditto
-    AdccRegs.ADCSOC2CTL.bit.TRIGSEL=0x7;    //ditto
-    AdccRegs.ADCSOC3CTL.bit.TRIGSEL=0x7;    //ditto
+	AdccRegs.ADCSOC0CTL.bit.CHSEL = 3; //ADCINC3作为AD转换次序0的输入源。WY
+	AdccRegs.ADCSOC0CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdccRegs.ADCSOC1CTL.bit.CHSEL = 4; //ADCINC4作为AD转换次序1的输入源。WY
+	AdccRegs.ADCSOC1CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdccRegs.ADCSOC2CTL.bit.CHSEL = 5; //ADCINC5作为AD转换次序2的输入源。WY
+	AdccRegs.ADCSOC2CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdccRegs.ADCSOC3CTL.bit.CHSEL = 2; //ADCINC2作为AD转换次序3的输入源。WY
+	AdccRegs.ADCSOC3CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
 
-//    AdccRegs.ADCSOC4CTL.bit.TRIGSEL=0x13;  //13h BURSTTRIG19 - ePWM8, ADCSOCA
-//    AdccRegs.ADCSOC6CTL.bit.TRIGSEL=0x13;  //ditto
-//    AdccRegs.ADCSOC8CTL.bit.TRIGSEL=0x13;
-//    AdccRegs.ADCSOC10CTL.bit.TRIGSEL=0x13;  //13h BURSTTRIG19 - ePWM8, ADCSOCA
-//    AdccRegs.ADCSOC11CTL.bit.TRIGSEL=0x13;  //ditto
+	/*配置ADC-B。WY*/
+	AdcbRegs.ADCCTL2.bit.SIGNALMODE = 0; //单端模式。WY
+	AdcbRegs.ADCCTL2.bit.RESOLUTION = 0; //12位分辨率。WY
+	AdcbRegs.ADCCTL2.bit.PRESCALE = 0x6; //预分频。ADCCLK = InputCLK / 4。WY
+	AdcbRegs.ADCCTL1.bit.ADCPWDNZ = 1; //AD转换上电。WY
 
-//    AdccRegs.ADCSOC8CTL.bit.TRIGSEL =0x17;  //17h BURSTTRIG23 - ePWM10, ADCSOCA
-//    AdccRegs.ADCSOC10CTL.bit.TRIGSEL=0x18;  //18h BURSTTRIG24 - ePWM10, ADCSOCB
-//    AdccRegs.ADCSOC13CTL.bit.TRIGSEL=0x17;  //17h BURSTTRIG23 - ePWM10, ADCSOCA
-//    AdccRegs.ADCSOC15CTL.bit.TRIGSEL=0x18;  //18h BURSTTRIG24 - ePWM10, ADCSOCB
+	AdcbRegs.ADCSOC0CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序0的触发源。WY
+	AdcbRegs.ADCSOC1CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序1的触发源。WY
+	AdcbRegs.ADCSOC2CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序2的触发源。WY
+	AdcbRegs.ADCSOC3CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序3的触发源。WY
 
-    AdccRegs.ADCSOC0CTL.bit.CHSEL=3;        //C3    ISO,ESC B相主电抗器输出电流(ISB)
-    AdccRegs.ADCSOC0CTL.bit.ACQPS=0x18;
-    AdccRegs.ADCSOC1CTL.bit.CHSEL=4;        //C4    ICO,ESC C相直流电容电压IOW
-    AdccRegs.ADCSOC1CTL.bit.ACQPS=0x18;
-    AdccRegs.ADCSOC2CTL.bit.CHSEL=5;        //C5    TEMP0,ESC测试温度T3
-    AdccRegs.ADCSOC2CTL.bit.ACQPS=0x18;
-    AdccRegs.ADCSOC3CTL.bit.CHSEL=2;        //C2    IBS1,ESC C相高压侧电压CUH
-    AdccRegs.ADCSOC3CTL.bit.ACQPS=0x18;
+	AdcbRegs.ADCSOC0CTL.bit.CHSEL = 5; //ADCINB5作为AD转换次序0的输入源。WY
+	AdcbRegs.ADCSOC0CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcbRegs.ADCSOC1CTL.bit.CHSEL = 4; //ADCINB4作为AD转换次序1的输入源。WY
+	AdcbRegs.ADCSOC1CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcbRegs.ADCSOC2CTL.bit.CHSEL = 2; //ADCINB2作为AD转换次序2的输入源。WY
+	AdcbRegs.ADCSOC2CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcbRegs.ADCSOC3CTL.bit.CHSEL = 1; //ADCINB1作为AD转换次序3的输入源。WY
+	AdcbRegs.ADCSOC3CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
 
+	AdcbRegs.ADCINTFLGCLR.all = 0x000F; //清除ADC-B的中断标志位。WY
+	AdcbRegs.ADCOFFTRIM.bit.OFFTRIM = 0; //ADC校正值为0。WY
 
+	/*配置ADC-D。WY*/
+	AdcdRegs.ADCCTL2.bit.SIGNALMODE = 0; //单端模式。WY
+	AdcdRegs.ADCCTL2.bit.RESOLUTION = 0; //12位分辨率。WY
+	AdcdRegs.ADCCTL2.bit.PRESCALE = 0x6; //预分频。ADCCLK = InputCLK / 4。WY
+	AdcdRegs.ADCCTL1.bit.ADCPWDNZ = 1; //AD转换上电。WY
 
-//    AdccRegs.ADCSOC8CTL.bit.CHSEL =3;        //C3
-//    AdccRegs.ADCSOC8CTL.bit.ACQPS =0x30;
-//    AdccRegs.ADCSOC10CTL.bit.CHSEL=3;       //ditto
-//    AdccRegs.ADCSOC10CTL.bit.ACQPS=0x30;
-//    AdccRegs.ADCSOC12CTL.bit.CHSEL=3;       //ditto
-//    AdccRegs.ADCSOC12CTL.bit.ACQPS=0x30;
-//    AdccRegs.ADCSOC14CTL.bit.CHSEL=3;       //ditto
-//    AdccRegs.ADCSOC14CTL.bit.ACQPS=0x30;
-//    AdccRegs.ADCSOC13CTL.bit.CHSEL=3;       //ditto
-//    AdccRegs.ADCSOC13CTL.bit.ACQPS=0x30;
-//    AdccRegs.ADCSOC15CTL.bit.CHSEL=3;       //ditto
-//    AdccRegs.ADCSOC15CTL.bit.ACQPS=0x30;
+	AdcdRegs.ADCSOC0CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序0的触发源。WY
+	AdcdRegs.ADCSOC1CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序1的触发源。WY
+	AdcdRegs.ADCSOC2CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序2的触发源。WY
+	AdcdRegs.ADCSOC3CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序3的触发源。WY
+	AdcdRegs.ADCSOC4CTL.bit.TRIGSEL = 0x7; //EPWM-2-ADCSOCA信号作为AD转换次序4的触发源。WY
 
-//    AdccRegs.ADCINTSEL1N2.bit.INT1E=1;      //中断1使能
-//    AdccRegs.ADCINTSEL1N2.bit.INT1SEL=0xD;  //EOC13 is trigger for ADCINT1
-//    AdccRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //
-//    AdccRegs.ADCINTSEL1N2.bit.INT2E=1;      //中断2使能
-//    AdccRegs.ADCINTSEL1N2.bit.INT2SEL=0xF;  //EOC15 is trigger for ADCINT2
-//    AdccRegs.ADCINTSEL1N2.bit.INT2CONT = 1;
-//    AdccRegs.ADCINTFLGCLR.all = 0x000F;
-//    AdccRegs.ADCOFFTRIM.bit.OFFTRIM=0;
+	AdcdRegs.ADCSOC0CTL.bit.CHSEL = 5; //ADCIND5作为AD转换次序0的输入源。WY
+	AdcdRegs.ADCSOC0CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcdRegs.ADCSOC1CTL.bit.CHSEL = 1; //ADCIND1作为AD转换次序1的输入源。WY
+	AdcdRegs.ADCSOC1CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcdRegs.ADCSOC2CTL.bit.CHSEL = 2; //ADCIND2作为AD转换次序2的输入源。WY
+	AdcdRegs.ADCSOC2CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcdRegs.ADCSOC3CTL.bit.CHSEL = 3; //ADCIND3作为AD转换次序3的输入源。WY
+	AdcdRegs.ADCSOC3CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
+	AdcdRegs.ADCSOC4CTL.bit.CHSEL = 4; //ADCIND4作为AD转换次序4的输入源。WY
+	AdcdRegs.ADCSOC4CTL.bit.ACQPS = 0x18; //采样窗口宽度。WY
 
+	AdcdRegs.ADCINTSEL1N2.bit.INT1E = 1; //使能中断ADC-D-INT1。WY
+	AdcdRegs.ADCINTSEL1N2.bit.INT1SEL = 0x0; //将AD-D转换次序0的结束信号（EOC0）作为ADCINT1的触发源。WY
+	AdcdRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //当AD-D转换次序0的结束信号（EOC0）产生时，立即触发中断ADC-D-INT1。WY
+	AdcdRegs.ADCINTFLGCLR.all = 0x000F; //清除ADC-D的所有标志位。WY
+	AdcdRegs.ADCOFFTRIM.bit.OFFTRIM = 0; //ADC-D的校正值为0。WY
 
-//    AdccRegs.ADCCTL2.bit.SIGNALMODE=0;
-//    AdccRegs.ADCCTL2.bit.RESOLUTION=0;
-//    AdccRegs.ADCCTL2.bit.PRESCALE = 0x6;
-//    AdccRegs.ADCCTL1.bit.ADCPWDNZ=1;
-//
-//    AdccRegs.ADCSOC0CTL.bit.TRIGSEL=0x5;    //05h BURSTTRIG5 - ePWM1, ADCSOCA
-//    AdccRegs.ADCSOC1CTL.bit.TRIGSEL=0x5;    //同上
-//    AdccRegs.ADCSOC2CTL.bit.TRIGSEL=0x5;    //同上
-//    AdccRegs.ADCSOC3CTL.bit.TRIGSEL=0x5;    //同上
-//
-//    AdccRegs.ADCSOC14CTL.bit.TRIGSEL=0x13;  //13h BURSTTRIG19 - ePWM8, ADCSOCA
-//    AdccRegs.ADCSOC15CTL.bit.TRIGSEL=0x14;  //14h BURSTTRIG20 - ePWM8, ADCSOCB
-//
-//    AdccRegs.ADCSOC0CTL.bit.CHSEL=2;        //C2    IBS1,电网电流B
-//    AdccRegs.ADCSOC0CTL.bit.ACQPS=0x18;
-//    AdccRegs.ADCSOC1CTL.bit.CHSEL=4;        //C4    ICO,输出电压C
-//    AdccRegs.ADCSOC1CTL.bit.ACQPS=0x18;
-//    AdccRegs.ADCSOC2CTL.bit.CHSEL=5;        //C5    TEMP1,散热片UV温度
-//    AdccRegs.ADCSOC2CTL.bit.ACQPS=0x18;
-//    AdccRegs.ADCSOC3CTL.bit.CHSEL=3;        //C3    ISO,输出电流B,不用
-//    AdccRegs.ADCSOC3CTL.bit.ACQPS=0x18;
-//
-//    AdccRegs.ADCSOC14CTL.bit.CHSEL=2;       //C2    IBS1,电网电流B
-//    AdccRegs.ADCSOC14CTL.bit.ACQPS=0x18;
-//    AdccRegs.ADCSOC15CTL.bit.CHSEL=2;       //C2    IBS1,电网电流B
-//    AdccRegs.ADCSOC15CTL.bit.ACQPS=0x18;
-//
-//    AdccRegs.ADCINTSEL1N2.bit.INT1E=1;      //中断1使能
-//    AdccRegs.ADCINTSEL1N2.bit.INT1SEL=0xE;  //EOC14 is trigger for ADCINT1
-//    AdccRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //
-//    AdccRegs.ADCINTSEL1N2.bit.INT2E=1;      //中断2使能
-//    AdccRegs.ADCINTSEL1N2.bit.INT2SEL=0xF;  //EOC15 is trigger for ADCINT2
-//    AdccRegs.ADCINTSEL1N2.bit.INT2CONT = 1;
-//    AdccRegs.ADCINTFLGCLR.all = 0x000F;
-//    AdccRegs.ADCOFFTRIM.bit.OFFTRIM=0;
-
-    /*************************************ADCC**************************************/
-    AdcbRegs.ADCCTL2.bit.SIGNALMODE=0;
-    AdcbRegs.ADCCTL2.bit.RESOLUTION=0;
-    AdcbRegs.ADCCTL2.bit.PRESCALE = 0x6;
-    AdcbRegs.ADCCTL1.bit.ADCPWDNZ=1;
-
-    AdcbRegs.ADCSOC0CTL.bit.TRIGSEL=0x7;    //07h ADCTRIG7 - ePWM2, ADCSOCA   EPWM2触发AD中断源
-    AdcbRegs.ADCSOC1CTL.bit.TRIGSEL=0x7;    //同上
-    AdcbRegs.ADCSOC2CTL.bit.TRIGSEL=0x7;    //同上
-    AdcbRegs.ADCSOC3CTL.bit.TRIGSEL=0x7;    //同上
-
-//    AdcbRegs.ADCSOC8CTL.bit.TRIGSEL =0x19;  //19h BURSTTRIG25 - ePWM11, ADCSOCA
-//    AdcbRegs.ADCSOC10CTL.bit.TRIGSEL=0x1A;  //1Ah BURSTTRIG26 - ePWM11, ADCSOCB
-//    AdcbRegs.ADCSOC12CTL.bit.TRIGSEL=0x19;  //19h BURSTTRIG25 - ePWM11, ADCSOCA
-//    AdcbRegs.ADCSOC14CTL.bit.TRIGSEL=0x1A;  //1Ah BURSTTRIG26 - ePWM11, ADCSOCB
-
-
-    AdcbRegs.ADCSOC0CTL.bit.CHSEL=5;        //ICS1,ESC B相低压侧电压BUL
-    AdcbRegs.ADCSOC0CTL.bit.ACQPS=0x18;
-    AdcbRegs.ADCSOC1CTL.bit.CHSEL=4;        //UA,ESC B相高压侧电压BUH
-    AdcbRegs.ADCSOC1CTL.bit.ACQPS=0x18;
-    AdcbRegs.ADCSOC2CTL.bit.CHSEL=2;        //UV,ESC B相旁路电流 ISV
-    AdcbRegs.ADCSOC2CTL.bit.ACQPS=0x18;
-    AdcbRegs.ADCSOC3CTL.bit.CHSEL=1;        //DCUP,ESC 温度测试T1
-    AdcbRegs.ADCSOC3CTL.bit.ACQPS=0x18;
-//  AdcbRegs.ADCSOC13CTL.bit.CHSEL=3;       //DCUN,不用
-//  AdcbRegs.ADCSOC13CTL.bit.ACQPS=0x18;
-
-//    AdcbRegs.ADCSOC8CTL.bit.CHSEL=2;       //
-//    AdcbRegs.ADCSOC8CTL.bit.ACQPS=0x30;    //
-//    AdcbRegs.ADCSOC10CTL.bit.CHSEL=2;       //ditto
-//    AdcbRegs.ADCSOC10CTL.bit.ACQPS=0x30;
-//    AdcbRegs.ADCSOC12CTL.bit.CHSEL=2;       //ditto
-//    AdcbRegs.ADCSOC12CTL.bit.ACQPS=0x30;
-//    AdcbRegs.ADCSOC14CTL.bit.CHSEL=2;       //ditto
-//    AdcbRegs.ADCSOC14CTL.bit.ACQPS=0x30;
-//    AdcbRegs.ADCSOC13CTL.bit.CHSEL=2;       //ditto
-//    AdcbRegs.ADCSOC13CTL.bit.ACQPS=0x30;
-//    AdcbRegs.ADCSOC15CTL.bit.CHSEL=2;       //ditto
-//    AdcbRegs.ADCSOC15CTL.bit.ACQPS=0x30;
-
-//    AdcbRegs.ADCINTSEL1N2.bit.INT1E=1;      //中断1使能
-//    AdcbRegs.ADCINTSEL1N2.bit.INT1SEL=0xD;  //EOC13 is trigger for ADCINT1
-//    AdcbRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //
-//    AdcbRegs.ADCINTSEL1N2.bit.INT2E=1;      //中断2使能
-//    AdcbRegs.ADCINTSEL1N2.bit.INT2SEL=0xF;  //EOC15 is trigger for ADCINT2
-//    AdcbRegs.ADCINTSEL1N2.bit.INT2CONT = 1;
-
-    AdcbRegs.ADCINTFLGCLR.all = 0x000F;
-    AdcbRegs.ADCOFFTRIM.bit.OFFTRIM=0;
-
-
-
-    /*************************************ADCD**************************************/
-    //ADCD用做普通AD采样产生EOC脉冲,触发ADCA1INT中断
-    AdcdRegs.ADCCTL2.bit.SIGNALMODE=0;
-    AdcdRegs.ADCCTL2.bit.RESOLUTION=0;
-    AdcdRegs.ADCCTL2.bit.PRESCALE = 0x6;
-    AdcdRegs.ADCCTL1.bit.ADCPWDNZ=1;
-
-    AdcdRegs.ADCSOC0CTL.bit.TRIGSEL=0x7;    //07h ADCTRIG7 - ePWM2, ADCSOCA   EPWM2触发AD中断源
-    AdcdRegs.ADCSOC1CTL.bit.TRIGSEL=0x7;    //同上
-    AdcdRegs.ADCSOC2CTL.bit.TRIGSEL=0x7;    //同上
-    AdcdRegs.ADCSOC3CTL.bit.TRIGSEL=0x7;    //同上
-    AdcdRegs.ADCSOC4CTL.bit.TRIGSEL=0x7;    //同上
-
-//    AdcdRegs.ADCSOC8CTL.bit.TRIGSEL =0x19;  //19h BURSTTRIG25 - ePWM11, ADCSOCA
-//    AdcdRegs.ADCSOC10CTL.bit.TRIGSEL=0x1A;  //1Ah BURSTTRIG26 - ePWM11, ADCSOCB
-//    AdcbRegs.ADCSOC13CTL.bit.TRIGSEL=0x19;  //19h BURSTTRIG25 - ePWM11, ADCSOCA
-//    AdcbRegs.ADCSOC15CTL.bit.TRIGSEL=0x1A;  //1Ah BURSTTRIG26 - ePWM11, ADCSOCB
-
-    AdcdRegs.ADCSOC0CTL.bit.CHSEL=5;        //D5    ITO,ESC C相主电抗器输出电流(ISC)
-    AdcdRegs.ADCSOC0CTL.bit.ACQPS=0x18;
-    AdcdRegs.ADCSOC1CTL.bit.CHSEL=1;        //D1    UB,ESC A相低压侧电压AUL
-    AdcdRegs.ADCSOC1CTL.bit.ACQPS=0x18;
-    AdcdRegs.ADCSOC2CTL.bit.CHSEL=2;        //D2    TEMP1,ESC测试温度T2
-    AdcdRegs.ADCSOC2CTL.bit.ACQPS=0x18;
-    AdcdRegs.ADCSOC3CTL.bit.CHSEL=3;        //D3    IAO,ESC A相直流电容电压 (IOU)
-    AdcdRegs.ADCSOC3CTL.bit.ACQPS=0x18;
-    AdcdRegs.ADCSOC4CTL.bit.CHSEL=4;        //D4    UW,ESC C相旁路电流
-    AdcdRegs.ADCSOC4CTL.bit.ACQPS=0x18;
-
-//    AdcdRegs.ADCSOC8CTL.bit.CHSEL =5;       //  D5
-//    AdcdRegs.ADCSOC8CTL.bit.ACQPS =0x30;    //
-//    AdcdRegs.ADCSOC10CTL.bit.CHSEL=5;       //ditto
-//    AdcdRegs.ADCSOC10CTL.bit.ACQPS=0x30;
-
-//    AdcdRegs.ADCINTSEL1N2.bit.INT1E=1;      //中断1使能
-//    AdcdRegs.ADCINTSEL1N2.bit.INT1SEL=0xD;  //EOC13 is trigger for ADCINT1
-//    AdcdRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //
-//    AdcdRegs.ADCINTSEL1N2.bit.INT2E=1;      //中断2使能
-//    AdcdRegs.ADCINTSEL1N2.bit.INT2SEL=0xF;  //EOC15 is trigger for ADCINT2
-//    AdcdRegs.ADCINTSEL1N2.bit.INT2CONT = 1;
-
-    AdcdRegs.ADCINTSEL1N2.bit.INT1E=1;      //中断1使能
-    AdcdRegs.ADCINTSEL1N2.bit.INT1SEL=0x0;  //EOC0 is trigger for ADCINT1
-    AdcdRegs.ADCINTSEL1N2.bit.INT1CONT = 1; //
-    AdcdRegs.ADCINTFLGCLR.all = 0x000F;
-    AdcdRegs.ADCOFFTRIM.bit.OFFTRIM=0;
-    EDIS;
+	EDIS;
 }
-
 
 #if (TNMD150A200415REV1)
 void InitGpio_NewBoard(void)
@@ -447,97 +309,151 @@ void InitGpio_NewBoard(void)
     EDIS;
 }
 #elif(NPC3CA10020210330REV1)
+
+/*
+ * 功能：配置GPIO。WY
+ */
 void InitGpio_NewBoard(void)
 {
-    EALLOW;
-    //IO Input
-    GpioCtrlRegs.GPCDIR.bit.GPIO91   = 0;   //防雷反馈
-    GpioCtrlRegs.GPCPUD.bit.GPIO91   = 0;
-    GpioCtrlRegs.GPADIR.bit.GPIO1    = 0;   //15V控制电掉电检测
-    GpioCtrlRegs.GPAPUD.bit.GPIO1    = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO157  = 0;   //急停
-    GpioCtrlRegs.GPEPUD.bit.GPIO157  = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO92   = 0;   //旁路微断反馈
-    GpioCtrlRegs.GPCPUD.bit.GPIO92   = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO94   = 0; //过流检测引脚,A
-    GpioCtrlRegs.GPCPUD.bit.GPIO94   = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO85   = 0; //过流检测引脚,B
-    GpioCtrlRegs.GPCPUD.bit.GPIO85   = 0;
-    GpioCtrlRegs.GPDDIR.bit.GPIO97   = 0; //过流检测引脚,C
-    GpioCtrlRegs.GPDPUD.bit.GPIO97   = 0;
+	EALLOW;
 
-//    GpioCtrlRegs.GPCDIR.bit.GPIO91   = 1;   //临时测试GPIO
-//    GpioCtrlRegs.GPCPUD.bit.GPIO91   = 0;
-//    GpioCtrlRegs.GPCDIR.bit.GPIO92   = 1;   //临时测试GPIO
-//    GpioCtrlRegs.GPCPUD.bit.GPIO92   = 0;
+    /*GPIO输入*/
+    /*防雷反馈*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO91 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO91 = 0; //使能上拉。WY
 
-    //IO Output
-    GpioCtrlRegs.GPDDIR.bit.GPIO110  = 1;   //PULSE,心跳脉冲输出
-    GpioCtrlRegs.GPDPUD.bit.GPIO110  = 0;
-    GpioCtrlRegs.GPFDIR.bit.GPIO163  = 1;   //磁保持继电器控制 分
-    GpioCtrlRegs.GPFPUD.bit.GPIO163  = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO79   = 1;   //A相高/低压磁保持继电器
-    GpioCtrlRegs.GPCPUD.bit.GPIO79   = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO78   = 1;   //A相旁路磁保持继电器
-    GpioCtrlRegs.GPCPUD.bit.GPIO78   = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO151  = 1;   //B相高/低压磁保持继电器
-    GpioCtrlRegs.GPEPUD.bit.GPIO151  = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO150  = 1;   //B相旁路磁保持继电器
-    GpioCtrlRegs.GPEPUD.bit.GPIO150  = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO77   = 1;   //C相高/低压磁保持继电器
-    GpioCtrlRegs.GPCPUD.bit.GPIO77   = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO152  = 1;   //C相旁路磁保持继电器
-    GpioCtrlRegs.GPEPUD.bit.GPIO152  = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO154  = 1;   //SCRA_EN
-    GpioCtrlRegs.GPEPUD.bit.GPIO154  = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO153  = 1;   //SCRB_EN
-    GpioCtrlRegs.GPEPUD.bit.GPIO153  = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO155  = 1;   //SCRC_EN
-    GpioCtrlRegs.GPEPUD.bit.GPIO155  = 0;
-//    GpioCtrlRegs.GPCDIR.bit.GPIO95   = 1;   //PWM使能信号端口  PWMEN1  //NPC3CA 10020 220711未用
-//    GpioCtrlRegs.GPCPUD.bit.GPIO95   = 0;
-    GpioCtrlRegs.GPEDIR.bit.GPIO156  = 1;   //A相PWM使能信号端口
-    GpioCtrlRegs.GPEPUD.bit.GPIO156  = 0;
-    GpioCtrlRegs.GPFDIR.bit.GPIO164  = 1;   //B相PWM使能信号端口
-    GpioCtrlRegs.GPFPUD.bit.GPIO164  = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO93   = 1;   //C相PWM使能信号端口   PWMEN2
-    GpioCtrlRegs.GPCPUD.bit.GPIO93   = 0;
-    GpioCtrlRegs.GPDDIR.bit.GPIO105  = 1;   //A相小继电器控制
-    GpioCtrlRegs.GPDPUD.bit.GPIO105  = 0;
-    GpioCtrlRegs.GPCDIR.bit.GPIO76   = 1;   //B相小继电器控制
-    GpioCtrlRegs.GPCPUD.bit.GPIO76   = 0;
-    GpioCtrlRegs.GPBDIR.bit.GPIO43   = 1;   //C相小继电器控制
-    GpioCtrlRegs.GPBPUD.bit.GPIO43   = 0;
+	/*15V电源掉电检测*/
+	GpioCtrlRegs.GPADIR.bit.GPIO1 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO1 = 0; //使能上拉。WY
 
-    GpioCtrlRegs.GPEDIR.bit.GPIO158  = 1;   //外部运行灯
-    GpioCtrlRegs.GPEPUD.bit.GPIO158  = 0;
-    GpioCtrlRegs.GPBDIR.bit.GPIO42   = 1;   //故障指示灯
-    GpioCtrlRegs.GPBPUD.bit.GPIO42   = 0;
-    GpioCtrlRegs.GPBDIR.bit.GPIO59   = 1;    //板载运行灯
-    GpioCtrlRegs.GPBPUD.bit.GPIO59   = 0;
-    GpioCtrlRegs.GPBDIR.bit.GPIO60   = 1;    //板载故障灯
-    GpioCtrlRegs.GPBPUD.bit.GPIO60   = 0;
-    GpioCtrlRegs.GPBDIR.bit.GPIO61   = 1;    //板载同步灯
-    GpioCtrlRegs.GPBPUD.bit.GPIO61   = 0;
-    GpioCtrlRegs.GPDDIR.bit.GPIO104  = 1;    //控制15V电源供电引脚
-    GpioCtrlRegs.GPDPUD.bit.GPIO104  = 0;
+	/*设备急停按钮*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO157 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO157 = 0; //使能上拉。WY
 
-//    GpioCtrlRegs.GPCDIR.bit.GPIO91   = 1;   //防雷反馈
-//    GpioCtrlRegs.GPCPUD.bit.GPIO91   = 0;
+	/*旁路微型断路器检测*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO92 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO92 = 0; //使能上拉。WY
 
+	/*A相过流检测*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO94 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO94 = 0; //使能上拉。WY
 
-    GpioDataRegs.GPFSET.bit.GPIO163  = 1;    //(置高电平)
-    GpioDataRegs.GPCSET.bit.GPIO79   = 1;
-    GpioDataRegs.GPCSET.bit.GPIO78   = 1;
-    GpioDataRegs.GPESET.bit.GPIO151  = 1;
-    GpioDataRegs.GPESET.bit.GPIO150  = 1;
-    GpioDataRegs.GPCSET.bit.GPIO77   = 1;
-    GpioDataRegs.GPESET.bit.GPIO152  = 1;
-    GpioDataRegs.GPDSET.bit.GPIO104  = 1;
+	/*B相过流检测*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO85 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO85 = 0; //使能上拉。WY
 
-    EDIS;
+	/*C相过流检测*/
+	GpioCtrlRegs.GPDDIR.bit.GPIO97 = 0; //GPIO输入模式。WY
+	GpioCtrlRegs.GPDPUD.bit.GPIO97 = 0; //使能上拉。WY
+
+	/*GPIO输出*/
+	/*DSP心跳脉冲*/
+	GpioCtrlRegs.GPDDIR.bit.GPIO110 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPDPUD.bit.GPIO110 = 0; //使能上拉。WY
+
+	/*磁保持继电器*/
+	GpioCtrlRegs.GPFDIR.bit.GPIO163 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPFPUD.bit.GPIO163 = 0; //使能上拉。WY
+
+	/*A相主路磁保持继电器*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO79 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO79 = 0; //使能上拉。WY
+
+	/*A相旁路磁保持继电器*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO78 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO78 = 0; //使能上拉。WY
+
+	/*B相主路磁保持继电器*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO151 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO151 = 0; //使能上拉。WY
+
+	/*B相旁路磁保持继电器*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO150 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO150 = 0; //使能上拉。WY
+
+	/*C相主路磁保持继电器*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO77 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO77 = 0; //使能上拉。WY
+
+	/*C相旁路磁保持继电器*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO152 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO152 = 0; //使能上拉。WY
+
+	/*A相旁路晶闸管*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO154 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO154 = 0; //使能上拉。WY
+
+	/*B相旁路晶闸管*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO153 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO153 = 0; //使能上拉。WY
+
+	/*C相旁路晶闸管*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO155 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO155 = 0; //使能上拉。WY
+
+	/*A相PWM使能*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO156 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO156 = 0; //使能上拉。WY
+
+	/*B相PWM使能*/
+	GpioCtrlRegs.GPFDIR.bit.GPIO164 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPFPUD.bit.GPIO164 = 0; //使能上拉。WY
+
+	/*C相PWM使能*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO93 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO93 = 0; //使能上拉。WY
+
+	/*A相小继电器*/
+	GpioCtrlRegs.GPDDIR.bit.GPIO105 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPDPUD.bit.GPIO105 = 0; //使能上拉。WY
+
+	/*B相小继电器*/
+	GpioCtrlRegs.GPCDIR.bit.GPIO76 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPCPUD.bit.GPIO76 = 0; //使能上拉。WY
+
+	/*C相小继电器*/
+	GpioCtrlRegs.GPBDIR.bit.GPIO43 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPBPUD.bit.GPIO43 = 0; //使能上拉。WY
+
+	/*设备运行指示灯*/
+	GpioCtrlRegs.GPEDIR.bit.GPIO158 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPEPUD.bit.GPIO158 = 0; //使能上拉。WY
+
+	/*设备故障指示灯*/
+	GpioCtrlRegs.GPBDIR.bit.GPIO42 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPBPUD.bit.GPIO42 = 0; //使能上拉。WY
+
+	/*板载运行指示灯*/
+	GpioCtrlRegs.GPBDIR.bit.GPIO59 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPBPUD.bit.GPIO59 = 0; //使能上拉。WY
+
+	/*板载故障指示灯*/
+	GpioCtrlRegs.GPBDIR.bit.GPIO60 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPBPUD.bit.GPIO60 = 0; //使能上拉。WY
+
+	/*板载同步指示灯*/
+	GpioCtrlRegs.GPBDIR.bit.GPIO61 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPBPUD.bit.GPIO61 = 0; //使能上拉。WY
+
+	/*15V电源使能*/
+	GpioCtrlRegs.GPDDIR.bit.GPIO104 = 1; //GPIO输出模式。WY
+	GpioCtrlRegs.GPDPUD.bit.GPIO104 = 0; //使能上拉。WY
+
+	GpioDataRegs.GPFSET.bit.GPIO163 = 1; //？WY
+
+	GpioDataRegs.GPCSET.bit.GPIO79 = 1;	//A相主路磁保持继电器断开。WY
+	GpioDataRegs.GPCSET.bit.GPIO78 = 1; //A相旁路磁保持继电器断开。WY
+
+	GpioDataRegs.GPESET.bit.GPIO151 = 1; //B相主路磁保持继电器断开。WY
+	GpioDataRegs.GPESET.bit.GPIO150 = 1; //B相旁路磁保持继电器断开。WY
+
+	GpioDataRegs.GPCSET.bit.GPIO77 = 1; //C相主路磁保持继电器断开。WY
+	GpioDataRegs.GPESET.bit.GPIO152 = 1; //C相旁路磁保持继电器断开。WY
+
+	GpioDataRegs.GPDSET.bit.GPIO104 = 1; //15V电源上电。WY
+
+	EDIS;
 }
-
 
 #endif
 

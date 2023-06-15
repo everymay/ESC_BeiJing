@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="GBK"?>
+<!--  This file conforms to the DTD xdc/bld/build.dtd -->
+<package name="configPkg" version="" producerId="undefined">
+    <units>
+    </units>
+    <sources>
+        <srcFile name="package/cfg/377_p28FP_p28FP.c"/>
+    </sources>
+    <configscripts>
+        <srcFile name="F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/Debug/configPkg/package/cfg/377_p28FP.cfg"/>
+    </configscripts>
+    <makefiles>
+        <srcFile name="package.mak" src="package.bld"/>
+        <srcFile name="package/package.xdc.dep" src="package.xdc"/>
+        <srcFile name="package/cfg/377_p28FP_p28FP.mak" src="package.bld"/>
+        <srcFile name="package/cfg/377_p28FP_p28FP.o28FP.dep" src="package/cfg/377_p28FP_p28FP.c"/>
+        <srcFile name="package/cfg/377_p28FP_p28FP.dep" src="package/cfg/377_p28FP_p28FP.cfg"/>
+        <srcFile name="package/cfg/377_p28FP.x28FP.mak" src="package.bld"/>
+        <srcFile name="package/rel/configPkg.tar.dep" src="package/rel/configPkg.xdc.inc"/>
+    </makefiles>
+    <targets>
+        <target name="ti.targets.C28_float"
+            version="ti.targets.C28_float{1,0,18.1,2"
+            rawVersion="18.1.2"
+            platform="ti.platforms.sim28xx"
+            isa="28FP"
+            suffix="28FP"
+            rootDir="E:/APP/TI/CCS/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS"
+            os="undefined"
+            rts="ti.targets.rts2800">
+            <model endian="little"
+                codeModel="undefined"
+                dataModel="large"/>
+        </target>
+    </targets>
+    <libraries>
+    </libraries>
+    <configurations>
+    <configuration name="377_p28FP"
+        pname="377_p28FP.p28FP"
+        target="ti.targets.C28_float"
+        platform="ti.platforms.tms320x28:TMS320F28377S"
+        profile="release"
+        isPartial="false"
+        xCfgScript="package/cfg/377_p28FP_p28FP.cfg"
+        xCfgPrefix="package/cfg/377_p28FP_p28FP"
+        cfgScript="F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/Debug/configPkg/package/cfg/377_p28FP.cfg"
+        cfgArgs="null"
+        />
+    </configurations>
+    <executables>
+    <executable name="377_p28FP"
+        pname="377_p28FP.x28FP"
+        target="ti.targets.C28_float"
+        platform="ti.platforms.tms320x28:TMS320F28377S"
+        profile="release"
+        xCfgScript="package/cfg/377_p28FP_p28FP.cfg"
+        xCfgPrefix="package/cfg/377_p28FP_p28FP"
+        cfgScript="F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/Debug/configPkg/package/cfg/377_p28FP.cfg"
+        cfgArgs="null"
+        />
+    </executables>
+    <tests>
+    <test exeName="377_p28FP.x28FP"
+        args=""
+        groupName="377_p28FP.x28FP"
+        refOutput="undefined"
+        refExitCode="0"
+        execArgs=""
+        />
+    </tests>
+    <releases relDir="package/rel/">
+    <release name="configPkg"
+        pname="configPkg.tar"
+        label="default"
+    >
+        <file name="package/package.bld.xml"/>
+        <file name="package/build.cfg"/>
+        <file name="package/package.xdc.inc"/>
+    </release>
+    </releases>
+    <repositories>
+    </repositories>
+</package>

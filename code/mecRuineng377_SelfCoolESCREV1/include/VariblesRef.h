@@ -1201,7 +1201,7 @@ typedef struct
 	Uint16 ContactorFeedBackFlag :1;
 	Uint16 VoltageModeFlag :1;
 	Uint16 FaultskipFlag :1;
-	Uint16 faultFlag :1;
+	Uint16 faultFlag :1; //故障标志位。0，不存在故障；1，存在故障。WY
 	Uint16 resetFlag :1; //复位标志位。0，无需执行复位操作；1，等待执行复位操作。WY
 	Uint16 stopFlag :1;
 	Uint16 startFlag :1;
@@ -1211,7 +1211,7 @@ typedef struct
 	Uint16 PWMcurrDirFlag :1;
 	Uint16 PeakStopFlag :1;
 	Uint16 onceRunStartFlag :1;
-	Uint16 FAULTCONFIRFlag :1;
+	Uint16 FAULTCONFIRFlag :1; //故障信号标志位。0，不存在故障信号；1，存在故障信号，等待进一步故障检测。WY
 	Uint16 DelayFlag :1;
 	Uint16 StateSkipFlag :1;
 	Uint16 RELAYCONTROLFlag :1;

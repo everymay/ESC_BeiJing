@@ -18,7 +18,6 @@ extern Event_Handle Event_FMspiWriteCtrl;
 extern Event_Handle Event_Outside;
 
 /* 电气上启动和停止控制 0725
-*  状态机切换机制： StateEventFlag
 *  状态事件0 ： 控制电源取自电网，假设手动模式，。
 *  状态事件1 ： 正在软起充电， 充电完成确认，接触器闭合  ---- 跳转依据电网电压幅值不为0
 *  状态事件2 ： 调制           ----- 等待接收到启动指令，或者运行常态状态2 -----------注意进入稳定母线电压前，通过小限幅来软起
@@ -34,8 +33,8 @@ extern Event_Handle Event_Outside;
 */
 // 手动停机，直流母线电压处于高压，系统显示：如果按启动就是启动，如果按停机就是停机。
 // 假设手动停机后，需要检修，直流侧电压采样板水泥电阻放电，等待五分钟
-// 检修时，需要设定断开主回路接触器的入口：按停机按钮超过3秒，则断开所有开关。
-// 问题：对于接触器未增加反馈检测，默认可以闭合。需要增加。
+
+
 
 /*
  * 功能：初始化GPIO输出。WY
@@ -1690,45 +1689,12 @@ float UNCurDiffMAXFuntion(float UNCurDiffData[], int VAL)
     return UNCurDiffMAX;
 }
 
-//int Tempera_cal( int volt)
-//{
-//    int i=0;
-//    for (i = 0; i < 171; i++)
-//    {
-//        if(Tempera_Volt[i] >= volt)
-//            break;
-//        else if (Tempera_Volt[170] <= volt)
-//        {
-//            i=150;
-//        }
-//    }
-//    return(i-20);
-//}
 
-
+/*该函数未定义。WY*/
 void MainContactConfirm(Uint16 VAL)
 {
-//    static Uint16 ContactCnt1 = 0;
-//    static Uint16 ContactCnt2 = 0;
-//    if(GET_MAIN_CONTACT_OFF() == 0){        //断开
-//        SET_MAIN_CONTACT_ON(1);
-//        if(++ContactCnt1 >= VAL){
-//            ContactCnt1 = 0;
-//            ContactCnt2 = 0;
-//            SET_MAIN_CONTACT_OFF(1);
-//            StateFlag.MainContactEnanle = 0;
-//        }
-//    }
-//    if(GET_MAIN_CONTACT_ON() == 0){         //闭合
-//        if(++ContactCnt2 >= VAL){
-//            ContactCnt1 = 0;
-//            ContactCnt2 = 0;
-//            SET_MAIN_CONTACT_ON(1);
-//            SET_MAIN_CONTACT_OFF(1);
-//            StateFlag.MainContactEnanle = 1;
-//        }
-//    }
 }
+
 // 放电程序，强制进入放电程序，并且其他状态机不重叠。
 void DischargingMode(void)
 {
