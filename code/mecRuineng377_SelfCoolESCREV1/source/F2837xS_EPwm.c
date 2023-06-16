@@ -52,374 +52,205 @@
 void InitEPwm(void)
 {
 	EALLOW;
-	CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 0;                   //停止所有的TB时钟
-//	ClkCfgRegs.PERCLKDIVSEL.bit.EPWMCLKDIV = 0;             //0:系统时钟200兆  ;默认1:2分频  100兆  EPWMCLK = PLLSYSCLK/EPWMCLKDIV; //在EPWM系统寄存器中,377 CPU时钟为200兆,系统默认为2分频,即为100兆系统时钟,epwm也为100兆时钟信号
+	CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 0; //停止所有的PWM的时基时钟（Time Base Clock）。WY
 	EDIS;
-	//PWM3,PWM4,A相
-    EPwm3Regs.TBCTL.bit.CLKDIV      = TB_DIV1;              //时钟分频系数//TBCLK = EPWMCLK / (HSPCLKDIV x CLKDIV)  //epwm时钟信号 = 时基时钟  = 100兆HZ
-    EPwm3Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;              //TBCLK = EPWMCLK / (HSPCLKDIV x CLKDIV)
-    EPwm3Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;      // 连续增减模式   // Period = 2*TBPRD
-    EPwm3Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;           //产生4~9模块的phase-offset脉冲基准
-    EPwm3Regs.TBPHS.bit.TBPHS       = 0;
-    EPwm3Regs.TBCTR                 = 0;
-    EPwm3Regs.TBPRD                 = T1PR;                 //设置计数周期  //40K频率
-    EPwm3Regs.TBCTL.bit.PHSEN       = TB_DISABLE;           //主动模式，TBCTR不从TBPHS重载
-    EPwm3Regs.TBCTL.bit.PRDLD       = TB_SHADOW;            //计数值为零时从影子寄存器取值
-    EPwm3Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;          //时基计数器等于零,重装载 周期中断
-    EPwm3Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;            //计数比较
-    EPwm3Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO;          //
-    EPwm3Regs.CMPCTL.bit.SHDWBMODE  = CC_SHADOW;            //
-    EPwm3Regs.DBCTL.bit.IN_MODE     = DBA_ALL;              // 输入源模式选择---
-    EPwm3Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;           // 输出模式选择--- DB_DISABLE,输出B,A翻转
-    EPwm3Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;           // 极性选择---都不翻转
-    EPwm3Regs.DBFED.all             = 0;                    // 下降沿死区设置 dead time=DBFED*TBCLK
-    EPwm3Regs.DBRED.all             = 0;                    // 上升沿死区设置
-    EPwm3Regs.AQSFRC.bit.RLDCSF     = 3;
 
-	EPwm4Regs.TBCTL.bit.CLKDIV      = TB_DIV1;              //
-	EPwm4Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;  	        //
-	EPwm4Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN; 	    // 连续增减模式   // Period = 2*TBPRD
-	EPwm4Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;           //
-	EPwm4Regs.TBPHS.bit.TBPHS       = 0;
-	EPwm4Regs.TBCTR                 = 0;                    //时基计数器等于零
-	EPwm4Regs.TBPRD                 = T1PR;   		        //设置计数周期
-	EPwm4Regs.TBCTL.bit.PHSEN       = TB_DISABLE;      	    //主动模式，TBCTR不从TBPHS重载
-	EPwm4Regs.TBCTL.bit.PRDLD       = TB_SHADOW;            //计数值为零时从影子寄存器取值
-	EPwm4Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;          //时基计数器等于零,重装载 周期中断
-	EPwm4Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;            //
-	EPwm4Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO;          //
-	EPwm4Regs.CMPCTL.bit.SHDWBMODE  = CC_SHADOW;            //
-	EPwm4Regs.DBCTL.bit.IN_MODE     = DBA_ALL;              //
-	EPwm4Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;           // DB_DISABLE,输出B,A翻转
-	EPwm4Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;           // 都不翻转
-	EPwm4Regs.DBFED.all             = 0;   		            // 上升沿死区设置 dead time=DBFED*TBCLK
-	EPwm4Regs.DBRED.all             = 0;   		            // 下降沿死区设置
-	EPwm4Regs.AQSFRC.bit.RLDCSF     = 3;
+	/*配置EPWM3*/
+	EPwm3Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。WY。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm3Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm3Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm3Regs.TBCTR = 0; //时基计数器为0。WY
+	EPwm3Regs.TBPRD = T1PR; //设置计数周期。频率40KHz。WY
+	EPwm3Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为0时，从影子寄存器加载周期值。WY
+	EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //使能比较计数器CMPA的影子寄存器模式。WY
+	EPwm3Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPB从其影子寄存器中取值。WY
+	EPwm3Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm3Regs.DBCTL.bit.IN_MODE = DBA_ALL; //EPWM-3-A作为死区上升沿和下降沿的作用对象。WY
+	EPwm3Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm3Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。EPWM-3-A和EPWM-3-B均不作极性反转。WY
+	EPwm3Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm3Regs.DBRED.all = 0; //上升沿死区设置为0。WY
+	EPwm3Regs.AQSFRC.bit.RLDCSF = 3; //失能动作限定模块（Action Qualifier）的影子寄存器模式。WY
 
-    //PWM5,PWM6,B相
-	EPwm5Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-	EPwm5Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-	EPwm5Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-	EPwm5Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;      	    //同步信号
-	EPwm5Regs.TBPHS.bit.TBPHS       = 0;                    //错开
-	EPwm5Regs.TBCTR                 = 0;
-	EPwm5Regs.TBPRD                 = T1PR;
-	EPwm5Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-	EPwm5Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-	EPwm5Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;
-	EPwm5Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;
-    EPwm5Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO;      // 时基计数器等于零,重装载 周期中断
-    EPwm5Regs.CMPCTL.bit.SHDWBMODE  = CC_SHADOW;         //公用一个时间基准
-	EPwm5Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-	EPwm5Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-	EPwm5Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-	EPwm5Regs.DBFED.all             = 0;
-	EPwm5Regs.DBRED.all             = 0;
-	EPwm5Regs.AQSFRC.bit.RLDCSF     = 3;
+	EPwm4Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。WY。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm4Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm4Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm4Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm4Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm4Regs.TBCTR = 0; //时基计数器为0。WY
+	EPwm4Regs.TBPRD = T1PR; //设置计数周期。频率40KHz。WY
+	EPwm4Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm4Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为0时，从影子寄存器加载周期值。WY
+	EPwm4Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm4Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm4Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm4Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm4Regs.DBCTL.bit.IN_MODE = DBA_ALL; //EPWM-3-A作为死区上升沿和下降沿的作用对象。WY
+	EPwm4Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm4Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。EPWM-3-A和EPWM-3-B均不作极性反转。WY
+	EPwm4Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm4Regs.DBRED.all = 0; //上升沿死区设置为0。WY
+	EPwm4Regs.AQSFRC.bit.RLDCSF = 3; //失能动作限定模块（Action Qualifier）的影子寄存器模式。WY
 
-	EPwm6Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-	EPwm6Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-	EPwm6Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-	EPwm6Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;           //同步信号
-	EPwm6Regs.TBPHS.bit.TBPHS       = 0;
-	EPwm6Regs.TBCTR                 = 0;
-	EPwm6Regs.TBPRD                 = T1PR;
-	EPwm6Regs.TBCTL.bit.PHSEN       = TB_DISABLE;            //从动模式
-	EPwm6Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-	EPwm6Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;
-	EPwm6Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;
-    EPwm6Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO;      //
-    EPwm6Regs.CMPCTL.bit.SHDWBMODE  = CC_SHADOW;         //
-	EPwm6Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-	EPwm6Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-	EPwm6Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-	EPwm6Regs.DBFED.all             = 0;
-	EPwm6Regs.DBRED.all             = 0;
-	EPwm6Regs.AQSFRC.bit.RLDCSF     = 3;
+	EPwm5Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。WY。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm5Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm5Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm5Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm5Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm5Regs.TBCTR = 0; //时基计数器为0。WY
+	EPwm5Regs.TBPRD = T1PR; //设置计数周期。频率40KHz。WY
+	EPwm5Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm5Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为0时，从影子寄存器加载周期值。WY
+	EPwm5Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm5Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //使能比较计数器CMPA的影子寄存器模式。WY
+	EPwm5Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPB从其影子寄存器中取值。WY
+	EPwm5Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm5Regs.DBCTL.bit.IN_MODE = DBA_ALL; //EPWM-3-A作为死区上升沿和下降沿的作用对象。WY
+	EPwm5Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm5Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。EPWM-3-A和EPWM-3-B均不作极性反转。WY
+	EPwm5Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm5Regs.DBRED.all = 0; //上升沿死区设置为0。WY
+	EPwm5Regs.AQSFRC.bit.RLDCSF = 3; //失能动作限定模块（Action Qualifier）的影子寄存器模式。WY
 
-//PWM7,PWM8,C相
-	EPwm7Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-	EPwm7Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-	EPwm7Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-	EPwm7Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-	EPwm7Regs.TBPHS.bit.TBPHS       = 0;                  //实现超前于EPwm4Regs 1us产生AD采样,0.312us+0.7us(ADhold+CLA计算2相并输出),PWM时钟100M,
-    EPwm7Regs.TBCTR                 = 0;
-	EPwm7Regs.TBPRD                 = T1PR;
-	EPwm7Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-	EPwm7Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-    EPwm7Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;      //改为零点更新
-    EPwm7Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;         //立即更新
-    EPwm7Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO;
-    EPwm7Regs.CMPCTL.bit.SHDWBMODE  = CC_SHADOW;
-	EPwm7Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-	EPwm7Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-	EPwm7Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-	EPwm7Regs.DBFED.all             = 0;
-	EPwm7Regs.DBRED.all             = 0;
-	EPwm7Regs.AQSFRC.bit.RLDCSF     = 3;
+	EPwm6Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。WY。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm6Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm6Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm6Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm6Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm6Regs.TBCTR = 0; //时基计数器为0。WY
+	EPwm6Regs.TBPRD = T1PR; //设置计数周期。频率40KHz。WY
+	EPwm6Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm6Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为0时，从影子寄存器加载周期值。WY
+	EPwm6Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm6Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //使能比较计数器CMPA的影子寄存器模式。WY
+	EPwm6Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPB从其影子寄存器中取值。WY
+	EPwm6Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm6Regs.DBCTL.bit.IN_MODE = DBA_ALL; //EPWM-3-A作为死区上升沿和下降沿的作用对象。WY
+	EPwm6Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm6Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。EPWM-3-A和EPWM-3-B均不作极性反转。WY
+	EPwm6Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm6Regs.DBRED.all = 0; //上升沿死区设置为0。WY
+	EPwm6Regs.AQSFRC.bit.RLDCSF = 3; //失能动作限定模块（Action Qualifier）的影子寄存器模式。WY
 
-    EPwm8Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-    EPwm8Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-    EPwm8Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-    EPwm8Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-    EPwm8Regs.TBPHS.bit.TBPHS       = 0;                  //实现超前于EPwm5Regs 1us产生AD采样,0.312us+0.7us(ADhold+CLA计算2相并输出),PWM时钟100M,
-    EPwm8Regs.TBCTR                 = 0;
-    EPwm8Regs.TBPRD                 = T1PR;
-    EPwm8Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-    EPwm8Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-    EPwm8Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;
-    EPwm8Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;
-    EPwm8Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO;
-    EPwm8Regs.CMPCTL.bit.SHDWBMODE  = CC_SHADOW;
-    EPwm8Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-    EPwm8Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-    EPwm8Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-    EPwm8Regs.DBFED.all             = 0;
-    EPwm8Regs.DBRED.all             = 0;
-    EPwm8Regs.AQSFRC.bit.RLDCSF     = 3;         //立即加载(活动寄存器由CPU直接访问，而不是从影子寄存器加载)。
+	EPwm7Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。WY。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm7Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm7Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm7Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm7Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm7Regs.TBCTR = 0; //时基计数器为0。WY
+	EPwm7Regs.TBPRD = T1PR; //设置计数周期。频率40KHz。WY
+	EPwm7Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm7Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为0时，从影子寄存器加载周期值。WY
+	EPwm7Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm7Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //使能比较计数器CMPA的影子寄存器模式。WY
+	EPwm7Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPB从其影子寄存器中取值。WY
+	EPwm7Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm7Regs.DBCTL.bit.IN_MODE = DBA_ALL; //EPWM-3-A作为死区上升沿和下降沿的作用对象。WY
+	EPwm7Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm7Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。EPWM-3-A和EPWM-3-B均不作极性反转。WY
+	EPwm7Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm7Regs.DBRED.all = 0; //上升沿死区设置为0。WY
+	EPwm7Regs.AQSFRC.bit.RLDCSF = 3; //失能动作限定模块（Action Qualifier）的影子寄存器模式。WY
 
-    EPwm3Regs.AQCTLA.bit.CAU        = AQ_SET;                 //1管
-    EPwm3Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm3Regs.AQCTLB.bit.CBU        = AQ_CLEAR;               //2管,
-    EPwm3Regs.AQCTLB.bit.CBD        = AQ_SET;
-    EPwm4Regs.AQCTLA.bit.CAU        = AQ_SET;                 //3管
-    EPwm4Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm4Regs.AQCTLB.bit.CBU        = AQ_CLEAR;               //4管,
-    EPwm4Regs.AQCTLB.bit.CBD        = AQ_SET;
+	EPwm8Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。WY。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm8Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm8Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm8Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm8Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm8Regs.TBCTR = 0; //时基计数器为0。WY
+	EPwm8Regs.TBPRD = T1PR; //设置计数周期。频率40KHz。WY
+	EPwm8Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm8Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为0时，从影子寄存器加载周期值。WY
+	EPwm8Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm8Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //使能比较计数器CMPA的影子寄存器模式。WY
+	EPwm8Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPB从其影子寄存器中取值。WY
+	EPwm8Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW; //使能比较计数器CMPB的影子寄存器模式。WY
+	EPwm8Regs.DBCTL.bit.IN_MODE = DBA_ALL; //EPWM-3-A作为死区上升沿和下降沿的作用对象。WY
+	EPwm8Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm8Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。EPWM-3-A和EPWM-3-B均不作极性反转。WY
+	EPwm8Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm8Regs.DBRED.all = 0; //上升沿死区设置为0。WY
+	EPwm8Regs.AQSFRC.bit.RLDCSF = 3; //失能动作限定模块（Action Qualifier）的影子寄存器模式。WY
 
-    EPwm5Regs.AQCTLA.bit.CAU        = AQ_SET;
-    EPwm5Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm5Regs.AQCTLB.bit.CBU        = AQ_CLEAR;
-    EPwm5Regs.AQCTLB.bit.CBD        = AQ_SET;
-    EPwm6Regs.AQCTLA.bit.CAU        = AQ_SET;
-    EPwm6Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm6Regs.AQCTLB.bit.CBU        = AQ_CLEAR;
-    EPwm6Regs.AQCTLB.bit.CBD        = AQ_SET;
+	EPwm3Regs.AQCTLA.bit.CAU = AQ_SET; //向上计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为高电平。WY
+	EPwm3Regs.AQCTLA.bit.CAD = AQ_CLEAR; //向下计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为低电平。WY
+	EPwm3Regs.AQCTLB.bit.CBU = AQ_CLEAR; //向上计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为低电平。WY
+	EPwm3Regs.AQCTLB.bit.CBD = AQ_SET; //向下计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为高电平。WY
 
-    EPwm7Regs.AQCTLA.bit.CAU        = AQ_SET;
-    EPwm7Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm7Regs.AQCTLB.bit.CBU        = AQ_CLEAR;
-    EPwm7Regs.AQCTLB.bit.CBD        = AQ_SET;
-    EPwm8Regs.AQCTLA.bit.CAU        = AQ_SET;
-    EPwm8Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm8Regs.AQCTLB.bit.CBU        = AQ_CLEAR;
-    EPwm8Regs.AQCTLB.bit.CBD        = AQ_SET;
+	EPwm4Regs.AQCTLA.bit.CAU = AQ_SET; //向上计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为高电平。WY
+	EPwm4Regs.AQCTLA.bit.CAD = AQ_CLEAR; //向下计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为低电平。WY
+	EPwm4Regs.AQCTLB.bit.CBU = AQ_CLEAR; //向上计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为低电平。WY
+	EPwm4Regs.AQCTLB.bit.CBD = AQ_SET; //向下计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为高电平。WY
 
-//    EPwmRegsAQCFRCset   = EPwm7Regs.CMPCTL.all & 0x0000FFFF; //立即更新CC_IMMEDIATE  0x1
-//    EPwmRegsAQCFRCclear = EPwm7Regs.CMPCTL.all & 0x0000FFAF; //零点更新CC_SHADOW     0x0 ;bits 4,6清零
+	EPwm5Regs.AQCTLA.bit.CAU = AQ_SET; //向上计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为高电平。WY
+	EPwm5Regs.AQCTLA.bit.CAD = AQ_CLEAR; //向下计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为低电平。WY
+	EPwm5Regs.AQCTLB.bit.CBU = AQ_CLEAR; //向上计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为低电平。WY
+	EPwm5Regs.AQCTLB.bit.CBD = AQ_SET; //向下计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为高电平。WY
 
-////PWM9 CLA中产生提前采样脉冲
-//    EPwm9Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-//    EPwm9Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-//    EPwm9Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-//    EPwm9Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-//    EPwm9Regs.TBPHS.bit.TBPHS       = 0;                  //实现超前于EPwm6Regs 1us产生AD采样,0.312us+0.7us(ADhold+CLA计算2相并输出),PWM时钟100M,
-//    EPwm9Regs.TBCTR                 = 0;
-//    EPwm9Regs.TBPRD                 = T1PR;
-//    EPwm9Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-//    EPwm9Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-//    EPwm9Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO_PRD;
-//    EPwm9Regs.CMPCTL.bit.SHDWAMODE  = CC_IMMEDIATE;
-//    EPwm9Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO_PRD;
-//    EPwm9Regs.CMPCTL.bit.SHDWBMODE  = CC_IMMEDIATE;
-//    EPwm9Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-//    EPwm9Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-//    EPwm9Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-//    EPwm9Regs.DBFED.all             = 0;
-//    EPwm9Regs.DBRED.all             = 0;
-//
-//    EPwm9Regs.ETSEL.bit.SOCAEN      = 1;
-//    EPwm9Regs.ETSEL.bit.SOCASEL     = ET_CTRU_CMPA;         //上升沿触发AD
-//    EPwm9Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-//    EPwm9Regs.ETCLR.bit.SOCA        = 1;
-//    EPwm9Regs.ETSEL.bit.SOCBEN      = 1;
-//    EPwm9Regs.ETSEL.bit.SOCBSEL     = ET_CTRD_CMPB;         //下降沿触发AD
-//    EPwm9Regs.ETPS.bit.SOCBPRD      = ET_1ST;
-//    EPwm9Regs.ETCLR.bit.SOCB        = 1;
-//    EPwm9Regs.CMPA.bit.CMPA         = 0;                    //等待更新的与EPwm6Regs.CMPA.bit.CMPA一样,因为TBCTR超前,故采样脉冲也超前产生
-//    EPwm9Regs.CMPB.bit.CMPB         = T1PR-1;               //CMPA只能产生一个上计数采样脉冲,故需要CMPB产生下计数采样脉冲
-//
-////    EPwm9Regs.ETSEL.bit.INTEN       = 1;
-////    EPwm9Regs.ETSEL.bit.INTSEL      = ET_CTRU_CMPA;
-////    EPwm9Regs.ETPS.bit.INTPRD       = ET_1ST;
-////    EPwm9Regs.ETCLR.bit.INT         = 1;
-////    EPwm9Regs.ETSEL.bit.INTEN       = 1;
-////    EPwm9Regs.ETSEL.bit.INTSEL      = ET_CTRD_CMPB;
-////    EPwm9Regs.ETPS.bit.INTPRD       = ET_1ST;
-////    EPwm9Regs.ETCLR.bit.INT         = 1;
-//
-////PWM10
-//    EPwm10Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-//    EPwm10Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-//    EPwm10Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-//    EPwm10Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-//    EPwm10Regs.TBPHS.bit.TBPHS       = 0;                  //实现超前于EPwm4Regs 1us产生AD采样,0.312us+0.7us(ADhold+CLA计算2相并输出),PWM时钟100M,
-//    EPwm10Regs.TBCTR                 = 0;
-//    EPwm10Regs.TBPRD                 = T1PR;
-//    EPwm10Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-//    EPwm10Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-//    EPwm10Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO_PRD;
-//    EPwm10Regs.CMPCTL.bit.SHDWAMODE  = CC_IMMEDIATE;
-//    EPwm10Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO_PRD;
-//    EPwm10Regs.CMPCTL.bit.SHDWBMODE  = CC_IMMEDIATE;
-//    EPwm10Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-//    EPwm10Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-//    EPwm10Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-//    EPwm10Regs.DBFED.all             = 0;
-//    EPwm10Regs.DBRED.all             = 0;
-//
-//    EPwm10Regs.ETSEL.bit.SOCAEN      = 1;
-//    EPwm10Regs.ETSEL.bit.SOCASEL     = ET_CTRU_CMPA;         //上升沿触发AD
-//    EPwm10Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-//    EPwm10Regs.ETCLR.bit.SOCA        = 1;
-//    EPwm10Regs.ETSEL.bit.SOCBEN      = 1;
-//    EPwm10Regs.ETSEL.bit.SOCBSEL     = ET_CTRD_CMPB;         //下降沿触发AD
-//    EPwm10Regs.ETPS.bit.SOCBPRD      = ET_1ST;
-//    EPwm10Regs.ETCLR.bit.SOCB        = 1;
-//    EPwm10Regs.CMPA.bit.CMPA         = 0;                    //等待更新的与EPwm4Regs.CMPA.bit.CMPA一样,因为TBCTR超前,故采样脉冲也超前产生
-//    EPwm10Regs.CMPB.bit.CMPB         = T1PR-1;               //CMPA只能产生一个上计数采样脉冲,故需要CMPB产生下计数采样脉冲
-//
-////PWM11
-//    EPwm11Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-//    EPwm11Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-//    EPwm11Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-//    EPwm11Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-//    EPwm11Regs.TBPHS.bit.TBPHS       = 0;                  //实现超前于EPwm5Regs 1us产生AD采样,0.312us+0.7us(ADhold+CLA计算2相并输出),PWM时钟100M,
-//    EPwm11Regs.TBCTR                 = 0;
-//    EPwm11Regs.TBPRD                 = T1PR;
-//    EPwm11Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-//    EPwm11Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-//    EPwm11Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO_PRD;
-//    EPwm11Regs.CMPCTL.bit.SHDWAMODE  = CC_IMMEDIATE;
-//    EPwm11Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO_PRD;
-//    EPwm11Regs.CMPCTL.bit.SHDWBMODE  = CC_IMMEDIATE;
-//    EPwm11Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-//    EPwm11Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-//    EPwm11Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-//    EPwm11Regs.DBFED.all             = 0;
-//    EPwm11Regs.DBRED.all             = 0;
-//
-//    EPwm11Regs.ETSEL.bit.SOCAEN      = 1;
-//    EPwm11Regs.ETSEL.bit.SOCASEL     = ET_CTRU_CMPA;         //上升沿触发AD
-//    EPwm11Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-//    EPwm11Regs.ETCLR.bit.SOCA        = 1;
-//    EPwm11Regs.ETSEL.bit.SOCBEN      = 1;
-//    EPwm11Regs.ETSEL.bit.SOCBSEL     = ET_CTRD_CMPB;         //下降沿触发AD
-//    EPwm11Regs.ETPS.bit.SOCBPRD      = ET_1ST;
-//    EPwm11Regs.ETCLR.bit.SOCB        = 1;
-//    EPwm11Regs.CMPA.bit.CMPA         = 0;                    //等待更新的与EPwm5Regs.CMPA.bit.CMPA一样,因为TBCTR超前,故采样脉冲也超前产生
-//    EPwm11Regs.CMPB.bit.CMPB         = T1PR-1;               //CMPA只能产生一个上计数采样脉冲,故需要CMPB产生下计数采样脉冲
+	EPwm6Regs.AQCTLA.bit.CAU = AQ_SET; //向上计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为高电平。WY
+	EPwm6Regs.AQCTLA.bit.CAD = AQ_CLEAR; //向下计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为低电平。WY
+	EPwm6Regs.AQCTLB.bit.CBU = AQ_CLEAR; //向上计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为低电平。WY
+	EPwm6Regs.AQCTLB.bit.CBD = AQ_SET; //向下计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为高电平。WY
 
-////PWM12与PWM9联用
-//    EPwm12Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-//    EPwm12Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-//    EPwm12Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-//    EPwm12Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-//    EPwm12Regs.TBPHS.bit.TBPHS       = 0;                  //实现超前于EPwm6Regs 1us产生AD采样,0.312us+0.7us(ADhold+CLA计算2相并输出),PWM时钟100M,
-//    EPwm12Regs.TBCTR                 = 0;
-//    EPwm12Regs.TBPRD                 = T1PR;
-//    EPwm12Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-//    EPwm12Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-//    EPwm12Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO_PRD;
-//    EPwm12Regs.CMPCTL.bit.SHDWAMODE  = CC_IMMEDIATE;
-//    EPwm12Regs.CMPCTL.bit.LOADBMODE  = CC_CTR_ZERO_PRD;
-//    EPwm12Regs.CMPCTL.bit.SHDWBMODE  = CC_IMMEDIATE;
-//    EPwm12Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-//    EPwm12Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-//    EPwm12Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-//    EPwm12Regs.DBFED.all             = 0;
-//    EPwm12Regs.DBRED.all             = 0;
-//
-//    EPwm12Regs.ETSEL.bit.SOCAEN      = 1;
-//    EPwm12Regs.ETSEL.bit.SOCASEL     = ET_CTRU_CMPA;         //上升沿触发AD
-//    EPwm12Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-//    EPwm12Regs.ETCLR.bit.SOCA        = 1;
-//    EPwm12Regs.ETSEL.bit.SOCBEN      = 1;
-//    EPwm12Regs.ETSEL.bit.SOCBSEL     = ET_CTRD_CMPB;         //下降沿触发AD
-//    EPwm12Regs.ETPS.bit.SOCBPRD      = ET_1ST;
-//    EPwm12Regs.ETCLR.bit.SOCB        = 1;
-//    EPwm12Regs.CMPA.bit.CMPA         = 0;                    //等待更新的与EPwm6Regs.CMPA.bit.CMPA一样,因为TBCTR超前,故采样脉冲也超前产生
-//    EPwm12Regs.CMPB.bit.CMPB         = T1PR-1;               //CMPA只能产生一个上计数采样脉冲,故需要CMPB产生下计数采样脉冲
+	EPwm7Regs.AQCTLA.bit.CAU = AQ_SET; //向上计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为高电平。WY
+	EPwm7Regs.AQCTLA.bit.CAD = AQ_CLEAR; //向下计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为低电平。WY
+	EPwm7Regs.AQCTLB.bit.CBU = AQ_CLEAR; //向上计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为低电平。WY
+	EPwm7Regs.AQCTLB.bit.CBD = AQ_SET; //向下计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为高电平。WY
 
-//PWM2A,产生AD采样脉冲,及电流中点的采样中断
-	EPwm2Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-	EPwm2Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-	EPwm2Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-	EPwm2Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-	EPwm2Regs.TBPHS.bit.TBPHS       = 0;
-	EPwm2Regs.TBPRD                 = T1PR*2;          //20k频率
-	EPwm2Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-	EPwm2Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-	EPwm2Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;
-	EPwm2Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;
-//	EPwm2Regs.AQCTLA.bit.CAU        = AQ_SET;
-//	EPwm2Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-	EPwm2Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-	EPwm2Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-	EPwm2Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-	EPwm2Regs.DBFED.all             = 0;
-	EPwm2Regs.DBRED.all             = 0;
+	EPwm8Regs.AQCTLA.bit.CAU = AQ_SET; //向上计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为高电平。WY
+	EPwm8Regs.AQCTLA.bit.CAD = AQ_CLEAR; //向下计数时，当时基计数器TBCTR = 比较计数器CMPA，A通道为低电平。WY
+	EPwm8Regs.AQCTLB.bit.CBU = AQ_CLEAR; //向上计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为低电平。WY
+	EPwm8Regs.AQCTLB.bit.CBD = AQ_SET; //向下计数时，当时基计数器TBCTR =  比较计数器CMPB，B通道为高电平。WY
 
-	EPwm2Regs.ETSEL.bit.SOCAEN      = 1;
-	EPwm2Regs.ETSEL.bit.SOCASEL     = ET_CTRU_CMPA;
-	EPwm2Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-	EPwm2Regs.ETCLR.bit.SOCA        = 1;
-    EPwm2Regs.CMPA.bit.CMPA         = 112;                  //产生电压,温度等采样脉冲   //调整电流中点AD采样值  矫正零点附近采样
-//	EPwm2Regs.ETSEL.bit.INTEN       = 1;
-//	EPwm2Regs.ETSEL.bit.INTSEL      = ET_CTR_PRDZERO;       //产生中断
+	EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1; //分频系数。默认情况下，EPWM模块的时钟 = 系统时钟 / 2。当系统时钟为200MHz时，EPWM模块的时钟即为100MHz。WY
+	EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; //分频系数。WY
+	EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; //增减模式。WY
+	EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE; //不产生同步信号。WY
+	EPwm2Regs.TBPHS.bit.TBPHS = 0; //相位差为0。WY
+	EPwm2Regs.TBPRD = T1PR * 2; //设置计数周期。频率20KHz。WY
+	EPwm2Regs.TBCTL.bit.PHSEN = TB_DISABLE; //失能时基寄存器的影子寄存器模式。WY
+	EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW; //当时基计数器为零时，从影子寄存器加载周期值。WY
+	EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; //当时基计数器为0时，比较计数器CMPA从其影子寄存器中取值。WY
+	EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW; //使能比较计数器CMPA的影子寄存器模式。WY
+	EPwm2Regs.DBCTL.bit.IN_MODE = DBA_ALL; //通道A作为死区上升沿和下降沿的作用对象。WY
+	EPwm2Regs.DBCTL.bit.OUT_MODE = DB_DISABLE; //失能死区功能。WY
+	EPwm2Regs.DBCTL.bit.POLSEL = DB_ACTV_HI; //极性选择。通道A和通道B均不作极性反转。WY
+	EPwm2Regs.DBFED.all = 0; //下降沿死区设置为0。WY
+	EPwm2Regs.DBRED.all = 0; //上升沿死区设置为0。WY
 
-//PWM1A,产生风机调速占空比
-    EPwm1Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-    EPwm1Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-    EPwm1Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UPDOWN;
-    EPwm1Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_DISABLE;
-    EPwm1Regs.TBPHS.bit.TBPHS       = 0;
-    EPwm1Regs.TBCTR                 = 0;
-    EPwm1Regs.TBPRD                 = FUNT1PR;          //50k频率
-    EPwm1Regs.TBCTL.bit.PHSEN       = TB_DISABLE;
-    EPwm1Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-    EPwm1Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;
-    EPwm1Regs.CMPCTL.bit.SHDWAMODE  = CC_SHADOW;
-    EPwm1Regs.AQCTLA.bit.CAU        = AQ_SET;
-    EPwm1Regs.AQCTLA.bit.CAD        = AQ_CLEAR;
-    EPwm1Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-    EPwm1Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-    EPwm1Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-    EPwm1Regs.DBFED.all             = 0;
-    EPwm1Regs.DBRED.all             = 0;
-    EPwm1Regs.AQSFRC.bit.RLDCSF     = 3;         //立即加载(活动寄存器由CPU直接访问，而不是从影子寄存器加载)。
+	EPwm2Regs.ETSEL.bit.SOCAEN = 1; //PWM可以触发AD转换（SOC-A）。WY
+	EPwm2Regs.ETSEL.bit.SOCASEL = ET_CTRU_CMPA; //计数器增加时，当时基计数器TBTCR = 比较计数器CMPA，产生触发AD转换的脉冲。WY
+	EPwm2Regs.ETPS.bit.SOCAPRD = ET_1ST; //每次脉冲都可以触发AD转换（SOC-A）。WY
+	EPwm2Regs.ETCLR.bit.SOCA = 1; //清除AD转换（SOC-A）的标志位。WY
+	EPwm2Regs.CMPA.bit.CMPA = 112; //写入比较计数器的值。WY。
 
-//    EPwm1Regs.ETSEL.bit.SOCAEN      = 1;
-//    EPwm1Regs.ETSEL.bit.SOCASEL     = ET_CTRU_CMPA;
-//    EPwm1Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-//    EPwm1Regs.ETCLR.bit.SOCA        = 1;
-//    EPwm1Regs.CMPA.bit.CMPA         = 112;                  //产生电压,温度等采样脉冲   //调整电流中点AD采样值  矫正零点附近采样
-//    EPwm1Regs.ETSEL.bit.INTEN       = 1;
-//    EPwm1Regs.ETSEL.bit.INTSEL      = ET_CTR_PRDZERO;       //产生中断
-
-//EPwm2 CLA的AD触发
-//	EPwm2Regs.TBCTL.bit.CLKDIV      = TB_DIV1;
-//	EPwm2Regs.TBCTL.bit.HSPCLKDIV   = TB_DIV1;
-//	EPwm2Regs.TBCTL.bit.CTRMODE     = TB_COUNT_UP;
-//	EPwm2Regs.TBCTL.bit.SYNCOSEL    = TB_SYNC_IN;           //同步信号
-//	EPwm2Regs.TBPHS.bit.TBPHS       =  0;
-//	EPwm2Regs.TBPRD                 = T1PR;                 //16k*2(3125) 12.8k*2(3906) 1.28M(78.125)
-//	EPwm2Regs.TBCTL.bit.PHSEN       = TB_ENABLE;            //从动模式
-//	EPwm2Regs.TBCTL.bit.PRDLD       = TB_SHADOW;
-//	EPwm2Regs.CMPCTL.bit.LOADAMODE  = CC_CTR_ZERO;
-//	EPwm2Regs.CMPCTL.bit.SHDWAMODE  = CC_IMMEDIATE;
-//	EPwm2Regs.AQCTLA.bit.CAU        = AQ_SET;               // 输出取反了，要反电平
-//	EPwm2Regs.AQCTLA.bit.CAD        = AQ_CLEAR;             // 输出取反了，要反电平
-//	EPwm2Regs.DBCTL.bit.IN_MODE     = DBA_ALL;
-//	EPwm2Regs.DBCTL.bit.OUT_MODE    = DB_DISABLE;
-//	EPwm2Regs.DBCTL.bit.POLSEL      = DB_ACTV_HI;
-//	EPwm2Regs.DBFED.all             = 1;
-//	EPwm2Regs.DBRED.all             = 1;
-//
-//	EPwm2Regs.ETSEL.bit.SOCAEN      = 1;
-//	EPwm2Regs.ETSEL.bit.SOCASEL     = 4;                    //Enable event time-base counter equal to CMPA when the timer	is incrementing
-//	EPwm2Regs.ETPS.bit.SOCAPRD      = ET_1ST;
-//	EPwm2Regs.ETCLR.bit.SOCA        = 1;
+	/*
+	 * 配置PWM1
+	 * 功能说明：PWM-1-A用于风机调速
+	 */
+	EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+	EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;
+	EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN;
+	EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
+	EPwm1Regs.TBPHS.bit.TBPHS = 0;
+	EPwm1Regs.TBCTR = 0;
+	EPwm1Regs.TBPRD = FUNT1PR;
+	EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE;
+	EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+	EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO;
+	EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+	EPwm1Regs.AQCTLA.bit.CAU = AQ_SET;
+	EPwm1Regs.AQCTLA.bit.CAD = AQ_CLEAR;
+	EPwm1Regs.DBCTL.bit.IN_MODE = DBA_ALL;
+	EPwm1Regs.DBCTL.bit.OUT_MODE = DB_DISABLE;
+	EPwm1Regs.DBCTL.bit.POLSEL = DB_ACTV_HI;
+	EPwm1Regs.DBFED.all = 0;
+	EPwm1Regs.DBRED.all = 0;
+	EPwm1Regs.AQSFRC.bit.RLDCSF = 3;
 
 	EALLOW;
 	CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1;
@@ -427,54 +258,57 @@ void InitEPwm(void)
 }
 
 #if THREE_LEVEL_PWM == 1
+
+/*
+ * 功能：配置EPWM相关的引脚。WY
+ */
 void InitEPwmGpio(void)
 {
 	EALLOW;
-	// 使用PWM口 PWM4A 5A 6A ===  GPIO6 GPIO8 GPIO10
 
-	GpioCtrlRegs.GPAMUX1.bit.GPIO0 =1;    // EPWM1A
-    GpioCtrlRegs.GPAMUX1.bit.GPIO4 =1;    // EPWM3A
-    GpioCtrlRegs.GPAMUX1.bit.GPIO5 =1;    // EPWM3B
-    GpioCtrlRegs.GPAMUX1.bit.GPIO6 =1;    // EPWM4A
-    GpioCtrlRegs.GPAMUX1.bit.GPIO7 =1;    // EPWM4B
-    GpioCtrlRegs.GPAMUX1.bit.GPIO8 =1;    // EPWM5A
-    GpioCtrlRegs.GPAMUX1.bit.GPIO9 =1;    // EPWM5B
-	GpioCtrlRegs.GPAMUX1.bit.GPIO10 =1;   // EPWM6A
-	GpioCtrlRegs.GPAMUX1.bit.GPIO11 =1;   // EPWM6B
-	GpioCtrlRegs.GPAMUX1.bit.GPIO12 =1;   // EPWM7A
-	GpioCtrlRegs.GPAMUX1.bit.GPIO13 =1;   // EPWM7B
-	GpioCtrlRegs.GPAMUX1.bit.GPIO14 =1;   // EPWM8A
-	GpioCtrlRegs.GPAMUX1.bit.GPIO15 =1;   // EPWM8B
+	GpioCtrlRegs.GPAMUX1.bit.GPIO0 = 1; //引脚复用为EPWM-1-A。WY
 
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO4  = 0;    // EPWM3A
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO5  = 0;    // EPWM3B
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO6  = 0;   // EPWM4A
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO7  = 0;   // EPWM4B
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO8  = 0;   // EPWM5A
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO9  = 0;   // EPWM5B
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO10 = 0;   // EPWM6A
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO11 = 0;   // EPWM6B
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO12 = 0;   // EPWM7A
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO13 = 0;   // EPWM7B
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO14 = 0;   // EPWM8A
-//    GpioCtrlRegs.GPAGMUX1.bit.GPIO15 = 0;   // EPWM8B
+	GpioCtrlRegs.GPAMUX1.bit.GPIO4 = 1; //引脚复用为EPWM-3-A。WY
+	GpioCtrlRegs.GPAMUX1.bit.GPIO5 = 1;//引脚复用为EPWM-3-B。WY
 
-	GpioCtrlRegs.GPAPUD.bit.GPIO0 =0;
-	GpioCtrlRegs.GPAPUD.bit.GPIO4 =0;
-	GpioCtrlRegs.GPAPUD.bit.GPIO5 =0;
-	GpioCtrlRegs.GPAPUD.bit.GPIO6 =0;
-	GpioCtrlRegs.GPAPUD.bit.GPIO7 =0;
-	GpioCtrlRegs.GPAPUD.bit.GPIO8 =0;
-	GpioCtrlRegs.GPAPUD.bit.GPIO9 =0;
-    GpioCtrlRegs.GPAPUD.bit.GPIO10 =0;
-    GpioCtrlRegs.GPAPUD.bit.GPIO11 =0;
-    GpioCtrlRegs.GPAPUD.bit.GPIO12 =0;
-    GpioCtrlRegs.GPAPUD.bit.GPIO13 =0;
-    GpioCtrlRegs.GPAPUD.bit.GPIO14 =0;
-    GpioCtrlRegs.GPAPUD.bit.GPIO15 =0;
+	GpioCtrlRegs.GPAMUX1.bit.GPIO6 = 1; //引脚复用为EPWM-4-A。WY
+	GpioCtrlRegs.GPAMUX1.bit.GPIO7 = 1; //引脚复用为EPWM-4-B。WY
+
+	GpioCtrlRegs.GPAMUX1.bit.GPIO8 = 1; //引脚复用为EPWM-5-A。WY
+	GpioCtrlRegs.GPAMUX1.bit.GPIO9 = 1; //引脚复用为EPWM-5-B。WY
+
+	GpioCtrlRegs.GPAMUX1.bit.GPIO10 = 1; //引脚复用为EPWM-6-A。WY
+	GpioCtrlRegs.GPAMUX1.bit.GPIO11 = 1; //引脚复用为EPWM-6-B。WY
+
+	GpioCtrlRegs.GPAMUX1.bit.GPIO12 = 1; //引脚复用为EPWM-7-A。WY
+	GpioCtrlRegs.GPAMUX1.bit.GPIO13 = 1; //引脚复用为EPWM-7-B。WY
+
+	GpioCtrlRegs.GPAMUX1.bit.GPIO14 = 1; //引脚复用为EPWM-8-A。WY
+	GpioCtrlRegs.GPAMUX1.bit.GPIO15 = 1; //引脚复用为EPWM-8-B。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO0 = 0; //上拉模式。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO4 = 0; //上拉模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO5 = 0; //上拉模式。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO6 = 0; //上拉模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO7 = 0; //上拉模式。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO8 = 0; //上拉模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO9 = 0; //上拉模式。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO10 = 0; //上拉模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO11 = 0; //上拉模式。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO12 = 0; //上拉模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO13 = 0; //上拉模式。WY
+
+	GpioCtrlRegs.GPAPUD.bit.GPIO14 = 0; //上拉模式。WY
+	GpioCtrlRegs.GPAPUD.bit.GPIO15 = 0; //上拉模式。WY
 
 	EDIS;
 }
+
 #elif THREE_LEVEL_PWM == 0
 void InitEPwmGpio(void)
 {

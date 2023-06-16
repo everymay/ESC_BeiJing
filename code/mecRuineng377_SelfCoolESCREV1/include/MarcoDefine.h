@@ -169,42 +169,160 @@
     #define GET_PULSE()                               GpioDataRegs.GPDDAT.bit.GPIO110             //心跳检测
     #define TOGGLE_PULSE()                            GpioDataRegs.GPDTOGGLE.bit.GPIO110 = 1;
     #define SET_MAIN_CONTACT_OFF(VAL)         if(VAL) GpioDataRegs.GPFSET.bit.GPIO163 = 1; else GpioDataRegs.GPFCLEAR.bit.GPIO163 = 1
-    #define GET_MAIN_CONTACT_OFF()                    GpioDataRegs.GPFDAT.bit.GPIO163             //磁保持继电器分闸
+	#define GET_MAIN_CONTACT_OFF()                    GpioDataRegs.GPFDAT.bit.GPIO163             //磁保持继电器分闸
 
-    #define SET_MAIN_CONTACT_ACTION_A(VAL)    if((GET_POWER_CTRL == 0)&&(StateEventFlag_A != STATE_EVENT_STANDBY_A)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
+
+	/*
+	 * 设置A相主路磁保持继电器状态。WY
+	 * VAL = 0，闭合；
+	 * VAL = 1，断开。
+	 */
+	#define SET_MAIN_CONTACT_ACTION_A(VAL)    if((GET_POWER_CTRL == 0)&&(StateEventFlag_A != STATE_EVENT_STANDBY_A)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPCSET.bit.GPIO79 = 1; else GpioDataRegs.GPCCLEAR.bit.GPIO79 = 1
-    #define GET_MAIN_CONTACT_ACTION_A                 GpioDataRegs.GPCDAT.bit.GPIO79              // A相高/低压磁保持继电器
+
+
+
+	/*
+	 * A相主路磁保持继电器的控制引脚。WY
+	 * 0，闭合；
+	 * 1，断开。
+	 */
+	#define GET_MAIN_CONTACT_ACTION_A                 GpioDataRegs.GPCDAT.bit.GPIO79              // A相高/低压磁保持继电器
+
+	/*
+	 * 设置A相旁路磁保持继电器.WY
+	 * VAL = 0，闭合；
+	 * VAL = 1，断开。
+	 */
     #define SET_BYPASS_CONTACT_ACTION_A(VAL)  if((GET_POWER_CTRL == 0)&&(StateEventFlag_A != STATE_EVENT_STANDBY_A)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPCSET.bit.GPIO78 = 1; else GpioDataRegs.GPCCLEAR.bit.GPIO78 = 1
-    #define GET_BYPASS_CONTACT_ACTION_A               GpioDataRegs.GPCDAT.bit.GPIO78              // A相旁路磁保持继电器
 
+	/*
+	 * A相旁路磁保持继电器的控制引脚。WY
+	 * 0：闭合；
+	 * 1：断开。
+	 */
+	#define GET_BYPASS_CONTACT_ACTION_A               GpioDataRegs.GPCDAT.bit.GPIO78              // A相旁路磁保持继电器
+
+	/*
+	 * 设置B相主路磁保持继电器状态。WY
+	 * VAL = 0，闭合；
+	 * VAL = 1，断开。
+	 */
     #define SET_MAIN_CONTACT_ACTION_B(VAL)    if((GET_POWER_CTRL == 0)&&(StateEventFlag_B != STATE_EVENT_STANDBY_B)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO151 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO151 = 1
-    #define GET_MAIN_CONTACT_ACTION_B                 GpioDataRegs.GPEDAT.bit.GPIO151             // B相高/低压磁保持继电器
-    #define SET_BYPASS_CONTACT_ACTION_B(VAL)  if((GET_POWER_CTRL == 0)&&(StateEventFlag_B != STATE_EVENT_STANDBY_B)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
-                                                 if(VAL) GpioDataRegs.GPESET.bit.GPIO150 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO150 = 1
-    #define GET_BYPASS_CONTACT_ACTION_B               GpioDataRegs.GPEDAT.bit.GPIO150             // B相旁路磁保持继电器
 
+	/*
+	 * B相主路磁保持继电器控制引脚。WY
+	 * 0：闭合；
+	 * 1：断开。
+	 */
+	#define GET_MAIN_CONTACT_ACTION_B                 GpioDataRegs.GPEDAT.bit.GPIO151             // B相高/低压磁保持继电器
+
+
+	/*
+	 * 设置B相旁路磁保持继电器状态.WY
+	 * VAL = 0，闭合；
+	 * VAL = 1，断开。
+	 */
+	#define SET_BYPASS_CONTACT_ACTION_B(VAL)  if((GET_POWER_CTRL == 0)&&(StateEventFlag_B != STATE_EVENT_STANDBY_B)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
+                                                 if(VAL) GpioDataRegs.GPESET.bit.GPIO150 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO150 = 1
+
+	/*
+	 * B相旁路磁保持继电器的控制引脚。WY
+	 * 0：闭合；
+	 * 1：断开。WY*/
+	#define GET_BYPASS_CONTACT_ACTION_B               GpioDataRegs.GPEDAT.bit.GPIO150             // B相旁路磁保持继电器
+
+	/*
+	 * 设置C相主路磁保持继电器状态。WY
+	 * VAL = 0，闭合；
+	 * VAL = 1，断开。
+	 */
     #define SET_MAIN_CONTACT_ACTION_C(VAL)    if((GET_POWER_CTRL == 0)&&(StateEventFlag_C != STATE_EVENT_STANDBY_C)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPCSET.bit.GPIO77 = 1; else GpioDataRegs.GPCCLEAR.bit.GPIO77 = 1
+
+	/*
+	 * C相主路磁保持继电器控制引脚。WY
+	 * 0，闭合；
+	 * 1，断开。
+	 */
     #define GET_MAIN_CONTACT_ACTION_C                 GpioDataRegs.GPCDAT.bit.GPIO77              // C相高/低压磁保持继电器
+
+	/*
+	 * 设置C相旁路磁保持继电器状态.WY
+	 * VAL = 0，闭合；
+	 * VAL = 1，断开。
+	 */
     #define SET_BYPASS_CONTACT_ACTION_C(VAL)  if((GET_POWER_CTRL == 0)&&(StateEventFlag_C != STATE_EVENT_STANDBY_C)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO152 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO152 = 1
+
+	/*
+	 * C相旁路磁保持继电器的控制引脚。WY
+	 * 0：闭合；
+	 * 1：断开。WY*/
     #define GET_BYPASS_CONTACT_ACTION_C               GpioDataRegs.GPEDAT.bit.GPIO152             // C相旁路磁保持继电器
 
+	/*
+	 * 配置A相旁路晶闸管状态。WY
+	 * VAL = 0：开通；
+	 * VAL = 1：关断。
+	 */
     #define SET_SCRA_ENABLE(VAL)              if((GET_POWER_CTRL == 0)&&(StateEventFlag_A != STATE_EVENT_STANDBY_A)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO154 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO154 = 1  //SCRA_EN
+
+   	/*
+	 * 配置B相旁路晶闸管状态。WY
+	 * VAL = 0：开通；
+	 * VAL = 1：关断。
+	 */
     #define SET_SCRB_ENABLE(VAL)              if((GET_POWER_CTRL == 0)&&(StateEventFlag_B != STATE_EVENT_STANDBY_B)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO153 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO153 = 1  //SCRB_EN
+
+   	/*
+	 * 配置C相旁路晶闸管状态。WY
+	 * VAL = 0：开通；
+	 * VAL = 1：关断。
+	 */
     #define SET_SCRC_ENABLE(VAL)              if((GET_POWER_CTRL == 0)&&(StateEventFlag_C != STATE_EVENT_STANDBY_C)){ SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO155 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO155 = 1  //SCRC_EN
 
+   	/*
+	 * 设置设备运行指示灯状态。WY
+	 * VAL = 0：灯灭；
+	 * VAL = 1：灯亮。
+	 */
     #define SET_RUNNING_LED(VAL)              if(VAL) GpioDataRegs.GPESET.bit.GPIO158 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO158 = 1
+
+   	/*
+	 * 设备运行指示灯状态。WY
+	 * VAL = 0：灯灭；
+	 * VAL = 1：灯亮。
+	 */
     #define GET_RUNNING_LED                           GpioDataRegs.GPEDAT.bit.GPIO158             //设备运行指示灯
+
+   	/*
+	 * 设置设备故障指示灯状态。WY
+	 * VAL = 0：灯灭；
+	 * VAL = 1：灯亮。
+	 */
     #define SET_FAULT_LED(VAL)                if(VAL) GpioDataRegs.GPBSET.bit.GPIO42 = 1; else GpioDataRegs.GPBCLEAR.bit.GPIO42 = 1
+
+   	/*
+	 * 设备故障指示灯状态。WY
+	 * VAL = 0：灯灭；
+	 * VAL = 1：灯亮。
+	 */
     #define GET_FAULT_LED                             GpioDataRegs.GPBDAT.bit.GPIO42              //故障指示灯
 
+	/*
+	 * 急停按钮。WY
+	 */
     #define STOP_INSTRUCTION                          GpioDataRegs.GPEDAT.bit.GPIO157             // 急停按钮
+
+	/*
+	 * 15V电源。WY
+	 */
     #define GET_CTRL24_POWER                          GpioDataRegs.GPADAT.bit.GPIO1               // 15V控制电掉电检测
     #define SET_POWER_CTRL(VAL)               if(VAL) GpioDataRegs.GPDSET.bit.GPIO104 = 1; else GpioDataRegs.GPDCLEAR.bit.GPIO104 = 1
     #define GET_POWER_CTRL                            GpioDataRegs.GPDDAT.bit.GPIO104             // 控制15V电源供电引脚

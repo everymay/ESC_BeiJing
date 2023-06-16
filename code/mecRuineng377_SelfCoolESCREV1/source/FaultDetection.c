@@ -592,88 +592,63 @@ void SetFaultDelayCounterLong(Uint16 counterName,Uint32 mode)
 
 void FaultDetectInInt(void)                  // 放置于中断，紧急保护,每次AD中断运行一次,如果更改位置.需更改IGBTFAULT_DLYTIME的定义
 {}
-  /********************* Ecap中断  ******************************/
+
+
+/*
+ * ECAP中断
+ */
 void EcapINT1(void)
 {
-    //--------------- ESC 快速硬件过流保护A--------------//
-//    TIMER1 = ECap1Regs.CAP1;
-//    TIMER2 = ECap1Regs.CAP2;
-//    TIMER3 = ECap1Regs.CAP3;
-//    TIMER4 = ECap1Regs.CAP4;
-//        if(StateEventFlag == STATE_EVENT_RUN){
-//            if(ECap1Regs.ECFLG.bit.CEVT2 != 0){
-//                if(TIMER2 > TIMER1){
-//                    TIMERPERIODVAL1 = TIMER2 - TIMER1;
-//                }else{
-//                    TIMERPERIODVAL1 = (0xFFFFFFFF - TIMER1) + TIMER2;   //注意运算顺序,防止溢出!
-//                }
-//                if((ECap1Regs.ECFLG.bit.CEVT3 != 0)&&(ECap1Regs.ECFLG.bit.CEVT4 == 0)){
-//                    CAPTIEMRFlag = 1;
-//                }else if((ECap1Regs.ECFLG.bit.CEVT3 != 0)&&(ECap1Regs.ECFLG.bit.CEVT4 != 0)){
-//                    if(TIMER4 > TIMER3){
-//                        TIMERPERIODVAL2 = TIMER4 - TIMER3;
-//                    }else{
-//                        TIMERPERIODVAL2 = (0xFFFFFFFF - TIMER3) + TIMER4;   //注意运算顺序,防止溢出!
-//                    }
-//                    if((TIMERPERIODVAL1 > 100*CAPPERIODVAL)||(TIMERPERIODVAL2 > 100*CAPPERIODVAL))   CAPTIEMRFlag = 1;
-//                    else                      CAPTIEMRFlag = 0;
-//                }else{
-//                    if(TIMERPERIODVAL1 > 100*CAPPERIODVAL)   CAPTIEMRFlag = 1;
-//                    else                      CAPTIEMRFlag = 0;
-//                }`
-//            }else{
-//                CAPTIEMRFlag = 1;
-//            }
-//            if((softwareFaultWord1.B.hardwareOverCurrentFlag == 0)/*&&(CAPTIEMRFlag != 0)*/){
-//                CAPTIEMRFlag = 0;
-//                SET_IGBT_EN1(IGBT_FAULT);                           //关闭IGBT的使能信号输出  IO信号拉高
-//            softwareFaultWord1.B.hardwareOverCurrentFlag = FaultDetect(SOE_GP_FAULT+9,CNT_HW_OVER_CUR,0);
-//        }
-//    }
     if(StateEventFlag_A == STATE_EVENT_RUN_A){
         ESCFlagA.FAULTCONFIRFlag = 1;
-        if((softwareFaultWord1.B.ESCFastHardwareOverCurFlagA == 0)/*&&(CAPTIEMRFlag != 0)*/){
+        if((softwareFaultWord1.B.ESCFastHardwareOverCurFlagA == 0)){
             ESCFlagA.ESCCntMs.StartDelay = 0;
             softwareFaultWord1.B.ESCFastHardwareOverCurFlagA = FaultDetect(SOE_GP_FAULT+1,CNT_HW_OVER_CUR_A,0,ESCFlagA.PHASE);
         }
     }else{
         SetFaultDelayCounter(CNT_HW_OVER_CUR_A,0);
     }
-//   ECap1Regs.ECCTL2.bit.REARM = 1;
+
     ECap1Regs.ECCLR.bit.CEVT4 = 1;
     ECap1Regs.ECCLR.bit.CEVT3 = 1;
     ECap1Regs.ECCLR.bit.CEVT2 = 1;
     ECap1Regs.ECCLR.bit.CEVT1 = 1;
     ECap1Regs.ECCLR.bit.INT = 1;
-//    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
-//    ECap1Regs.ECCLR.all=0xFFFF;                //clare all flag
+
 }
+
 void EcapINT2(void)
 {
-    //--------------- ESC 快速硬件过流保护B--------------//
-    if(StateEventFlag_B == STATE_EVENT_RUN_B){
-        ESCFlagB.FAULTCONFIRFlag = 1;
-        if((softwareFaultWord1.B.ESCFastHardwareOverCurFlagB == 0)/*&&(CAPTIEMRFlag != 0)*/){
-            ESCFlagB.ESCCntMs.StartDelay = 0;
-            softwareFaultWord1.B.ESCFastHardwareOverCurFlagB = FaultDetect(SOE_GP_FAULT+2,CNT_HW_OVER_CUR_B,0,ESCFlagB.PHASE);
-        }
-    }else{
-        SetFaultDelayCounter(CNT_HW_OVER_CUR_B,0);
-    }
-    ECap2Regs.ECCLR.bit.CEVT4 = 1;
-    ECap2Regs.ECCLR.bit.CEVT3 = 1;
-    ECap2Regs.ECCLR.bit.CEVT2 = 1;
-    ECap2Regs.ECCLR.bit.CEVT1 = 1;
-    ECap2Regs.ECCLR.bit.INT = 1;
-    PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
+	if (StateEventFlag_B == STATE_EVENT_RUN_B)
+	{
+		ESCFlagB.FAULTCONFIRFlag = 1;
+		if ((softwareFaultWord1.B.ESCFastHardwareOverCurFlagB == 0))
+		{
+			ESCFlagB.ESCCntMs.StartDelay = 0;
+			softwareFaultWord1.B.ESCFastHardwareOverCurFlagB = FaultDetect(SOE_GP_FAULT + 2, CNT_HW_OVER_CUR_B, 0, ESCFlagB.PHASE);
+		}
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_HW_OVER_CUR_B, 0);
+	}
+
+
+	ECap2Regs.ECCLR.bit.CEVT4 = 1;
+	ECap2Regs.ECCLR.bit.CEVT3 = 1;
+	ECap2Regs.ECCLR.bit.CEVT2 = 1;
+	ECap2Regs.ECCLR.bit.CEVT1 = 1;
+	ECap2Regs.ECCLR.bit.INT = 1;
+	PieCtrlRegs.PIEACK.all = PIEACK_GROUP4;
 }
+
 void EcapINT3(void)
 {
-    //--------------- ESC 快速硬件过流保护C--------------//
     if(StateEventFlag_C == STATE_EVENT_RUN_C){
         ESCFlagC.FAULTCONFIRFlag = 1;
-        if((softwareFaultWord1.B.ESCFastHardwareOverCurFlagC == 0)/*&&(CAPTIEMRFlag != 0)*/){
+        if((softwareFaultWord1.B.ESCFastHardwareOverCurFlagC == 0)){
             ESCFlagC.ESCCntMs.StartDelay = 0;
             softwareFaultWord1.B.ESCFastHardwareOverCurFlagC = FaultDetect(SOE_GP_FAULT+3,CNT_HW_OVER_CUR_C,0,ESCFlagC.PHASE);
         }
@@ -692,7 +667,7 @@ void EcapINT3(void)
  * 功能：快速故障检测。WY
  * 说明：该函数在ADC-1的中断服务函数中被调用。WY
  */
-void FaultFastDetectInInt(void)                  // 放置于中断，快速保护
+void FaultFastDetectInInt(void)
 {
 //由于该故障判断是放在中断中,而上电进行零偏校准的时间较长,所以要加上状态判断,防止在零偏校准时,进入该故障,使状态位ESCFlagA.FAULTCONFIRFlag置1;
 	if (PhaseControl == 1)

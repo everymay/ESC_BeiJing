@@ -60,8 +60,8 @@ void main(void)
 	InitModbusSCI(); //初始化Modbus。WY
 	InitCtrlParam(0); //初始化控制参数。WY
 	InitParameters();			//Initialization of key parameters
-	DMAInitialize(); //此函数无作用？未启用DMA？WY
-	FFTInit(); //此函数未使用。WY
+	DMAInitialize(); //本项目未启用DMA。WY
+	FFTInit(); //此函数无意义。WY
     InitAdc(); //配置ADC。WY
     InitEPwmGpio(); //配置EPWM相关的引脚。WY
     InitEPwm(); //配置EPWM。WY
