@@ -6,7 +6,7 @@
 // 根据硬件信号的输出来看，如果高为封锁，则置2.
 #if (THREE_LEVEL_PWM||NMECB180709REV3_1||NMECB180202REV3)
 void FaultClearPWMA(void)
-{
+{ //此功能未使用。WY
 	SET_IGBT_ENA(IGBT_ENABLE);	//保持1us
 	asm(" RPT #127 || NOP");
 	asm(" RPT #50 || NOP");

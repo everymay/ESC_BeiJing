@@ -769,7 +769,6 @@ void ElseWrite(Uint16 ADDR,int16 DATA){
 		   break;
 	   case 0x8003:
 		   if(DATA == 1){
-//		  		StateFlag.resetFlag = 1;		//∏¥Œª√¸¡Ó
                if((ESCBYRelayCNTA != 1)&&(ESCSicFaultCNTA != 1)){
                    ESCFlagA.resetFlag = 1;
                }

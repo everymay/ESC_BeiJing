@@ -11,7 +11,7 @@ var makeAssembly = false;
 var Executable = xdc.module('xdc.bld.Executable');
 
 var exeOpts = new Executable.Attrs({
-        cfgScript: 'D:/WorkSpace_v8/escselfcool/377.cfg',
+        cfgScript: 'F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/377.cfg',
         profile: 'release',
         cfgHome: 'xconfig_377',
 });
@@ -40,8 +40,8 @@ else {
 }
 
 var thisObj = {
-    cfg:        'D:/WorkSpace_v8/escselfcool/377.cfg',
-    outputPath: 'D:/WorkSpace_v8/escselfcool/.config/xconfig_377',
+    cfg:        'F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/377.cfg',
+    outputPath: 'F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/.config/xconfig_377',
     exeName:    '377' + suffix,
     exeIntName: '377' + suffix.replace('.', '_'),
     targ:       targ,

@@ -39,11 +39,16 @@ float TIMER1 = 0,TIMER2 = 0,TIMER3 = 0,TIMER4 = 0,TIMERPERIODVAL1 = 0,TIMERPERIO
 int CAPTIEMRFlag = 0;
 
 float ESC_DutyDataA = 1.0f,ESC_DutyDataB = 1.0f,ESC_DutyDataC = 1.0f;
-float OUTCUR_OVER_INS	= 300;	// peak : 144.342*1.414 * 1.3 = 265
-float OUTCUR_OVER_INS_NEG= -300;
-float OUTCUR_OVER_RMS	= 174;	// RMS  : 115*1.2 = 173
+
+float OUTCUR_OVER_INS = 300; //µçÁ÷Ë²Ê±ÖµÉÏÏÞ¡£WY	 // peak : 144.342*1.414 * 1.3 = 265
+
+float OUTCUR_OVER_INS_NEG = -300; //µçÁ÷Ë²Ê±ÖµÏÂÏÞ¡£WY
+
+float OUTCUR_OVER_RMS = 174; //µçÁ÷ÓÐÐ§Öµ¹ýÁ÷ÉÏÏÞ¡£WY        // RMS  : 115*1.2 = 173
 float OUTCUR_FAULTCONTACT = 30;
-float OUT_OVER_LOAD		= 130;	// RMS  : 115*1.1 = 158
+
+float OUT_OVER_LOAD = 130; //µçÁ÷ÓÐÐ§Öµ¹ýÔØÉÏÏÞ¡£WY    // RMS  : 115*1.1 = 158
+
 float OutCurMaxLimit	= 200;	// Qpeak: 115*1.732=250
 float OutCurMaxLimitNeg	= 200;	// Qpeak: 115*1.732=250
 float reactPowGivenLimit = 80 ;
@@ -83,12 +88,15 @@ float quarterPeriod = 0;  // spwm /2= 3750/2=1875
 float GridVoltAF = 0;
 float GridVoltBF = 0;
 float GridVoltCF = 0;
-float DccapVoltA = 0;
-float DccapVoltB = 0;
-float DccapVoltC = 0;
-float GridBPCurrAF = 0;
-float GridBPCurrBF = 0;
-float GridBPCurrCF = 0;
+
+float DccapVoltA = 0; //AÏàÖ±Á÷µçÈÝµçÑ¹¡£WY
+float DccapVoltB = 0; //BÏàÖ±Á÷µçÈÝµçÑ¹¡£WY
+float DccapVoltC = 0; //CÏàÖ±Á÷µçÈÝµçÑ¹¡£WY
+
+float GridBPCurrAF = 0; //AÏàÅÔÂ·µçÁ÷Ë²Ê±Öµ£¿WY
+float GridBPCurrBF = 0; //BÏàÅÔÂ·µçÁ÷Ë²Ê±Öµ£¿WY
+float GridBPCurrCF = 0; //CÏàÅÔÂ·µçÁ÷Ë²Ê±Öµ£¿WY
+
 float GridVoltAF_Beta = 0;
 float GridVoltBF_Beta = 0;
 float GridVoltCF_Beta = 0;
@@ -98,9 +106,11 @@ float LoadVoltWF_Beta = 0;
 float LoadVoltUF = 0;
 float LoadVoltVF = 0;
 float LoadVoltWF = 0;
-float VoltInAF = 0;
-float VoltInBF = 0;
-float VoltInCF = 0;
+
+float VoltInAF = 0; //AÏàµçÍøµçÑ¹£¨Ë²Ê±Öµ£©WY
+float VoltInBF = 0; //BÏàµçÍøµçÑ¹£¨Ë²Ê±Öµ£©WY
+float VoltInCF = 0; //CÏàµçÍøµçÑ¹£¨Ë²Ê±Öµ£©WY
+
 float VoltInAF_Beta = 0;
 float VoltInBF_Beta = 0;
 float VoltInCF_Beta = 0;
@@ -110,20 +120,20 @@ float VoltOutCF = 0;
 float VoltOutAF_Beta = 0;
 float VoltOutBF_Beta = 0;
 float VoltOutCF_Beta = 0;
-float GridCurrAF = 0;
-float GridCurrBF = 0;
-float GridCurrCF = 0;
+
+float GridCurrAF = 0; //AÏàµçÍøµçÁ÷Ë²Ê±Öµ£¿WY
+float GridCurrBF = 0; //BÏàµçÍøµçÁ÷Ë²Ê±Öµ£¿WY
+float GridCurrCF = 0; //CÏàµçÍøµçÁ÷Ë²Ê±Öµ£¿WY
+
 float GridVoltAlpha = 0;
 float GridVoltBeta = 0;
 float GridVoltRms = 0;
 float GridVoltRms_F = 0;
 float LoadVoltRms = 0;
 float LoadVoltRms_F = 0;
-//float GridPLLVoltD=0.1;
-//float GridPLLVoltQ=0.2;
-//float GridPLLVoltDn=0.01;
-//float GridPLLVoltQn=0.02;
-float GridFreq = 50;
+
+float GridFreq = 50; //µçÍøÆµÂÊ¡£WY
+
 float GridVoltTheta = 0;
 float GridCurrTheta = 0;
 //float VoltThetaB = 0;
@@ -236,16 +246,19 @@ float GridReactPowerPhC=0;
 float GridApparentPowerPhC=0;
 float GridCosFiPhC=0;
 
-//float Voltuplimit=0;
-//float Voltlowlimit=0;
-//float Voltoverlimitcompentarvalue=0;
-//float Voltunderlimitcompentarvalue=0;
-
 float Esc_CurPhaseA = 0,Esc_CurPhaseB = 0,Esc_CurPhaseC = 0;
-//float Esc_VoltPhaseA = 0,Esc_VoltPhaseB = 0,Esc_VoltPhaseC = 0;
-//int FunContDelayFlag = 0;
-int ArithFlagA = 0,ArithFlagB = 0,ArithFlagC = 0;
-int TestArithFlagA = 1,TestArithFlagB = 1,TestArithFlagC = 1;
+
+int ArithFlagA = 0; //AÏàµçÍøµçÁ÷Í»±ä±êÖ¾Î»¡£0£¬´æÔÚÍ»±ä£»1£¬²»´æÔÚÍ»±ä¡£WY
+int ArithFlagB = 0; //BÏàµçÍøµçÁ÷Í»±ä±êÖ¾Î»¡£0£¬´æÔÚÍ»±ä£»1£¬²»´æÔÚÍ»±ä¡£WY
+int ArithFlagC = 0; //CÏàµçÍøµçÁ÷Í»±ä±êÖ¾Î»¡£0£¬´æÔÚÍ»±ä£»1£¬²»´æÔÚÍ»±ä¡£WY
+
+/*
+ * Îª·ÀÖ¹ÏµÍ³µ÷½Ú¹ý³ÌÖÐµÄ¶¶¶¯£¬¹ÊÉèÖÃËø¶¨±êÖ¾Î»£º½«ÏµÍ³Ëø¶¨ÔÚÖ¸¶¨×´Ì¬²¢³ÖÐøÖ¸¶¨µÄÊ±¼ä¡£WY
+ */
+int TestArithFlagA = 1; //AÏàµçÍøµçÑ¹Í»±äËø¶¨±êÖ¾Î»¡£WY
+int TestArithFlagB = 1; //BÏàµçÍøµçÑ¹Í»±äËø¶¨±êÖ¾Î»¡£WY
+int TestArithFlagC = 1; //CÏàµçÍøµçÑ¹Í»±äËø¶¨±êÖ¾Î»¡£WY
+
 Uint16 GridcurrCnt = 0;
 
 int PeakStopFlagA = 0,PeakStopFlagB = 0,PeakStopFlagC = 0;
@@ -289,31 +302,38 @@ float ResonProtcABC;
 float ResonProtcABCRms;
 // ÓÐÐ§ÖµµÄ¼ÆËã±äÁ¿
 float VoltGivenStart = 0;
-float VoltInA_rms = 0;
-float VoltInB_rms = 0;
-float VoltInC_rms = 0;
-float VoltOutA_rms = 0;
-float VoltOutB_rms = 0;
-float VoltOutC_rms = 0;
+
+float VoltInA_rms = 0; //AÏàµçÍøµçÑ¹ÓÐÐ§Öµ¡£WY
+float VoltInB_rms = 0; //BÏàµçÍøµçÑ¹ÓÐÐ§Öµ¡£WY
+float VoltInC_rms = 0; //CÏàµçÍøµçÑ¹ÓÐÐ§Öµ¡£WY
+
+float VoltOutA_rms = 0; //AÏà¸ºÔØµçÑ¹ÓÐÐ§Öµ¡£WY
+float VoltOutB_rms = 0; //BÏà¸ºÔØµçÑ¹ÓÐÐ§Öµ¡£WY
+float VoltOutC_rms = 0; //CÏà¸ºÔØµçÑ¹ÓÐÐ§Öµ¡£WY
+
 float apfOutCurA_rms = 0;
 float apfOutCurB_rms = 0;
 float apfOutCurC_rms = 0;
 float loadCurA_rms = 0;
 float loadCurB_rms = 0;
 float loadCurC_rms = 0;
-float gridCurA_rms = 0;
-float gridCurB_rms = 0;
-float gridCurC_rms = 0;
-float gridCurrBYAF_rms = 0;
-float gridCurrBYBF_rms = 0;
-float gridCurrBYCF_rms = 0;
+
+float gridCurA_rms = 0; //AÏàµçÍøµçÁ÷ÓÐÐ§Öµ¡£WY
+float gridCurB_rms = 0; //BÏàµçÍøµçÁ÷ÓÐÐ§Öµ¡£WY
+float gridCurC_rms = 0; //CÏàµçÍøµçÁ÷ÓÐÐ§Öµ¡£WY
+
+float gridCurrBYAF_rms = 0; //AÏàÅÔÂ·µçÁ÷ÓÐÐ§Öµ¡£WY
+float gridCurrBYBF_rms = 0; //BÏàÅÔÂ·µçÁ÷ÓÐÐ§Öµ¡£WY
+float gridCurrBYCF_rms = 0; //CÏàÅÔÂ·µçÁ÷ÓÐÐ§Öµ¡£WY
+
 int cntGridVoltPhaseSeqFault = 0;
 float TotalHarmDistorionGridCurr,TotalHarmDistorionLoadCurr,TotalHarmDistorionVolt;
 int16 EscStandyDelayCnt = 0;
 
-int CTRL24_POWERFlag = 0;
+int CTRL24_POWERFlag = 0; //15VµçÔ´×´Ì¬±êÖ¾Î»¡£0£ºÒÑÖ´ÐÐÏìÓ¦£»1£ºµÈ´ýÖ´ÐÐÏìÓ¦¡£WY
 
-Uint16 windColdCtr;
+Uint16 windColdCtr; //¹ÊÕÏÆÁ±Î±êÖ¾Î»¡£0£¬ÆÁ±Î¸Ã¹ÊÕÏ£»1£¬²»ÆÁ±Î¸Ã¹ÊÕÏ¡£WY
+
 int EscStandyDelayCnta1 = 0,EscStandyDelayCntb1 = 0,EscStandyDelayCntc1 = 0,EscStandyDelayCnta2 = 0,EscStandyDelayCntb2 = 0,EscStandyDelayCntc2 = 0;
 extern int StateSkipFlagA = 0,StateSkipFlagB = 0,StateSkipFlagC = 0;
 int GV_RMS_UNDER_PowerOnForRecharge;
@@ -397,14 +417,12 @@ float reactPowerCompCurQc = 0;
 
 float GridResSin = 0.01 ;
 float GridResCos = 0.02 ;
-//float PLLResSin = 0.1 ;
-//float PLLResCos = 0.2 ;
-//float PLLRes2Sin = 0.01 ;
-//float PLLRes2Cos = 0.02 ;
-//volatile int StateEventFlag = STATE_EVENT_STANDBY;
-volatile int StateEventFlag_A = STATE_EVENT_STANDBY_A;
-volatile int StateEventFlag_B = STATE_EVENT_STANDBY_B;
-volatile int StateEventFlag_C = STATE_EVENT_STANDBY_C;
+
+
+volatile int StateEventFlag_A = STATE_EVENT_STANDBY_A; //AÏà×´Ì¬»ú¡£³õÊ¼×´Ì¬Îª£º³õÊ¼×´Ì¬£¨Õý³£Í£»ú£©¡£WY
+volatile int StateEventFlag_B = STATE_EVENT_STANDBY_B; //BÏà×´Ì¬»ú¡£³õÊ¼×´Ì¬Îª£º³õÊ¼×´Ì¬£¨Õý³£Í£»ú£©¡£WY
+volatile int StateEventFlag_C = STATE_EVENT_STANDBY_C; //CÏà×´Ì¬»ú¡£³õÊ¼×´Ì¬Îª£º³õÊ¼×´Ì¬£¨Õý³£Í£»ú£©¡£WY
+
 float PIlim_Udc = 120;
 float I_ins_index = 0;
 int PWM_ins_indexA = 0,PWM_ins_indexB = 0,PWM_ins_indexC = 0;
@@ -414,9 +432,9 @@ float PFConsin = 0;
 float PWMcurrDirFlagA,PWMcurrDirFlagB,PWMcurrDirFlagC;
 int ESCHighLowRelayCNTA = 0,ESCHighLowRelayCNTB = 0,ESCHighLowRelayCNTC = 0;
 
-int ESCSicFaultCNTA = 0; //AÏàSiC¹Ü×´Ì¬±êÖ¾Î»¡£0£¬Õý³££»1£¬Òì³£¡£WY
-int ESCSicFaultCNTB = 0; //BÏàSiC¹Ü×´Ì¬±êÖ¾Î»¡£0£¬Õý³££»1£¬Òì³£¡£WY
-int ESCSicFaultCNTC = 0; //CÏàSiC¹Ü×´Ì¬±êÖ¾Î»¡£0£¬Õý³££»1£¬Òì³£¡£WY
+int ESCSicFaultCNTA = 0; //AÏàSiC¹Ü×´Ì¬¡£0£¬Õý³££»1£¬Òì³£¡£WY
+int ESCSicFaultCNTB = 0; //BÏàSiC¹Ü×´Ì¬¡£0£¬Õý³££»1£¬Òì³£¡£WY
+int ESCSicFaultCNTC = 0; //CÏàSiC¹Ü×´Ì¬¡£0£¬Õý³££»1£¬Òì³£¡£WY
 
 int ESCBYRelayCNTA = 0; //AÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷×´Ì¬¡£0£¬Õý³££¨ÉÏµçÄ¬ÈÏ£©£»1£¬Òì³£¡£WY
 int ESCBYRelayCNTB = 0; //BÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷×´Ì¬¡£0£¬Õý³££¨ÉÏµçÄ¬ÈÏ£©£»1£¬Òì³£¡£WY
@@ -424,7 +442,9 @@ int ESCBYRelayCNTC = 0; //CÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷×´Ì¬¡£0£¬Õý³££¨ÉÏµçÄ¬ÈÏ£©£»1£¬Òì³£¡
 
 int TurnOffPeakFaultFlagA = 0,TurnOffPeakFaultFlagB = 0,TurnOffPeakFaultFlagC = 0;
 long tempbuff = 0;
-float ArithVAL=3,ArithVal=3;
+
+float ArithVAL=3; //µçÍøµçÑ¹Í»±äÖµÉÏÏÞ¡£WY
+float ArithVal=3; //µçÍøµçÑ¹Í»±äÖµÏÂÏÞ¡£WY
 
 float dbg_claWave[6];
 float dbg_claPwmReg[8];
@@ -457,25 +477,59 @@ float SyncHardwareLead=1100;
 float SampleLead=100;
 float GV_RMS_OVER_RLY_PROT = 460;
 float GV_INS_OVER =  800 ; // 400*1.15*1.414*1.05 = 682.962
-float GV_RMS_OVER  = 460;  // 400*1.15 = 460
-float GV_RMS_UNDER = 340;  // 400*0.85 = 340   ÊÔÑéÉè¶¨20
-float GF_OVER      = 63 ;  // 50*1.1 = 55
-float GF_UNDER     = 40 ;  // 50*0.9 = 45
-float ESCDCVOLITLIMIT     = 800;  // 380*1.414*1.15 + 100 = 718
+
+float GV_RMS_OVER = 460; //µçÍøµçÑ¹ÓÐÐ§ÖµÉÏÏÞ¡£WY       // 400*1.15 = 460
+
+float GV_RMS_UNDER = 340; //µçÍøµçÑ¹ÓÐÐ§ÖµÏÂÏÞ¡£WY // 400*0.85 = 340   ÊÔÑéÉè¶¨20
+
+float GF_OVER = 63; //µçÍøÆµÂÊÉÏÏÞÖµ¡£WY    // 50*1.1 = 55
+float GF_UNDER = 40; //µçÍøÆµÂÊÏÂÏÞÖµ¡£WY    // 50*0.9 = 45
+
+float ESCDCVOLITLIMIT = 800; //µçÈÝµçÑ¹ÉÏÏÞÖµ¡£WY   // 380*1.414*1.15 + 100 = 718
+
 float VoltFallResponseLimit    = 200;  // 380*1.414*0.8 = 456    Ç·Ñ¹Öµ¹ý³¤¿ÉÄÜµ¼ÖÂÄæ±äÆ÷Ê§¿Ø ÉèÖÃÎª0.8±¶
 float GV_NEGTIVE_UP     = 60;  // ÔÝ¶¨²»¶Ô³Æ50% £»´ý¶¨£¿£¿£¿ ×°ÖÃÔÚºÎÖÖ²»¶Ô³ÆµçÍø¹¤¿öÏÂ£¬ÎÞ·¨Á¬ÐøÔËÐÐ£¬ÔòÉè¶¨Îª¹ÊÕÏÎ»
 float VoltHarmOver = 0;
 float DC_ERR_LIMIT  =  50;
+
+/*
+ * ÎÂ¶ÈÊý¾Ý£¨µ¥Î»£º¡æ£©¡£WY
+ * [0]£º³ö·ç¿ÚÉ¢ÈÈÆ¬ÎÂ¶È
+ * [1]£ºµ¥ÔªÍâ¿ÇÎÂ¶È
+ */
 float TempData[10];
+
 float CTLFANDATA[10];
 float CURRData[10];
+
+/*
+ * ÈýÏàµçÍøµçÁ÷£¨ÓÐÐ§Öµ£©¡£WY
+ * [0]£ºAÏàµçÍøµçÁ÷£¨ÓÐÐ§Öµ£©
+ * [1]£ºBÏàµçÍøµçÁ÷£¨ÓÐÐ§Öµ£©
+ * [2]£ºCÏàµçÍøµçÁ÷£¨ÓÐÐ§Öµ£©
+ */
 float UnCurrData[3];
+
 float UNCurDiffData[10];
+
+/*
+ * ÔÚµ÷½ÚÈýÏà²»Æ½ºâÊ±£¬¸ºÔØµçÑ¹£¨ÓÐÐ§Öµ£©Ä¿±êÖµ¡£WY
+ * [0]£ºAÏà¸ºÔØµçÑ¹£¨ÓÐÐ§Öµ£©Ä¿±êÖµ
+ * [1]£ºBÏà¸ºÔØµçÑ¹£¨ÓÐÐ§Öµ£©Ä¿±êÖµ
+ * [2]£ºCÏà¸ºÔØµçÑ¹£¨ÓÐÐ§Öµ£©Ä¿±êÖµ
+ */
 float CurrentUnbalanceRegularVoltage[3];
+
 int VoltageOverflow[3]={0,0,0};
 int centreGravity=0;
 float centreGravityValue=0;
+
+/*
+ * ÈýÏà²»Æ½ºâ¶È¡£WY
+ * ¼ÆËã¹«Ê½£ºÈýÏà²»Æ½ºâ¶È = £¨ÈýÏàµçÁ÷ÖÐÓÐÐ§ÖµµÄ×î´óÕß - ÈýÏàµçÁ÷ÓÐÐ§ÖµµÄ¾ùÖµ£© / ÈýÏàµçÁ÷ÓÐÐ§ÖµµÄ¾ùÖµ
+ */
 float currentUnbalance;
+
 #endif
 Uint16 PIAutoJust=0;
 int TempEnvirProvalue=0;
@@ -500,13 +554,30 @@ int ESCtestVAL1 = 0,ESCtestVAL2 = 0;
 float dutytmpA1,dutytmpA2,dutytmpB1,dutytmpB2,dutytmpC1,dutytmpC2;
 
 float dutytmp,dutytmp1,TESEINSGridIn,TESETarget,TESEPIerr,testvalue1,FeedVAl,DEBUGduty,DEBUGData,PhaseValue,TESTRMSGridInVAL,NumeratorValue,DenominatorVAL;
-float VolttargetCorrA,VolttargetCorrB,VolttargetCorrC;
+
+float VolttargetCorrA; //AÏà¸ºÔØµçÑ¹ÓÐÐ§ÖµµÄÄ¿±êÖµµÄÐÞÕýÏµÊý¡£WY
+float VolttargetCorrB; //AÏà¸ºÔØµçÑ¹ÓÐÐ§ÖµµÄÄ¿±êÖµµÄÐÞÕýÏµÊý¡£WY
+float VolttargetCorrC; //AÏà¸ºÔØµçÑ¹ÓÐÐ§ÖµµÄÄ¿±êÖµµÄÐÞÕýÏµÊý¡£WY
+
 int ConstantCurrInsFlagA = 0,ConstantCurrInsFlagB = 0,ConstantCurrInsFlagC = 0;
+
+/*
+ * ¸ºÔØµçÁ÷£¨ÓÐÐ§Öµ£©Ä¿±êÖµ¡£wy
+ *
+ * µ±Í¬Ê±Âú×ãÏÂÁÐÌõ¼þÊ±£¬ÏµÍ³¹¤×÷ÓÚºãµçÁ÷Ä£Ê½¡£
+ * 1. µçÍøµçÁ÷£¨ÓÐÐ§Öµ£© > µçÍøµçÁ÷£¨ÓÐÐ§Öµ£©¶î¶¨Öµ£»
+ * 2. µçÍøµçÁ÷£¨ÓÐÐ§Öµ£© < µçÍøµçÁ÷£¨ÓÐÐ§Öµ£©¹ýÔØÖµ¡£
+ *
+ * ºãµçÁ÷Ä£Ê½£º¸ù¾ÝÉè±¸ÎÂ¶È²é±í£¬ÒÔÐÞÕý¸ºÔØµçÁ÷£¨ÓÐÐ§Öµ£©Ä¿±êÖµ¡££¿
+ */
 float CurrTargetTemper;
+
 float VolPIOutPwmVa = 1;
 float VolPIOutPwmVb = 1;
 float VolPIOutPwmVc = 1;
-float PIVAL = 3.141593f;
+
+float PIVAL = 3.141593f; //¦ÐµÄ¸¡µãÊý½üËÆÖµ¡£WY
+
 float VolCor = 100;
 float VolCorU = 100;
 float VolCorV = 100;
@@ -516,7 +587,9 @@ float OutputCurrent = 0;
 float reactPrCompPerc = 1;
 float restantReactCurrent = 0;
 float transfRatio = 100;   // ÏÂ·¢²ÎÊýÎªX:5   600/5= 120
-float TargetCurrentUnbalance;
+
+float TargetCurrentUnbalance; //ÈýÏà²»Æ½ºâ¶ÈµÄÉÏÏÞ¡£WY
+
 float ConstantReactivePower;
 float transfRatioVirtu = 100;
 float dcCapVoltRatio = 0.293;    //200Å· 600-2048 0.293ÉÙ1.5±¶
@@ -740,7 +813,12 @@ STRU_HarmTHD HarmTHD[HARM_CALU_NUM];
 VirtulADStru VirtulAD={0,0,0,0,0,0,0,0,0,0,2076,2080,2080,2083,2081,2078,2053,2062,2056,1,1,1,1,1};
 VirtulADStruVAL VirtulADVAL;
 VirtulADStruval VirtulADval={2076,2080,2080,2083,2081,2078,2053,2062,2056,2054,2052,2055,0,0,0};
-STRU_WinCold WindCold={95,130,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+STRU_WinCold WindCold =
+{ 95, //µ¥ÔªÍâ¿ÇÎÂ¶ÈÉÏÏÞ¡£WY
+  130, //É¢ÈÈÆ¬³ö·ç¿ÚÎÂ¶È¡£WY
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
 #pragma DATA_SECTION(SyncInformation, "EBSS2")
 Stru_SyncInformation SyncInformation;
 Stru_Time Time;

@@ -1,8 +1,8 @@
 #
-_XDCBUILDCOUNT = 
+_XDCBUILDCOUNT = 0
 ifneq (,$(findstring path,$(_USEXDCENV_)))
-override XDCPATH = D:/TI/bios_6_73_01_01/packages;D:/TI/uia_2_30_01_02/packages;D:/TI/controlSUITE;D:/packages;D:/WorkSpace_v8/escselfcool/.config
-override XDCROOT = D:/TI/xdctools_3_50_08_24_core
+override XDCPATH = E:/APP/TI/SYSBIOS/bios_6_73_01_01/packages;E:/APP/TI/UIA/uia_2_30_01_02/packages;D:/TI/controlSUITE;E:/packages;F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/.config
+override XDCROOT = E:/APP/TI/CCS/xdctools_3_50_08_24_core
 override XDCBUILDCFG = ./config.bld
 endif
 ifneq (,$(findstring args,$(_USEXDCENV_)))
@@ -11,6 +11,6 @@ override XDCTARGETS =
 endif
 #
 ifeq (0,1)
-PKGPATH = D:/TI/bios_6_73_01_01/packages;D:/TI/uia_2_30_01_02/packages;D:/TI/controlSUITE;D:/packages;D:/WorkSpace_v8/escselfcool/.config;D:/TI/xdctools_3_50_08_24_core/packages;..
+PKGPATH = E:/APP/TI/SYSBIOS/bios_6_73_01_01/packages;E:/APP/TI/UIA/uia_2_30_01_02/packages;D:/TI/controlSUITE;E:/packages;F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/.config;E:/APP/TI/CCS/xdctools_3_50_08_24_core/packages;..
 HOSTOS = Windows
 endif

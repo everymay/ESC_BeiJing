@@ -49,7 +49,7 @@ void OutputGpioInit_NEWBOARD(void)
 	SET_BYPASS_CONTACT_ACTION_B(ESC_ACTION_ENABLE); //闭合B相旁路磁保持继电器闭合。WY
 	SET_BYPASS_CONTACT_ACTION_C(ESC_ACTION_ENABLE); //闭合C相旁路磁保持继电器闭合。WY
 
-	SET_SCRA_ENABLE(ESC_ACTION_DISABLE); //关断A相旁路晶闸管。WY
+	SET_SCRA_ENABLE(ESC_ACTION_DISABLE); //关断A相旁路晶闸管。WY。此处应为导通。
 	SET_SCRB_ENABLE(ESC_ACTION_DISABLE); //关断B相旁路晶闸管。WY
 	SET_SCRC_ENABLE(ESC_ACTION_DISABLE); //关断C相旁路晶闸管。WY
 
@@ -588,7 +588,7 @@ void ESCWAITTURNRUN(ESCCTRLVALFLAG *ESCFlag)
 						SET_SCRA_ENABLE(ESC_ACTION_ENABLE); //开通A相旁路晶闸管。注意：在断开磁保持继电器之前，必须开通晶闸管，防止磁保持继电器拉弧。WY
 						SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_DISABLE); //断开A相旁路磁保持继电器。WY
 						StateEventFlag_A = STATE_EVENT_RUN_A; //切换状态机至：A相正常运行.WY
-						CurrentUnbalanceRegularVoltage[0] = ESCFlagA.VoltThreShold; //最小值  //？。WY
+						CurrentUnbalanceRegularVoltage[0] = ESCFlagA.VoltThreShold; //最小值  //？？。WY
 					}
 
 					/*处理B相。WY*/
@@ -1043,8 +1043,8 @@ void SetStartCtrl(void)
 					ESCFlagA.stopFlag = 0; //A相无需执行停机操作。WY
 
 					if ((GET_GV_VOL_CTRL_A == 1)  //A相小继电器闭合。WY
-							&& (GET_BYPASS_FEEDBACK == 1)  //A相旁路磁保持继电器状态正常。WY
-							&& (ESCBYRelayCNTA != 1) //微型断路器闭合。WY
+							&& (GET_BYPASS_FEEDBACK == 1)  //微型断路器闭合。WY
+							&& (ESCBYRelayCNTA != 1) //A相旁路磁保持继电器状态正常。WY
 							&& (ESCSicFaultCNTA != 1)) //A相SiC管状态正常。WY
 					{
 						StateEventFlag_A = STATE_EVENT_RECHARGE_A; //切换状态机至：A相预充电。WY
@@ -1388,15 +1388,15 @@ void SetStartCtrl(void)
 		{
 			StateEventFlag_A = STATE_EVENT_STOP_A; //切换状态机至：A相主动停机状态。WY
 
-			ESCFlagA.faultFlag = 0;
+			ESCFlagA.faultFlag = 0; //A相不存在故障。WY
 			ESCFlagA.startFlag = 0; //A相无需执行启动操作。WY
-			ESCFlagA.FAULTCONFIRFlag = 0;
+			ESCFlagA.FAULTCONFIRFlag = 0; //A相不存在故障信号。WY
 			ESCFlagA.stopFlag = 1; //A相需要执行停机操作。WY
 			FaultClearPWMA();
 			DisablePWMA(); //封锁A相PWM。WY
 			ESCFlagA.onceRunStartFlag = 0;
 			ESCFlagA.HWPowerFAULTFlag = 0;
-			ESCFlagA.resetFlag = 0;
+			ESCFlagA.resetFlag = 0; //无需执行复位操作。WY
 			FaultReset();
 
 			if ((StateEventFlag_A != STATE_EVENT_FAULT_A)
@@ -1727,6 +1727,7 @@ void Delayus(int16 i){ //i*5*0.001 ms
 
 #define LMT84_TEMPERATURE_COEFF_K			1.313f
 #define LMT84_TEMPERATURE_COEFF_B			1853.0f
+
 void OutsideIsrProg(void)
 {
     UInt events;
@@ -1736,9 +1737,6 @@ void OutsideIsrProg(void)
         // Wait for ANY of the ISR events to be posted *
         events = Event_pend(Event_Outside, Event_Id_NONE,Event_Id_00 ,BIOS_WAIT_FOREVER);
         static int cntForRunEach=0;
-//        float tempT2=0,tempT3=0,tempOnBoard=0;
-//        int  temperature2,temperature3;
-
 
         OutPro++;
         if(++cntForRunEach >= 4)  // 这个位置是N，就表示main函数里轮询N-1次
@@ -1760,27 +1758,10 @@ void OutsideIsrProg(void)
             StateFlag.PLLSafetyFlag = 1;	//锁相正常
         }
         if(StateFlag.SoeFlag&& !StateFlag.EEPROMResourceLock)			SOE_Write();
-    //  if(RecordWaveFlag&&!StateFlag.EEPROMResourceLock&&(StateEventFlag==STATE_EVENT_FAULT))    SOE_Wave_Record();
 
             switch(cntForRunEach){
             case 0:		// 1  温度采样子程序
-//                temperature3 = (int)(ADC_RU_TEMP0 - VirtulAD.temperature3);
-//                temperature2 = (int)(ADC_RU_TEMP1 - VirtulAD.temperature2);
-//
-//                temperature2 = ntc_tab[temperature2];
-//                tempT2 = (float)temperature2 * 0.1;			//单元测温2
-//                WindCold.HeatSinkTempterature 		= 0.88*WindCold.HeatSinkTempterature + 0.12*tempT2;
-//                if(WindCold.HeatSinkTempterature>200)WindCold.HeatSinkTempterature=200;
-//
-//                temperature3 = (int)(ADC_RU_TEMP0 - VirtulAD.temperature3);
-//                temperature3 = ntc_tab[temperature3];
-//                tempT3 = (float)temperature3 * 0.1;         //单元测温2
-//                WindCold.EnvirTemperature       = 0.88*WindCold.EnvirTemperature + 0.12*tempT3;
-//                if(WindCold.EnvirTemperature>200)WindCold.EnvirTemperature=200;
-//
-//                tempOnBoard =(LMT84_TEMPERATURE_COEFF_B-(LMT84_TEMPERATURE_COEFF_K*ADC_RU_DSPTEMP))* 0.1;	//JCL:T3作为增加板载温度传感
-//                WindCold.MotherBoardTempterature = 0.88*WindCold.MotherBoardTempterature + 0.12*tempOnBoard;
-//                if(WindCold.MotherBoardTempterature>200)WindCold.MotherBoardTempterature=200;
+
 
                 FunAutoControl();// 对单元内部风机做单独的控制
 
@@ -1865,22 +1846,7 @@ void OutsideIsrProg(void)
                         ESCFlagC.HWPowerSTOPFlag = 0;
                     }
                 }
-///************加这个判断是为了在整机测试时,误操作旁路机械开关后,15V供电会先断开,然后在60s之后会再次和15V供电,而这时已经不能自动启动了,
-// ************所以防止停机时,设备15V供电一直有,会有损耗,加上该函数判断,会在一定时间后再断开15V供电.************/
-//                if(    (StateFlag.startingMethod == 0)&&\
-//                       (GET_POWER_CTRL == 1)&&\
-//                       (StateEventFlag_A == STATE_EVENT_STANDBY_A)&&\
-//                       (StateEventFlag_B == STATE_EVENT_STANDBY_B)&&\
-//                       (StateEventFlag_C == STATE_EVENT_STANDBY_C)   ){
-//                    if(CntSec.StopDelay > CNT_SEC(60)){
-//                        if((ESCBYRelayCNTA != 1)&&\
-//                                (ESCBYRelayCNTB != 1)&&\
-//                                (ESCBYRelayCNTC != 1)){
-//                            SET_POWER_CTRL(0);
-//                        }
-//                        CntSec.StopDelay = 0;
-//                    }
-//                }
+
                 if((ESCBYRelayCNTA == 1)||(ESCSicFaultCNTA == 1)){  //高低压磁保持继电器/sic管子损坏故障计数次数达到5次即5次之上,设备不在自动启动
                     ESCFlagA.ESCCntMs.StartDelay = 0;
                     ESCFlagA.resetFlag = 0;
@@ -1893,62 +1859,7 @@ void OutsideIsrProg(void)
                     ESCFlagC.ESCCntMs.StartDelay = 0;
                     ESCFlagC.resetFlag = 0;
                 }
-//该判断是用来设备在运行时发生故障,切换旁路时,旁路磁保持继电器未动作,然后检测负载电流小于1A300MS,然后使高低压磁保持继电器合闸,管子直通来保持负载不长时间断流;
-//该判断使用了负载电流的判断,不知道精不精准,如果有负载本身电流就小的情况,该判断就有问题了????
-//                if((gridCurrBYAF_rms < 1.0f)&&(StateEventFlag_A == STATE_EVENT_FAULT_A)){
-//                    if(ESCFlagA.ESCCntMs.CutCurrDelay > CNT_MS(300)){
-//                        ESCFlagA.PWM_ins_index = 1;
-//                        ESCFlagA.ESC_DutyData = 1.0;
-//                        SET_SCRA_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-//                        SET_MAIN_CONTACT_ACTION_A(ESC_ACTION_ENABLE);
-//                        SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE);     //切旁路
-//                        Delayus(TIME_WRITE_15VOLT_REDAY);
-//                        EnablePWMA();
-//                        Delayus(100);                                                      //需要加个延时时间,否则PWM的寄存器会来不及动作
-//                        SET_IGBT_ENA(IGBT_ENABLE);                                         //开IGBT使能
-//                        EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//                        EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//                        EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//                        EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//                        ESCBYRelayCNTA = 1;
-//                    }
-//                }
-//                if((gridCurrBYBF_rms < 1.0f)&&(StateEventFlag_B == STATE_EVENT_FAULT_B)){
-//                    if(ESCFlagB.ESCCntMs.CutCurrDelay > CNT_MS(300)){
-//                        ESCFlagB.PWM_ins_index = 1;
-//                        ESCFlagB.ESC_DutyData = 1.0;
-//                        SET_SCRB_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-//                        SET_MAIN_CONTACT_ACTION_B(ESC_ACTION_ENABLE);
-//                        SET_BYPASS_CONTACT_ACTION_B(ESC_ACTION_ENABLE);     //切旁路
-//                        Delayus(TIME_WRITE_15VOLT_REDAY);
-//                        EnablePWMB();
-//                        Delayus(100);                                                      //需要加个延时时间,否则PWM的寄存器会来不及动作
-//                        SET_IGBT_ENB(IGBT_ENABLE);                                         //开IGBT使能
-//                        EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//                        EPwm5Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//                        EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//                        EPwm6Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//                        ESCBYRelayCNTB = 1;
-//                    }
-//                }
-//                if((gridCurrBYCF_rms < 1.0f)&&(StateEventFlag_C == STATE_EVENT_FAULT_C)){
-//                    if(ESCFlagC.ESCCntMs.CutCurrDelay > CNT_MS(300)){
-//                        ESCFlagC.PWM_ins_index = 1;
-//                        ESCFlagC.ESC_DutyData = 1.0;
-//                        SET_SCRC_ENABLE(ESC_ACTION_ENABLE);                 //开晶闸管
-//                        SET_MAIN_CONTACT_ACTION_C(ESC_ACTION_ENABLE);
-//                        SET_BYPASS_CONTACT_ACTION_C(ESC_ACTION_ENABLE);     //切旁路
-//                        Delayus(TIME_WRITE_15VOLT_REDAY);
-//                        EnablePWMC();
-//                        Delayus(100);                                                      //需要加个延时时间,否则PWM的寄存器会来不及动作
-//                        SET_IGBT_ENC(IGBT_ENABLE);                                         //开IGBT使能
-//                        EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//                        EPwm7Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//                        EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//                        EPwm8Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//                        ESCBYRelayCNTC = 1;
-//                    }
-//                }
+
 
                 OverTempLimitCur();
                 break;
@@ -2093,7 +2004,6 @@ void OutsideIsrProg(void)
             case 3:
                 if(CntMs.StartDelay >=CNT_MS(500)){		//500ms
                     FaultDetectInMainLoop();													//故障检测
-//                    FaultDetectInRunning();
                 }
 
                 AutoStartInFault();
@@ -2467,19 +2377,6 @@ void AutoStartInFault(void)
 		default:break;
 		}
 
-//		if(cntForAutoStIn30 <= 30){		//esc自启动后30分钟内重复故障跳闸。
-//			if(softwareFaultWord3.B.ESCCalibrarionFailureFlag == 0){
-//				softwareFaultWord3.B.ESCCalibrarionFailureFlag = FaultDetectExtCnt(SOE_GP_FAULT+38,10,cntForRepFaultA);	// 共计10次
-//				if(softwareFaultWord3.B.ESCCalibrarionFailureFlag){
-//					StateFlag.startingMethod = 1;        //严禁自启动，可通过人工下发自动启动标识进行赋值。
-//					if(PWM_address == 0)		StateFlag.StateInstruction = 3;		//主机故障广告
-//				}
-//			}
-//		}else{
-//		    cntForAutoStIn30 = 0;
-//			cntForRepFaultA = 0;
-//		}
-
         switch(ESCFlagB.autoStFlag){
         case ORIGINAL_STATE_B:          //初始状态
          if(ESCFlagB.VoltageModeFlag == 0){
@@ -2747,7 +2644,7 @@ void ExecuteOpenContact_C(void)
 
 
 void initStartVar(void){
-	PIVolA.i6 = 0;
+	PIVolA.i6 = 0; //参考TI库
 	PIVolA.i10 = 0;
 	PIVolB.i6 = 0;
 	PIVolB.i10 = 0;
@@ -3303,7 +3200,7 @@ void PowerReactStateRefresh(void)
 			|shift(0,8)		|shift(0,9)	|shift(0,10)					|shift(0,11)\
 			|shift(0,12)					|shift(0,13)				|shift(0,14)					|shift(0,15);
 //	Choose5=(int)(DccapVoltA*10);//备用5始终显示 主板温度
-	switch(debugDispFlag){
+	switch(debugDispFlag){ //触控屏显示组
 	  case  0:
 		  Choose1=GpioDataRegs.GPCDAT.bit.GPIO79;		Choose2=GpioDataRegs.GPCDAT.bit.GPIO78;        //A相高低压磁保持 旁路磁保持
 		  Choose3=GpioDataRegs.GPEDAT.bit.GPIO156;		Choose4=GpioDataRegs.GPDDAT.bit.GPIO104;
@@ -3660,12 +3557,4 @@ void RemoteWriteControl(Uint16 usAddress) //0x06  0x05
 	状态0 = 1；
 	}
  */
-
-//*********************** NO MORE **************************//
-
-
-
-//===========================================================================
-// No more.
-//===========================================================================
 

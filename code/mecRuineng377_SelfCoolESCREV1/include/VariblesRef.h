@@ -110,25 +110,64 @@
 //#define CNT_FANGLEI_FAULT               23
 
 #define CNT_FAULT_DETECT_NUM            43  //要大于从CNT_HW_OVER_CUR_A开始的数量
-#define CNT_HW_OVER_CUR_A               0   //
-#define CNT_HW_OVER_CUR_B               1   //
-#define CNT_HW_OVER_CUR_C               2   //
-#define CNT_INS_OVER_CUR_A              3   //
-#define CNT_INS_OVER_CUR_B              4   //
-#define CNT_INS_OVER_CUR_C              5   //
-#define CNT_DC_NEUTRAL_OVER_VOLT_A      6   //
-#define CNT_DC_NEUTRAL_OVER_VOLT_B      7   //
-#define CNT_DC_NEUTRAL_OVER_VOLT_C      8   //
-#define CNT_RMS_OVER_VOLT_A             9   //
-#define CNT_RMS_OVER_VOLT_B             10  //
-#define CNT_RMS_OVER_VOLT_C             11  //
-#define CNT_CTRL_POWER_OFF              12  //
-#define CNT_RMS_UNDER_VOLT_A            13  //
-#define CNT_RMS_UNDER_VOLT_B            14  //
-#define CNT_RMS_UNDER_VOLT_C            15  //
-#define LCNT_LOAD_OVER_CUR_A            16  //
-#define LCNT_LOAD_OVER_CUR_B            17  //
-#define LCNT_LOAD_OVER_CUR_C            18  //
+
+/*A相硬件过流故障信号次数。WY*/
+#define CNT_HW_OVER_CUR_A               0
+
+/*B相硬件过流故障信号次数。WY*/
+#define CNT_HW_OVER_CUR_B               1
+
+/*C相硬件过流故障信号次数。WY*/
+#define CNT_HW_OVER_CUR_C               2
+
+/*A相瞬时值过流故障信号次数。WY*/
+#define CNT_INS_OVER_CUR_A              3
+
+/*B相瞬时值过流故障信号次数。WY*/
+#define CNT_INS_OVER_CUR_B              4
+
+/*C相瞬时值过流故障信号次数。WY*/
+#define CNT_INS_OVER_CUR_C              5
+
+/*A相直流电容电压过压故障信号次数。WY*/
+#define CNT_DC_NEUTRAL_OVER_VOLT_A      6
+
+/*B相直流电容电压过压故障信号次数。WY*/
+#define CNT_DC_NEUTRAL_OVER_VOLT_B      7
+
+/*C相直流电容电压过压故障信号次数。WY*/
+#define CNT_DC_NEUTRAL_OVER_VOLT_C      8
+
+/*A相电压有效值过压故障信号次数。WY*/
+#define CNT_RMS_OVER_VOLT_A             9
+
+/*B相电压有效值过压故障信号次数。WY*/
+#define CNT_RMS_OVER_VOLT_B             10
+
+/*C相电压有效值过压故障信号次数。WY*/
+#define CNT_RMS_OVER_VOLT_C             11
+
+/*15V电源掉电检测故障信号次数。WY*/
+#define CNT_CTRL_POWER_OFF              12
+
+/*A相电压有效值欠压故障信号次数。WY*/
+#define CNT_RMS_UNDER_VOLT_A            13
+
+/*B相电压有效值欠压故障信号次数。WY*/
+#define CNT_RMS_UNDER_VOLT_B            14
+
+/*C相电压有效值欠压故障信号次数。WY*/
+#define CNT_RMS_UNDER_VOLT_C            15
+
+/*A相输出过载故障信号次数。WY*/
+#define LCNT_LOAD_OVER_CUR_A            16
+
+/*B相输出过载故障信号次数。WY*/
+#define LCNT_LOAD_OVER_CUR_B            17
+
+/*C相输出过载故障信号次数。WY*/
+#define LCNT_LOAD_OVER_CUR_C            18
+
 #define CNT_RMS_OVER_CUR_A              19  //
 #define CNT_RMS_OVER_CUR_B              20
 #define CNT_RMS_OVER_CUR_C              21
@@ -140,18 +179,35 @@
 #define CNT_BYPASS_NOCLOSE_B            27
 #define CNT_BYPASS_NOCLOSE_C            28
 #define CNT_SET_BOARD_OVER_TEMP         29
+
+/*电网过频故障信号次数。WY*/
 #define CNT_OVER_FREQ                   30
+
+/*电网欠频故障信号次数。WY*/
 #define CNT_UNDER_FREQ                  31
+
 #define CNT_CALIB_ZERO_SHIFT            32
 #define CNT_PARAM_STORAGE_EEPROM        33
 #define CNT_HIGHLOWRELAY_A              34
 #define CNT_HIGHLOWRELAY_B              35
 #define CNT_HIGHLOWRELAY_C              36
+
+/*A相SiC管损坏故障信号次数。WY*/
 #define CNT_SICFAULT_A                  37
+
+/*B相SiC管损坏故障信号次数。WY*/
 #define CNT_SICFAULT_B                  38
+
+/*C相SiC管损坏故障信号次数。WY*/
 #define CNT_SICFAULT_C                  39
+
+/*A相旁路磁保持继电器故障信号次数。WY*/
 #define CNT_BYRelay_A                   40
+
+/*B相旁路磁保持继电器故障信号次数。WY*/
 #define CNT_BYRelay_B                   41
+
+/*C相旁路磁保持继电器故障信号次数。WY*/
 #define CNT_BYRelay_C                   42
 
 #define LCNT_FAULT_DETECT_NUM			1	//要大于从LCNT_LOAD_OVER_CURR开始的数量
@@ -929,7 +985,15 @@ struct STRU_CNT_MS{
     int WatchdogDelay;
     int PowerOnForRechargeVoltage;
     int WIFIDelay;
+
+    /*
+     * 当三相不平衡现象持续时长超过该值，判定：设备处于三相不平衡状态。WY
+     */
     int UNCurrDelay1;
+
+    /*
+     * 当三相平衡现象持续时长超过该值，判定：设备处于三相平衡状态。WY
+     */
     int UNCurrDelay2;
 };
 extern struct STRU_CNT_MS CntMs;
@@ -956,112 +1020,128 @@ struct STRU_CNT_SEC{
 };
 extern struct STRU_CNT_SEC CntSec;
 
-struct STRU_STATE_FLAG{
-	Uint16 UserParamWrite			:1;
-	Uint16 ManuToProtecWrite		:1;
-	Uint16 SpecialParamWrite		:1;
-	Uint16 FactoryParamWrite		:1;
-	Uint16 HarmonicParamWrite		:1;
-	Uint16 CapDataParamWrite		:1;
-	Uint16 FactoryParamRefresh		:1;
-	Uint16 harmCompPercParamRefresh	:1;
-	Uint16 HarmonicWaveParamRefresh	:1;
-	Uint16 autoAdcOffsetFlag		:1;
-	Uint16 onceTimeAdcAutoAdjust	:1;
-	Uint16 onceTimeStateMachine     :1;
-	Uint16 onceRunStartFlag			:1;
-	Uint16 realFaultFlag			:1;
-	Uint16 VolSurTimeFlag			:1;
-	Uint16 StabilizeFlag			:1;
-	Uint16 SoeFlag					:1;
-	Uint16 isStarted				:1;
-	Uint16 isStopped				:1;
-	Uint16 isFault					:1;
-	Uint16 doFaultClear				:1;
-	Uint16 doStop					:1;
-	Uint16 doStart					:1;
-	Uint16 waitFlag					:1;
-	Uint16 stopwait					:1;
-	Uint16 doWarningCancelSound		:1;
-	Uint16 negCurCompFlag			:1;		//负序补偿开启
-	Uint16 harmCompEn				:1;		//谐波补偿开启
-	Uint16 reactPrCompFlag			:1;		//无功补偿开启
-	Uint16 AVCPrCompFlag			:1;		//AVC补偿开启
-	Uint16 VoltcompenFlag           :1;     //电压补偿开启
-	Uint16 VoltageModeFlag			:1;
-	Uint16 apfWiringmethod			:1;
-	Uint16 startingMethod			:1;
-	Uint16 isHarmCompensateMode		:1;		//0发谐波模式 1补偿
-	Uint16 ManualUbanCurFlag		:1;		//厂家设置手动发不平衡模式
-	Uint16 positionCT				:1;
-	Uint16 spwmFlag					:1;
-	Uint16 DynamicProportionEn		:1;
-	Uint16 VoltFilterEn				:1;
-	Uint16 SVPWMEn					:1;
-	Uint16 InvCurUVRmsReadyFlag     :1;
-	Uint16 prioritizedModeFlag		:2;		//Bit10~12：优先设定,0,1:无功优先2:谐波优先3:不平衡优先
-	Uint16 modeChoosedFlag 			:4; 	// 模式选择
-	Uint16 constantQFlag			:2;		//Bit6~7：无功补偿模式,	0:恒无功功率  1:恒无功电流
-											//		 				2:恒功率因数  3:关闭无功补偿
-	Uint16 VoltageMode				:3;
-//	Uint16 autoStFlag				:4;
-	Uint16 startFlag				:1;
-	Uint16 stopFlag					:1;
-	Uint16 resetFlag				:1;
-//	Uint16 faultFlag				:1;
-	Uint16 selfJcOkFlag				:1;
-	Uint16 RespondFlag				:5;
-	Uint16 LEDRunFlag				:1;
-	Uint16 resetFaultOnceTime		:1;
-	Uint16 EEPROMResourceLock		:1;
-	Uint16 onceOneMinFlag			:1;
-	Uint16 RxcFlag					:1;
-	Uint16 SendFlag					:1;
-	Uint16 NegativeSequenceFlag		:1;
-	Uint16 CurrACountFlag			:1;
-	Uint16 CurrBCountFlag			:1;
-	Uint16 CurrCCountFlag			:1;
-	Uint16 DelayCalculationFlag		:1;
-	Uint16 MakeEnergyFlag			:1;
+struct STRU_STATE_FLAG
+{
+	Uint16 UserParamWrite :1;
+	Uint16 ManuToProtecWrite :1;
+	Uint16 SpecialParamWrite :1;
+	Uint16 FactoryParamWrite :1;
+	Uint16 HarmonicParamWrite :1;
+	Uint16 CapDataParamWrite :1;
+	Uint16 FactoryParamRefresh :1;
+	Uint16 harmCompPercParamRefresh :1;
+	Uint16 HarmonicWaveParamRefresh :1;
+	Uint16 autoAdcOffsetFlag :1;
+	Uint16 onceTimeAdcAutoAdjust :1;
+	Uint16 onceTimeStateMachine :1;
+	Uint16 onceRunStartFlag :1;
+	Uint16 realFaultFlag :1;
+	Uint16 VolSurTimeFlag :1;
+	Uint16 StabilizeFlag :1;
+	Uint16 SoeFlag :1;
+	Uint16 isStarted :1;
+	Uint16 isStopped :1;
+	Uint16 isFault :1;
+	Uint16 doFaultClear :1;
+	Uint16 doStop :1;
+	Uint16 doStart :1;
+	Uint16 waitFlag :1;
+	Uint16 stopwait :1;
+	Uint16 doWarningCancelSound :1;
+	Uint16 negCurCompFlag :1;//负序补偿开启
+	Uint16 harmCompEn :1;//谐波补偿开启
+	Uint16 reactPrCompFlag :1;//无功补偿开启
+	Uint16 AVCPrCompFlag :1;//AVC补偿开启
+	Uint16 VoltcompenFlag :1;//电压补偿开启
+
+	/*
+	 * 工作模式。WY
+	 * 0：升压；
+	 * 1：降压。
+	 */
+	Uint16 VoltageModeFlag :1;
+
+	Uint16 apfWiringmethod :1;
+	Uint16 startingMethod :1;
+	Uint16 isHarmCompensateMode :1;//0发谐波模式 1补偿
+	Uint16 ManualUbanCurFlag :1;//厂家设置手动发不平衡模式
+	Uint16 positionCT :1;
+	Uint16 spwmFlag :1;
+	Uint16 DynamicProportionEn :1;
+	Uint16 VoltFilterEn :1;
+	Uint16 SVPWMEn :1;
+	Uint16 InvCurUVRmsReadyFlag :1;
+	Uint16 prioritizedModeFlag :2;//Bit10~12：优先设定,0,1:无功优先2:谐波优先3:不平衡优先
+	Uint16 modeChoosedFlag :4;// 模式选择
+	Uint16 constantQFlag :2;//Bit6~7：无功补偿模式,	0:恒无功功率  1:恒无功电流
+//		 				2:恒功率因数  3:关闭无功补偿
+
+	/*
+	 * 工作模式。WY
+	 * 0：升压模式；
+	 * 1：降压模式；
+	 * 2：升降压模式；
+	 * 3：不平衡模式；
+	 * 4：无功补偿模式。
+	 */
+	Uint16 VoltageMode :3;
+
+	Uint16 startFlag :1;
+	Uint16 stopFlag :1;
+	Uint16 resetFlag :1;
+	Uint16 selfJcOkFlag :1;
+	Uint16 RespondFlag :5;
+	Uint16 LEDRunFlag :1;
+	Uint16 resetFaultOnceTime :1;
+	Uint16 EEPROMResourceLock :1;
+	Uint16 onceOneMinFlag :1;
+	Uint16 RxcFlag :1;
+	Uint16 SendFlag :1;
+	Uint16 NegativeSequenceFlag :1;
+	Uint16 CurrACountFlag :1;
+	Uint16 CurrBCountFlag :1;
+	Uint16 CurrCCountFlag :1;
+	Uint16 DelayCalculationFlag :1;
+	Uint16 MakeEnergyFlag :1;
 //	Uint16 ForceRecordWaveRefresh	:1;		//界面波形显示刷新
-	Uint16 ForceRMSRefresh			:1;		//多机并联均衡有效值刷新
-	Uint16 FactoryMode				:4;		//测试放电
-	Uint16 RechargeUdcFullFlag		:1;		//直流电容充电已冲饱
-	Uint16 EnTransformRatioMode		:1;		//高压侧变压器使能
-	Uint16 TransformRatioMode		:3;		//高压侧变压器组别模式
-	Uint16 cntForTHDi				:1;
-	Uint16 PLLSafetyFlag			:1;
-	Uint16 HFOverCurrentFlag		:1;
-	Uint16 startOnecRec				:1;		//
-	Uint16 MainContactOnShadow		:1;
-	Uint16 MainContactEnanle        :1;
-	Uint16 dcBusVtIncStart			:1;
-	Uint16 CapEmergShutFlag			:1;
-	Uint16 StateInstruction			:3;
-	Uint16 DirectionJudgeFail		:1;
-	Uint16 PhaseSequeJudSucceedFlag	:1;
-	Uint16 DirectionJudFailFlag		:1;
-	Uint16 ManufacturerParameters	:1;
-	Uint16 VitruZeroParameters		:1;
-	Uint16 UserPreferences			:1;
-	Uint16 SequenceAutoFlag			:1;
-	Uint16 PowerFactor				:2;
-	Uint16 SOEFullFlag				:1;
-	Uint16 IDPreferences			:1;
-    Uint16 WatchdogFlag             :1;
-    Uint16 RecordWritting			:1;
-    Uint16 RemoteWriteHoldFlag		:1;
-    Uint16 RemoteWriteCoilFlag      :1;
-    Uint16 CapStateFlag             :1;
-    Uint16 StartEraseFlag           :1;
-    Uint16 StartFlashFlag           :1;
-    Uint16 RecordStates             :1;
-    Uint16 FlashRecordFlag          :1;
-    Uint16 FanctrlTestFlag          :1;
-    Uint16 LowPowerFlag             :1;
-    Uint16 LowPowerStart            :1;
-    Uint16 TempSoeRecord            :1;
-    Uint16 RechageskipstopFlag      :1;
+	Uint16 ForceRMSRefresh :1;//多机并联均衡有效值刷新
+	Uint16 FactoryMode :4;//测试放电
+	Uint16 RechargeUdcFullFlag :1;//直流电容充电已冲饱
+	Uint16 EnTransformRatioMode :1;//高压侧变压器使能
+	Uint16 TransformRatioMode :3;//高压侧变压器组别模式
+	Uint16 cntForTHDi :1;
+	Uint16 PLLSafetyFlag :1;
+	Uint16 HFOverCurrentFlag :1;
+	Uint16 startOnecRec :1;//
+	Uint16 MainContactOnShadow :1;
+	Uint16 MainContactEnanle :1;
+	Uint16 dcBusVtIncStart :1;
+	Uint16 CapEmergShutFlag :1;
+	Uint16 StateInstruction :3;
+	Uint16 DirectionJudgeFail :1;
+	Uint16 PhaseSequeJudSucceedFlag :1;
+	Uint16 DirectionJudFailFlag :1;
+	Uint16 ManufacturerParameters :1;
+	Uint16 VitruZeroParameters :1;
+	Uint16 UserPreferences :1;
+	Uint16 SequenceAutoFlag :1;
+	Uint16 PowerFactor :2;
+	Uint16 SOEFullFlag :1;
+	Uint16 IDPreferences :1;
+	Uint16 WatchdogFlag :1;
+	Uint16 RecordWritting :1;
+	Uint16 RemoteWriteHoldFlag :1;
+	Uint16 RemoteWriteCoilFlag :1;
+	Uint16 CapStateFlag :1;
+	Uint16 StartEraseFlag :1;
+	Uint16 StartFlashFlag :1;
+	Uint16 RecordStates :1;
+	Uint16 FlashRecordFlag :1;
+	Uint16 FanctrlTestFlag :1;
+	Uint16 LowPowerFlag :1;
+	Uint16 LowPowerStart :1;
+	Uint16 TempSoeRecord :1;
+	Uint16 RechageskipstopFlag :1;
 };
 extern struct STRU_STATE_FLAG StateFlag;
 
@@ -1114,16 +1194,6 @@ typedef struct{
 	float DcBusVDnDevcoef;
 	float ApfOutCuDevcoef;
 	float CTOutCurDevcoef;
-
-//	int *GridHVoltA;
-//	int *GridHVoltB;
-//	int *GridHVoltC;
-//	int *GridLVoltA;
-//	int *GridLVoltB;
-//	int *GridLVoltC;
-//	int *GridCurr1;
-//	int *GridCurr2;
-//	int *GridCurr3;
 }VirtulADStru;
 extern VirtulADStru VirtulAD;
 
@@ -1168,7 +1238,7 @@ extern VirtulADStruval VirtulADval;
 struct ESC_STRU_CNT_MS{
     int ContactorDelay;
     int PllDelay;
-    int HarmDisDelay;      //ESC电网谐波畸变延时
+    int HarmDisDelay; //电网电压突变持续的时间（单位：ms）。WY
     int FaultDelayFlag;
     int StartDelay;
     int SelfJc;
@@ -1222,9 +1292,9 @@ typedef struct
 	Uint16 FaultJudgeFlag :1;
 	Uint16 BYFEEDBACKFLAG :1;
 
-	float VoltIn_rms;
-	float gridCur_rms;
-	float ESC_DutyData;
+	float VoltIn_rms; //电网电压有效值。WY
+	float gridCur_rms; //电网电流有效值。WY
+	float ESC_DutyData; //PWM占空比。WY
 	float VoltOut_rms;
 	float gridCurrBY_rms;
 
@@ -1232,32 +1302,33 @@ typedef struct
 	int StableValue;
 	int VoltThreShold;//门限值
 	int Backdiffvalue;
-	int PWM_ins_index;
+	int PWM_ins_index; //主路PWM调制状态。0，主路处于PWM调制状态；1，主路处于PWM直通状态。WY
 	int PllDelay;
 	int EscWaitRunDelayCnt;
 	int EscStandyDelayCnt1;
 	int EscStandyDelayCnt2;
-	int Volttarget;//目标值
+	int Volttarget; //负载电压有效值的目标值。WY
 }ESCCTRLVALFLAG;
 extern ESCCTRLVALFLAG ESCFlagA,ESCFlagB,ESCFlagC;
 
-typedef struct {
-	float UNIT_OVER_TEMP ; 				// 散热片温度限制
-	float BOARD_OVER_TEMP ; 			// 散热片温度限制
-	float INDUCE_OVER_TEMP; 			// 电抗器线圈温度限制
-	float MotherBoardTempterature;		// 板载温度
-	float HeatSinkTempterature;			// 散热片温度
-	float EnvirTemperature;              //环境温度
-	float windColdStartTempterature;	// 散热片传感器控制风机启动温度
-	float windColdStopTempterature;		// 散热片传感器控制风机停止温度
-	float MotherBoardStartTempterature;	// 板载传感器控制风机启动温度
-	float MotherBoardStopTempterature;	// 板载传感器控制风机停止温度
-	float ReduceCapacityHeatSink;		// 散热片降容模式温度
-	float BackReduceCapacityHeatSink;	// 降容模式恢复温度
-	float ReduceCapacityMotherBoard;	// 板载降容模式温度
+typedef struct
+{
+	float UNIT_OVER_TEMP; //单元外壳温度上限。WY
+	float BOARD_OVER_TEMP; //散热片出风口温度上限。WY
+	float INDUCE_OVER_TEMP;// 电抗器线圈温度限制
+	float MotherBoardTempterature;// 板载温度
+	float HeatSinkTempterature;// 散热片温度
+	float EnvirTemperature;//环境温度
+	float windColdStartTempterature;// 散热片传感器控制风机启动温度
+	float windColdStopTempterature;// 散热片传感器控制风机停止温度
+	float MotherBoardStartTempterature;// 板载传感器控制风机启动温度
+	float MotherBoardStopTempterature;// 板载传感器控制风机停止温度
+	float ReduceCapacityHeatSink;// 散热片降容模式温度
+	float BackReduceCapacityHeatSink;// 降容模式恢复温度
+	float ReduceCapacityMotherBoard;// 板载降容模式温度
 	float BackReduceCapacityMotherBoard;// 降容恢复恢复温度
 	Uint16 ColdFunCnt;
-	Uint16 windColdCtrMode;				// 风机运行模式1:一直开启 0,受温度传感器控制
+	Uint16 windColdCtrMode;// 风机运行模式1:一直开启 0,受温度传感器控制
 }STRU_WinCold;
 extern STRU_WinCold WindCold;
 

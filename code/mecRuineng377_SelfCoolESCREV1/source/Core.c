@@ -1130,7 +1130,7 @@ void MCUfilterMemCopy(DF22 *dst,int16 num)
 #define FFTMAG_SEGMENT2 10
 #define FFTMAG_SEGMENT3 (CALIBRATION_COEFF_LEN - FFTMAG_SEGMENT1 - FFTMAG_SEGMENT2)
 
-void InitMCUFilter(void)
+void InitMCUFilter(void) //选定开关频率
 {
     int i;
     MCUfilterMemCopy(&VolAndInvCurrFilter[0],           GRIDVOLT_DEFAULT_NUM);
@@ -1493,6 +1493,7 @@ void clock1ms(void)
     if(++CapEmergTim >= 4500)           CapEmergTim = 4500;
     if(++RandTimCount >= 60)            RandTimCount = 60;
 }
+
 void clock5ms(void)
 {
     static int j=2;

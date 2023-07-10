@@ -83,15 +83,23 @@ long cladbg1=0;
 #pragma DATA_SECTION(AdcaResultRegsADCRESULT8,              "CLADataLS01");
 
 float Esc_PhaseA = 0,Esc_PhaseB = 0,Esc_PhaseC = 0;
-float Esc_VoltPhaseA = 0,Esc_VoltPhaseB = 0,Esc_VoltPhaseC = 0;
+
+float Esc_VoltPhaseA = 0; //A相相位。WY
+float Esc_VoltPhaseB = 0; //B相相位。WY
+float Esc_VoltPhaseC = 0; //C相相位。WY
+
 float VirtulAD_loadCurrentA,VirtulAD_loadCurrentB,VirtulAD_loadCurrentC;
 int CurrDirA,CurrDirB,CurrDirC;
 float CLATestValue = 2.0f;
 int32 T1PRmulESC_T1PR;
 
-int32 T1PRmulESC_DutyDataA,T1PRmulESC_DutyDataB,T1PRmulESC_DutyDataC;
+int32 T1PRmulESC_DutyDataA; //A相PWM周期值。WY
+int32 T1PRmulESC_DutyDataB; //A相PWM周期值。WY
+int32 T1PRmulESC_DutyDataC; //A相PWM周期值。WY
+
 int32 T1PRmulESC_DutyDataAaddnegCurCompPerc,T1PRmulESC_DutyDataBaddnegCurCompPerc,T1PRmulESC_DutyDataCaddnegCurCompPerc;
 int32 T1PRmulESC_DutyDataAsubnegCurCompPerc,T1PRmulESC_DutyDataBsubnegCurCompPerc,T1PRmulESC_DutyDataCsubnegCurCompPerc;
+
 Uint32 *EPwm8RegsCMPA,*EPwm8RegsCMPB,*EPwm7RegsCMPA,*EPwm7RegsCMPB,*EPwm6RegsCMPA,*EPwm6RegsCMPB,*EPwm5RegsCMPA,*EPwm5RegsCMPB,*EPwm4RegsCMPA,*EPwm4RegsCMPB,*EPwm3RegsCMPA,*EPwm3RegsCMPB;
 Uint32 *EPwm8RegsAQCSFRC,*EPwm7RegsAQCSFRC,*EPwm6RegsAQCSFRC,*EPwm5RegsAQCSFRC,*EPwm4RegsAQCSFRC,*EPwm3RegsAQCSFRC;
 

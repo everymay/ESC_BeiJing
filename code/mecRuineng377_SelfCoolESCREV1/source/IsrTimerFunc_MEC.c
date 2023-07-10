@@ -16,7 +16,12 @@
 extern const Swi_Handle FFTstart;
 float32 ADBuff[6][ADTEMPBUFLEN];
 int T1PRPwmFrequency = 0;
-int ADBufPos=0;
+
+/*
+ * 节拍。WY
+ * 该变量在ADC-D-1的中断ISR中被使用。
+ */
+int ADBufPos = 0;
 
 Uint16 FFTSrcBufp=0;
 Uint16 ADGROUP_NUM=8;
@@ -68,6 +73,9 @@ void getFFTData(void)
     if(++FFTSrcBufp >= ADTEMPBUFLEN) FFTSrcBufp=0;
 }
 
+/*
+ * 功能：校正AD零偏。WY
+ */
 inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
 {
 #if TEST_VIRTUALSOURCE == 0
@@ -320,86 +328,6 @@ inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
 //输出基本正序(有功功率和无功功率)、负序(有功功率和无功功率)和零序的函数。
 inline void InverseTransformF(void)
 {
-//    float32 dq2Ualpha,dq2Ubeta,tmpSin,tmpCos;
-//    float32 volFundA,volFundB,volFundC;
-//    //Negative inverse transform
-//    if(StateFlag.negCurCompFlag == 1){
-// 		DQ2UALPHA_NEG(negCurCompD,negCurCompQ);
-// 		ICLACK(CurFundNgA,CurFundNgB,CurFundNgC,LoadFundaCurZ);
-//    }else{
-// 		CurFundNgA=0;CurFundNgB=0;CurFundNgC=0;
-//    }
-//    if(!StateFlag.negCurCompFlag){
-//        if(StateFlag.VolSurTimeFlag)//电压补偿（Q无功补偿）
-//        {
-//            dq2Ualpha = currentRefD  * GridResCos - currentRefQa * GridResSin;
-//            dq2Ubeta =  currentRefD  * GridResSin + currentRefQa * GridResCos;
-//            CurFundA = UdcBalanceCurr + dq2Ualpha * SQRT_2DIV3;
-//
-//            dq2Ualpha = currentRefD  * GridResCos - currentRefQb * GridResSin;
-//            dq2Ubeta =  currentRefD  * GridResSin + currentRefQb * GridResCos;
-//            CurFundB = UdcBalanceCurr + dq2Ualpha * -SQRT_2DIV3_DIV2 + dq2Ubeta * SQRT2_DIV2;
-//
-//            dq2Ualpha = currentRefD  * GridResCos - currentRefQc * GridResSin;
-//            dq2Ubeta =  currentRefD  * GridResSin + currentRefQc * GridResCos;
-//            CurFundC = UdcBalanceCurr + dq2Ualpha * -SQRT_2DIV3_DIV2 + dq2Ubeta * -SQRT2_DIV2;
-//        }else{
-//            tmpSin = GridResSin * I_ins_index * SQRT3;
-//            tmpCos = GridResCos * I_ins_index * SQRT3;
-//
-//            dq2Ualpha = currentRefD * GridResCos - currentRefA * tmpSin;
-//            dq2Ubeta =  currentRefD * GridResSin + currentRefA * tmpCos;
-//            CurFundA = UdcBalanceCurr + dq2Ualpha * SQRT_2DIV3;
-//
-//            dq2Ualpha = currentRefD * GridResCos - currentRefB * tmpSin;
-//            dq2Ubeta =  currentRefD * GridResSin + currentRefB * tmpCos;
-//            CurFundB = UdcBalanceCurr + dq2Ualpha * -SQRT_2DIV3_DIV2 + dq2Ubeta * SQRT2_DIV2;
-//
-//            dq2Ualpha = currentRefD * GridResCos - currentRefC * tmpSin;
-//            dq2Ubeta =  currentRefD * GridResSin + currentRefC * tmpCos;
-//            CurFundC = UdcBalanceCurr + dq2Ualpha * -SQRT_2DIV3_DIV2 + dq2Ubeta * -SQRT2_DIV2;
-//
-//            //Positive inverse transform standby
-//            dq2Ualpha = -currentRefA * GridResSin * SQRT3;
-//            CurFundStandbyA = UdcBalanceCurr + dq2Ualpha * SQRT_2DIV3;
-//            dq2Ualpha = -currentRefB * GridResSin * SQRT3;
-//            dq2Ubeta =   currentRefB * GridResCos * SQRT3;
-//            CurFundStandbyB = UdcBalanceCurr + dq2Ualpha * -SQRT_2DIV3_DIV2 + dq2Ubeta * SQRT2_DIV2;
-//            dq2Ualpha = -currentRefC * GridResSin * SQRT3;
-//            dq2Ubeta =   currentRefC * GridResCos * SQRT3;
-//            CurFundStandbyC = UdcBalanceCurr + dq2Ualpha * -SQRT_2DIV3_DIV2 + dq2Ubeta * -SQRT2_DIV2;
-//        }
-//    }else{
-//        //Positive inverse transform
-//        dq2Ualpha = currentRefD * GridResCos - currentRefQ * GridResSin * I_ins_index;
-//        dq2Ubeta =  currentRefQ * GridResCos * I_ins_index + currentRefD * GridResSin;
-//    //  ICLACK(CurFundA,CurFundB,CurFundC,UdcBalanceCurr);
-//        CurFundA = UdcBalanceCurr + dq2Ualpha * SQRT_2DIV3;
-//        CurFundB = UdcBalanceCurr + dq2Ualpha *-SQRT_2DIV3_DIV2 + dq2Ubeta * SQRT2_DIV2;
-//        CurFundC = UdcBalanceCurr + dq2Ualpha *-SQRT_2DIV3_DIV2 + dq2Ubeta *-SQRT2_DIV2;
-//
-//        //Positive inverse transform standby
-//        dq2Ualpha = -currentRefQ * GridResSin;
-//        dq2Ubeta =   currentRefQ * GridResCos;
-//        ICLACK(CurFundStandbyA,CurFundStandbyB,CurFundStandbyC,UdcBalanceCurr);
-//    }
-//    //Inverter current positive inverse transform
-//	dq2Ualpha =	-InvFundaCurQ * GridResCos - InvFundaCurD * GridResSin;		//DQ axis decoupling control
-//	dq2Ubeta =   InvFundaCurD * GridResCos - InvFundaCurQ * GridResSin;
-//
-//    volFundA = Q2D_ratio*(dq2Ualpha* SQRT_2DIV3);
-//    volFundB = Q2D_ratio*(dq2Ualpha*-SQRT_2DIV3_DIV2 + dq2Ubeta * SQRT2_DIV2);
-//    volFundC = Q2D_ratio*(dq2Ualpha*-SQRT_2DIV3_DIV2 + dq2Ubeta *-SQRT2_DIV2);
-//
-//    //Inverter current negative inverse transform
-//	dq2Ualpha = InvFundaCurNQ * GridResCos - InvFundaCurND * GridResSin;	//DQ axis decoupling control
-//	dq2Ubeta = -InvFundaCurND * GridResCos - InvFundaCurNQ * GridResSin;
-//
-//    VolFundA = volFundA + Q2D_ratio * (dq2Ualpha * SQRT_2DIV3);
-//    VolFundB = volFundB + Q2D_ratio * (dq2Ualpha *-SQRT_2DIV3_DIV2 + dq2Ubeta * SQRT2_DIV2);
-//    VolFundC = volFundC + Q2D_ratio * (dq2Ualpha *-SQRT_2DIV3_DIV2 + dq2Ubeta *-SQRT2_DIV2);
-//
-////    PRController();
 }
 
 //function of output fundamental positive sequence (active and reactive) and negative sequence (active and reactive power) and zero sequence.
@@ -449,157 +377,15 @@ void CurrRefCaul(void)
 //用于计算非整采样点间的数据,现在为1/2
 void GetGridLoadcurrAD(void)
 {
-//    VirtulADStru *pAD = &VirtulAD;
-//
-//    GridCurrPrvAD[0]=(*pAD->GridCurr1 - pAD->loadCurrentA);             //AD value
-//    GridCurrPrvAD[2]=(*pAD->GridCurr3 - pAD->loadCurrentC);
-//    GridCurrPrvAD[1]=(FactorySet.Infer.B.DefectCT) ? -(GridCurrPrvAD[0]+GridCurrPrvAD[2]) : (*pAD->GridCurr2 - pAD->loadCurrentB);//0:3个CT,!0:B相CT缺失
-//    GridCurrPrvADFlag = true;
 }
 
 void GetGridLoadcurr(void)      //12.8k
 {
-//#if	TEST_VIRTUALSOURCE == 0
-//    VirtulADStru *pAD = &VirtulAD;
-//    float tmp1=(*pAD->GridCurr1 - pAD->loadCurrentA);               //AD value
-//    float tmp3=(*pAD->GridCurr3 - pAD->loadCurrentC);
-//    float tmp2=(FactorySet.Infer.B.DefectCT) ? -(tmp1+tmp3) : (*pAD->GridCurr2 - pAD->loadCurrentB);//0:3个CT,!0:B相CT缺失
-//
-//    if(GridCurrPrvADFlag){
-//        GridCurrPrvADFlag = false;
-//        tmp1=(GridCurrPrvAD[0]+tmp1)*0.5;
-//        tmp3=(GridCurrPrvAD[2]+tmp3)*0.5;
-//        tmp2=(GridCurrPrvAD[1]+tmp2)*0.5;
-//    }
-//
-//	if(!StateFlag.positionCT){				//电流在电网侧取样
-//		if(StateFlag.EnTransformRatioMode){												//此系数为0关闭高压侧补偿
-//            GridCurrHvA = tmp1*pAD->LoadCurRatioA;                  //高压侧实测网侧电流
-//            GridCurrHvC = tmp3*pAD->LoadCurRatioC;
-//            GridCurrHvB = tmp2*pAD->LoadCurRatioB;
-//			switch(StateFlag.TransformRatioMode){
-//            case 1://Dyn11
-//            case 3://YNd11
-//                GridCurrA= (GridCurrHvA - GridCurrHvB)*TransformCurrH2L;//(A-B)         //Dyn11方式,折算到低压侧APF的输出端.
-//                GridCurrB= (GridCurrHvB - GridCurrHvC)*TransformCurrH2L;//(B-C)         //Dyn11
-//                GridCurrC= (GridCurrHvC - GridCurrHvA)*TransformCurrH2L;//(C-A)         //Dyn11
-//                break;
-//            case 0: //Yyn0
-//                GridCurrA= (GridCurrHvA )*TransformCurrH2L;                     //Yyn0方式,折算到低压侧APF的输出端.
-//                GridCurrB= (GridCurrHvB )*TransformCurrH2L;                     //
-//                GridCurrC= (GridCurrHvC )*TransformCurrH2L;                     //
-//                break;
-//            case 2://Dyn1
-//                GridCurrA= (GridCurrHvA - GridCurrHvC)*TransformCurrH2L;//(A-C)         //Dyn1
-//                GridCurrB= (GridCurrHvB - GridCurrHvA)*TransformCurrH2L;//(B-A)         //
-//                GridCurrC= (GridCurrHvC - GridCurrHvB)*TransformCurrH2L;//(C-B)         //
-//                break;
-//            }
-//        }else{
-//            GridCurrA = tmp1*pAD->LoadCurRatioA;
-//            GridCurrC = tmp3*pAD->LoadCurRatioC;
-//            GridCurrB = tmp2*pAD->LoadCurRatioB;
-//        }
-//
-//		if(StateFlag.SequenceAutoFlag){//此处是因为FFT分析的是负载电流
-//            LoadRealCurA = GridCurrA;
-//            LoadRealCurB = GridCurrB;
-//            LoadRealCurC = GridCurrC;
-//        }else{
-//            LoadRealCurA= (GridCurrA - ApfOutCurA*MU_LCD_RATIO);  //loadRealCurA,因为延时不一样,得做校正
-//            LoadRealCurB= (GridCurrB - ApfOutCurB*MU_LCD_RATIO);  //loadRealCurB
-//            LoadRealCurC= (GridCurrC - ApfOutCurC*MU_LCD_RATIO);  //loadRealCurC
-//        }
-//    }else{  //电流在负载侧取样
-//		if(StateFlag.EnTransformRatioMode){												//此系数为0关闭高压侧补偿
-//            LoadRealCurHvA  = tmp1*pAD->LoadCurRatioA;                  //高压侧实测负载侧电流
-//            LoadRealCurHvB  = tmp2*pAD->LoadCurRatioB;
-//            LoadRealCurHvC  = tmp3*pAD->LoadCurRatioC;
-//			switch(StateFlag.TransformRatioMode){
-//            case 1://Dyn11
-//            case 3://YNd11
-//                LoadRealCurA= (LoadRealCurHvA - LoadRealCurHvB)*TransformCurrH2L;//(A-B)            //Dyn11方式,折算到低压侧APF的输出端.
-//                LoadRealCurB= (LoadRealCurHvB - LoadRealCurHvC)*TransformCurrH2L;//(B-C)            //Dyn11
-//                LoadRealCurC= (LoadRealCurHvC - LoadRealCurHvA)*TransformCurrH2L;//(C-A)            //Dyn11
-//                break;
-//            case 0: //Yyn0
-//                LoadRealCurA= (LoadRealCurHvA )*TransformCurrH2L;                       //Yyn0方式,折算到低压侧APF的输出端.
-//                LoadRealCurB= (LoadRealCurHvB )*TransformCurrH2L;                       //
-//                LoadRealCurC= (LoadRealCurHvC )*TransformCurrH2L;                       //
-//                break;
-//            case 2://Dyn1
-//                LoadRealCurA= (LoadRealCurHvA - LoadRealCurHvC)*TransformCurrH2L;//(A-C)            //Dyn1
-//                LoadRealCurB= (LoadRealCurHvB - LoadRealCurHvA)*TransformCurrH2L;//(B-A)            //
-//                LoadRealCurC= (LoadRealCurHvC - LoadRealCurHvB)*TransformCurrH2L;//(C-B)            //
-//                break;
-//            }
-//        }else{
-//			if(CapGroupAct.capgroupswitch.B.CapVarUnseal){			//使能电容器组投切
-//                AllCapCapacityPhA=AllCapCapacityPhB=AllCapCapacityPhC=0;
-//            }
-//
-////		    float *pPrvVolt     = VoltSlid[CapVoltPosCur];
-////
-////            // I = U / Z = 2πfCU//(51 = 1/(250x250x314x1e-9))
-////            RUICA = AllCapCapacityPhA * *pPrvVolt++ * CAP_LOAD_RATIO;
-////            RUICB = AllCapCapacityPhB * *pPrvVolt++ * CAP_LOAD_RATIO;
-////            RUICC = AllCapCapacityPhC * *pPrvVolt++ * CAP_LOAD_RATIO;
-//            LoadRealCurA = tmp1*pAD->LoadCurRatioA + RUICA;
-//            LoadRealCurC = tmp3*pAD->LoadCurRatioC + RUICC;
-//            LoadRealCurB = tmp2*pAD->LoadCurRatioB + RUICB;
-//        }
-//        GridCurrA = (LoadRealCurA + ApfOutCurA*MU_LCD_RATIO);
-//        GridCurrB = (LoadRealCurB + ApfOutCurB*MU_LCD_RATIO);
-//        GridCurrC = (LoadRealCurC + ApfOutCurC*MU_LCD_RATIO);
-//    }
-//    //JCLDBG
-////  int16 xPhaseA,xPhaseA1,xPhaseA2;
-////  static float32 DbgStepPhaA=D2R(0);
-//
-////  DbgStepPhaA+=PI2/FUNDPOINT;
-////  CLAPhaseLimit(DbgStepPhaA);
-////  //To calculate the fundamental power
-////  xPhaseA =PhaseLimitI( (DbgStepPhaA*5  )*(PI2_SINE_LOOKTABLE/PI2) );
-////  xPhaseA1=PhaseLimitI( (DbgStepPhaA*7  )*(PI2_SINE_LOOKTABLE/PI2) ); //3次谐波
-////  xPhaseA2=PhaseLimitI( (DbgStepPhaA*19 )*(PI2_SINE_LOOKTABLE/PI2) ); //5次谐波
-////
-////  LoadRealCurC=LoadRealCurB=LoadRealCurA=\
-////  pSineLookTab(xPhaseA) *100 + pSineLookTab(xPhaseA1) *(100*0.5) + pSineLookTab(xPhaseA2) *(100*0.25);    //matrix realA*realB-imagA*imagB
-//
-//#else
-//	LoadRealCurA=TestLoadCurS(0);
-//	LoadRealCurB=TestLoadCurS(1);
-//	LoadRealCurC=TestLoadCurS(2);
-//	GridCurrA=TestLoadCurS(0);
-//	GridCurrB=TestLoadCurS(1);
-//	GridCurrC=TestLoadCurS(2);
-//#endif
-//#if TEST_DEBUGFFT
-//    GridCurrA=LoadRealCurA=TestLoadCurS(0);
-//    GridCurrA=LoadRealCurB=TestLoadCurS(1);
-//    GridCurrA=LoadRealCurC=TestLoadCurS(2);
-//#endif
+
 }
 
 void GetUdc(void)
 {
-//#if TEST_VIRTUALSOURCE == 0
-//    VirtulADStru *pAD = &VirtulAD;
-//
-//    dcVoltUp    = (ADC_RU_UDCUP - pAD->dcBusVoltUp)*(dcVoltUpRatio);    //dcVoltUp - 0.000586
-//    dcVoltDn    = (ADC_RU_UDCDN - pAD->dcBusVoltDn)*(dcVoltDnRatio);    //dcVsoltDn - 0.000586
-//    // 直流侧采样系数 2.67/940， 3V可以采集到1056，软件采样变换系数为1056.18/4096 = 0.257856
-//    dcVoltUpF   =DCL_runDF22(&UdcUpFilter, dcVoltUp);   //sampling frequency 16kHz
-//    dcVoltDnF   =DCL_runDF22(&UdcDnFilter, dcVoltDn);
-//    dcVoltF=dcVoltUpF + dcVoltDnF;
-//#if TEST_NULLPULSE
-//    if(dcVoltF<10) dcVoltF=10;
-//#endif
-//    //-dcVoltF  =DCL_runDF22(&UdcFilter, dcVoltUp + dcVoltDn);
-//#else
-//    dcVoltDnF=dcVoltUpF=dcVoltUp=dcVoltDn=750*0.5f;
-//    dcVoltF=750;
-//#endif
 }
 
 
@@ -633,147 +419,69 @@ inline void FaultRecordSel(void)
 	ErrorRecord.B.REC_FFT_MODE = pSel->isFFTMode;
 }
 
+/*
+ * 功能：产生DSP心跳脉冲。WY
+ * 说明：通过翻转GPIO电平，产生DSP心跳脉冲。
+   该函数在ADC-D-1的中断ISR中被调用，故脉冲频率取决于ADC-D-1的中断频率。
+ */
 inline void  SetHeatPulse(void)
 {
 #if HEATPULSE==1
-	TOGGLE_PULSE();
+	TOGGLE_PULSE(); //翻转GPIO电平。WY
 #endif
 }
 
-inline void	ADPosCnt(void)
+/*
+ * 功能：产生节拍。
+ * 说明：该函数在ADC-D-1的中断ISR中被调用
+ */
+inline void ADPosCnt(void)
 {
-	if(++ADBufPos>=ADGROUP_NUM) ADBufPos=0;
-    TimeStamp=PhaseLimit(TimeStamp+IFFT_PHASE_STEP); //ifft用的时间戳产生
+	if (++ADBufPos >= ADGROUP_NUM)
+	{
+		ADBufPos = 0;
+	}
+
+	TimeStamp = PhaseLimit(TimeStamp + IFFT_PHASE_STEP);//ifft用的时间戳产生
 }
 
-inline void VoltSlidPosCnt(void)    //构造正弦波
+/*
+ * 功能：构造正弦波。WY
+ */
+inline void VoltSlidPosCnt(void)
 {
-    if(++VoltPrvPos >= VOLT_FUNDPOINT)
-        VoltPrvPos=0;                                               //电网电压一周波缓冲区输入指针(即经过了滤波器延时及采样延时的)//实时采样的波形(经过滤波之后)
-    VoltPos = VoltPrvPos+VoltLeadPoints;                            //超前校正指针,超前了360*VoltLeadPoints/VOLT_FUNDPOINT度//电压校正
+	if (++VoltPrvPos >= VOLT_FUNDPOINT)
+		VoltPrvPos = 0;//电网电压一周波缓冲区输入指针(即经过了滤波器延时及采样延时的)//实时采样的波形(经过滤波之后)
+	VoltPos = VoltPrvPos + VoltLeadPoints;//超前校正指针,超前了360*VoltLeadPoints/VOLT_FUNDPOINT度//电压校正
 
-    if(VoltPos >= VOLT_FUNDPOINT)        VoltPos    -=VOLT_FUNDPOINT;                                   //环形缓冲区//VoltPos是提前做好的一个数组点数波形
+	if (VoltPos >= VOLT_FUNDPOINT)
+		VoltPos -= VOLT_FUNDPOINT;//环形缓冲区//VoltPos是提前做好的一个数组点数波形
 
-    CapVoltPos = VoltPos+CAP_VOL_POINT;                             //电容电压一周波缓冲区指针,滞后270度//
-    if(CapVoltPos >= VOLT_FUNDPOINT)    CapVoltPos  -=VOLT_FUNDPOINT;   //环形缓冲区
+	CapVoltPos = VoltPos + CAP_VOL_POINT;//电容电压一周波缓冲区指针,滞后270度//
+	if (CapVoltPos >= VOLT_FUNDPOINT)
+		CapVoltPos -= VOLT_FUNDPOINT;//环形缓冲区
 
-    CapVoltPosCur = VoltPos+CAP_VOL_POINT_CUR;                      //电容电压一周波缓冲区指针,滞后90度//
-    if(CapVoltPosCur>=VOLT_FUNDPOINT) CapVoltPosCur -=VOLT_FUNDPOINT;
+	CapVoltPosCur = VoltPos + CAP_VOL_POINT_CUR;//电容电压一周波缓冲区指针,滞后90度//
+	if (CapVoltPosCur >= VOLT_FUNDPOINT)
+		CapVoltPosCur -= VOLT_FUNDPOINT;
 }
 
 #if PWM_FREQUENCE_16KHZ
 void PIController(void)
 {
-/*	float currA,currB,currC;
-	currA=CurrRefA-ApfOutCurA;
-	if(currA > OutCurMaxLimit)			currA = OutCurMaxLimit;
-	if(currA < OutCurMaxLimitNeg)		currA = OutCurMaxLimitNeg;
-	currB=CurrRefB-ApfOutCurB;
-	if(currB > OutCurMaxLimit)			currB = OutCurMaxLimit;
-	if(currB < OutCurMaxLimitNeg)		currB = OutCurMaxLimitNeg;
-	currC=CurrRefC-ApfOutCurC;
-	if(currC > OutCurMaxLimit)			currC = OutCurMaxLimit;
-	if(currC < OutCurMaxLimitNeg)		currC = OutCurMaxLimitNeg;
-	if(StateFlag.dcBusVtIncStart==FALSE){
-		CtrlVoltA=currA*kp_CurA;
-		CtrlVoltB=currB*kp_CurB;
-		CtrlVoltC=currC*kp_CurC;
-	}else{		//直流电压正在启动过程中...
-		CtrlVoltA=currA*kp_Cur*0.02f;			//上电软起动
-		CtrlVoltB=currB*kp_Cur*0.02f;
-		CtrlVoltC=currC*kp_Cur*0.02f;
-	}*/
 }
 #endif
 
 #ifdef BOOST_DEBUG
 void PRController(void)
 {
-
-/*	float currA,currB,currC;
-	currA=CurrRefA-ApfOutCurA;
-	if(currA > OutCurMaxLimit)			currA = OutCurMaxLimit;
-	if(currA < OutCurMaxLimitNeg)		currA = OutCurMaxLimitNeg;
-	currB=CurrRefB-ApfOutCurB;
-	if(currB > OutCurMaxLimit)			currB = OutCurMaxLimit;
-	if(currB < OutCurMaxLimitNeg)		currB = OutCurMaxLimitNeg;
-	currC=CurrRefC-ApfOutCurC;
-	if(currC > OutCurMaxLimit)			currC = OutCurMaxLimit;
-	if(currC < OutCurMaxLimitNeg)		currC = OutCurMaxLimitNeg;
-	//if((StateEventFlag == STATE_EVENT_RUN))  // 最大36us 0623
-	if(StateFlag.dcBusVtIncStart==FALSE){
-		#if PR_CTRL==1
-		if(StateFlag.spwmFlag==0){		//PR控制开启
-			DCL_runDF22Block(&PRCtrlABK[0],&ctrlVoltA,currA);	//
-			DCL_runDF22Block(&PRCtrlBBK[0],&ctrlVoltB,currB);	//
-			DCL_runDF22Block(&PRCtrlCBK[0],&ctrlVoltC,currC);	//
-			CtrlVoltA=ctrlVoltA*ki_Cur+currA*kp_Cur;
-			CtrlVoltB=ctrlVoltB*ki_Cur+currB*kp_Cur;
-			CtrlVoltC=ctrlVoltC*ki_Cur+currC*kp_Cur;
-		}else{					//PI控制开启
-			CtrlVoltA=currA*kp_Cur;
-			CtrlVoltB=currB*kp_Cur;
-			CtrlVoltC=currC*kp_Cur;
-		}
-		#else
-		CtrlVoltA=currA*kp_CurA;
-		CtrlVoltB=currB*kp_CurB;
-		CtrlVoltC=currC*kp_CurC;
-		#endif
-	}else{		//直流电压正在启动过程中...
-		#if PR_CTRL==1
-		if(StateFlag.spwmFlag==0){
-			DCL_runDF22Block(&PRCtrlABK[0],&ctrlVoltA,currA);	//
-			DCL_runDF22Block(&PRCtrlBBK[0],&ctrlVoltB,currB);	//
-			DCL_runDF22Block(&PRCtrlCBK[0],&ctrlVoltC,currC);	//
-		}
-		#endif
-		CtrlVoltA=currA*kp_CurA*0.02f;			//上电软起动
-		CtrlVoltB=currB*kp_CurB*0.02f;
-		CtrlVoltC=currC*kp_CurC*0.02f;
-	}
-*/
-//	currC=CurrRefC-ApfOutCurCF;
-//	if(currC>500)currC=500;	if(currC<-500)currC=-500;
-//	ctrlC=currC*kp_Cur;
-//	ctrlC += DCL_runDF22(&PRCtrlC[0],currC);	//1
-//	ctrlC += DCL_runDF22(&PRCtrlC[1],currC);	//3
-//	ctrlVoltC=ctrlC;
-
-//    float currA,currB,currC;
-//    float betaSin,alphaSin,betaCos,alphaCos;//,tmp;
-//    betaSin     = ApfOutCurUVBeta   *UVresSin;
-//    alphaSin    = ApfOutCurUV       *UVresSin;
-//    betaCos     = ApfOutCurUVBeta   *UVresCos;
-//    alphaCos    = ApfOutCurUV       *UVresCos;
-
-//    invUVCurD=DCL_runDF22(&InvUVCurDFilter,alphaCos + betaSin);
-//    invUVCurQ=DCL_runDF22(&InvUVCurQFilter,betaCos  - alphaSin);
     StateFlag.InvCurUVRmsReadyFlag = 1;
     GardVoltIntissued = 50;           //界面下发值
     GardVoltTarVal = GardVoltIntissued-gpVoltA_rms;     //目标值
     if(StateEventFlag == STATE_EVENT_RUN){
-//        if((ParamEnviron.BG_MODEL == BGMODLE_3P_CURR_SOURCE)){
             if(StateFlag.InvCurUVRmsReadyFlag){
-//                if(VoltHarmOver>0.1){
                     currRef_D = RunPIRE(&OutInvUVCurrRMS,GardVoltTarVal,gpVoltC_rms);
-//                    currRef_D = 8;
                     CtrlVoltUV = (currRef_D *(SQRT2)* GridResCos );
-//                }else{
-//                    currRefUV_D =RunPI(&OutInvUVCurrD,OutInvCurrVal*(SQRT2),invUVCurD);
-//                    currRefUV_Q =RunPI(&OutInvUVCurrQ,0,invUVCurQ);
-//                    CtrlVoltUV = (currRefUV_D * UVresCos - currRefUV_Q * UVresSin);
-//                }
-//              }
-//            }else{
-//            OutInvUVCurrD.i10=0;
-//            OutInvUVCurrD.i6=0;
-//            OutInvUVCurrQ.i10=0;
-//            OutInvUVCurrQ.i6=0;
-//            OutInvUVCurrRMS.i10=0;
-//            OutInvUVCurrRMS.i6=0;
-//            CtrlVoltUV = 0;
-//          }
         }else{
         OutInvUVCurrD.i10=0;
         OutInvUVCurrD.i6=0;
@@ -783,10 +491,6 @@ void PRController(void)
         OutInvUVCurrRMS.i6=0;
         CtrlVoltUV = 0;
     }
-//#endif                                                           //PI控制开启
-//        CtrlVoltA=currA*kp_Cur;
-//        CtrlVoltB=currB*kp_Cur;
-//        CtrlVoltC=currC*kp_Cur;
 }
 }
 
@@ -808,41 +512,16 @@ inline ZCPJudgeA_ovsample(volatile Uint16 *ADResult,int ADoffset,int NumPort,Uin
     C= (float)Ci;
     D= (float)Di;
 
-    // 计算斜率a和截距b
-//    if( (temp>-0.0001f) && (temp<0.0001f) ){         // 判断分母不为0
     ratio  = (AD_FITING_N*C - FITING_B*D) * FITING_S;
     offset = (FITING_A*D - FITING_B*C) * FITING_S;
-//    }else{
-//        ratio = 1;
-//        offset = 0;
-//    }
-
-    // 计算相关系数r
-/*  float Xmean, Ymean;
-    Xmean = B / AD_FITING_N;
-    Ymean = D / AD_FITING_N;
-
-    float tempSumXX = 0.0, tempSumYY = 0.0;
-    for (i=0; i<AD_FITING_N; i++)
-    {
-        tempSumXX += (data_x[i] - Xmean) * (data_x[i] - Xmean);
-        tempSumYY += (data_y[i] - Ymean) * (data_y[i] - Ymean);
-        E += (data_x[i] - Xmean) * (data_y[i] - Ymean);
-    }
-    F = sqrtf(tempSumXX) * sqrtf(tempSumYY);
-
-    float r=E / F;
-    return r;*/
-    //坐标统一:过采样的x坐标是根据ACQPS=0x18,及12bitAD转换时间12点得出x坐标轴的间隔为(24+41)*SYSCLK(1/200M)=0.325us
-    //T1PR*2*(1/100M)*0.5*harmCompPerc得出PWM上顶点到占空比的点的时间(us).
     float Y=(ratio*(dcVoltUpRatioVirtu_reciprocal) * T1PR * harmCompPerc + offset - ADoffset)*outputCurRatio;   //y=(kx+b-零偏)*霍尔硬件系数
-    *pflag = Y>0?0:1;      //  电流方向可能有反的方向  ???
+    *pflag = Y>0?0:1;
     if(NumPort == 0){
-        debugA_Y = Y;    //临时测试用
+        debugA_Y = Y;
         debugA_ratio = ratio;
         debugA_offset = offset;
     }else{
-        debugB_Y = Y;    //临时测试用
+        debugB_Y = Y;
         debugB_ratio = ratio;
         debugB_offset = offset;
     }
@@ -893,19 +572,18 @@ float CurMeanValue;
 float CurDiffMAXValue;
 
 
-void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
+void UnCurrCompFUN(void)
 {
 #define MAXMODE 1
 #define MINMODE -1
 #define NORMMODE 0
 
-    CurMeanValue = (UnCurrData[0]+UnCurrData[1]+UnCurrData[2])/3; //三相电流平均值
+    CurMeanValue = (UnCurrData[0]+UnCurrData[1]+UnCurrData[2])/3;
     CurDiffMAXValue = Max3(UnCurrData[0],UnCurrData[1],UnCurrData[2]);
     midNumber = Max3(UnCurrData[0],UnCurrData[1],UnCurrData[2]);
-    //mid=a>b ? (b>c ? b:(a>c ? c:a)):(b>c ? (a>c ? a:c):b)
-    currentUnbalance = (CurDiffMAXValue-CurMeanValue)/CurMeanValue;    //三相电流不平衡度
+    currentUnbalance = (CurDiffMAXValue-CurMeanValue)/CurMeanValue;
 
-    if(currentUnbalance > TargetCurrentUnbalance){   //不平衡度>界面设定的值,等待1秒进入不平衡调节模式
+    if(currentUnbalance > TargetCurrentUnbalance){
         if(ESCFlagA.ESCCntSec.UNCurrDelay1 >= CNT_SEC(1)){
             unbalanceGenFlag=TRUE;
         }else{
@@ -915,7 +593,6 @@ void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
         ESCFlagA.ESCCntSec.UNCurrDelay1 = 0;
     }
 
-    //不平衡度<界面设定的值-0.01退出不平衡调节模式,维持住当前的指令电压
     if(currentUnbalance < TargetCurrentUnbalance-0.01){
         if(ESCFlagA.ESCCntSec.UNCurrDelay2 >= CNT_SEC(3)){
             unbalanceGenFlag=FALSE;
@@ -926,23 +603,23 @@ void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
 
     if(unbalanceGenFlag == TRUE){
 
-        centreGravity=(VoltageOverflow[0]+VoltageOverflow[1]+VoltageOverflow[2]);    //用上一次的三者重心偏向上还是下.
-        if(centreGravity>=2){       //电压已有两相调至最高,故重心(meanValue)得下移
+        centreGravity=(VoltageOverflow[0]+VoltageOverflow[1]+VoltageOverflow[2]);
+        if(centreGravity>=2){
             centreGravityValue-=0.00001;
-        }else if(centreGravity<=-2){//电压已有两相调至最低,故重心(meanValue)得上移
+        }else if(centreGravity<=-2){
             centreGravityValue+=0.00001;
         }else{
-            centreGravityValue =0;  //重心维持现在的三相电流平均(mean替代)值
+            centreGravityValue =0;
             }
         if(centreGravityValue<-0.2)
             centreGravityValue=-0.2;
         if(centreGravityValue>0.2)
             centreGravityValue=0.2;
 
-        if((UnCurrData[0] > CurMeanValue*(1+centreGravityValue))){      //%50的调节裕度
-            CurrentUnbalanceRegularVoltage[0] -= UNCurtestdata; //电流大,应该调低电压,即占空比趋向1
+        if((UnCurrData[0] > CurMeanValue*(1+centreGravityValue))){
+            CurrentUnbalanceRegularVoltage[0] -= UNCurtestdata;
         }else if((UnCurrData[0] < CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[0] += UNCurtestdata; //电流小,应该调高电压,即占空比趋向0.5
+            CurrentUnbalanceRegularVoltage[0] += UNCurtestdata;
             }
 
         if(CurrentUnbalanceRegularVoltage[0]>ESCFlagA.Volttarget){
@@ -956,9 +633,9 @@ void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
             }
 
         if((UnCurrData[1] > CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[1] -= UNCurtestdata; //电流大,应该调低电压
+            CurrentUnbalanceRegularVoltage[1] -= UNCurtestdata;
         }else if((UnCurrData[1] < CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[1] += UNCurtestdata; //电流小,应该调高电压
+            CurrentUnbalanceRegularVoltage[1] += UNCurtestdata;
             }
 
         if(CurrentUnbalanceRegularVoltage[1]>ESCFlagB.Volttarget){
@@ -972,9 +649,9 @@ void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
         }
 
         if((UnCurrData[2] > CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[2] -= UNCurtestdata; //电流大,应该调低电压
+            CurrentUnbalanceRegularVoltage[2] -= UNCurtestdata;
         }else if((UnCurrData[2] < CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[2] += UNCurtestdata; //电流小,应该调高电压
+            CurrentUnbalanceRegularVoltage[2] += UNCurtestdata;
         }
 
         if(CurrentUnbalanceRegularVoltage[2]>ESCFlagC.Volttarget){
@@ -990,111 +667,184 @@ void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
 }
 #else
 
-
-enum ChanMaxName{
-    UnCurrCompChanA=0,
-    UnCurrCompChanB=1,
-    UnCurrCompChanC=2,
+/*
+ * 在分析三相不平衡时，用于标识电流有效值大小排序。WY
+ */
+enum ChanMaxName
+{
+	UnCurrCompChanA = 0, //A相
+	UnCurrCompChanB = 1, //B相
+	UnCurrCompChanC = 2, //C相
 };
 
-void ChanMax3(float a,float b,float c,int * max ,int *min ,int *midd) {//求输入电流最大值
-    if(a>b){
-        if(a>c){        //A>B,A>C
-            *max         = UnCurrCompChanA;
+/*
+ * 功能：将三相电网电流有效值按照降序排序。WY
+ *
+ * 输入参数a：A相电网电流有效值
+ * 输入参数b：B相电网电流有效值
+ * 输入参数c：C相电网电流有效值
+ * 输出参数max：三相电网电流有效值的最大值序号
+ * 输出参数min：三相电网电流有效值的最小值序号
+ * 输出参数midd：三相电网电流有效值的居中值序号
+ */
+void ChanMax3(float a, float b, float c, int *max, int *min, int *midd)
+{
+	if (a > b)
+	{
+		if (a > c)
+		{
+			*max = UnCurrCompChanA; //A相电流有效值为三者中的最大值。WY
 
-            if(b<c){    //A>B,A>C,C>B :A>C>B
-                *min     = UnCurrCompChanB;
-                *midd    = UnCurrCompChanC;
-            }else{      //A>B,A>C,B>C :A>B>C
-                *min     = UnCurrCompChanC;
-                *midd    = UnCurrCompChanB;
-            }
+			if (b < c)
+			{
+				*min = UnCurrCompChanB; //B相电流有效值为三者中的最小值。WY
+				*midd = UnCurrCompChanC; //C相电流有效值为三者中的居中值。WY
+			}
+			else
+			{
+				*min = UnCurrCompChanC; //C相电流有效值为三者中的最小值。WY
+				*midd = UnCurrCompChanB; //B相电流有效值为三者中的居中值。WY
+			}
+		}
+		else
+		{
+			*max = UnCurrCompChanC; //C相电流有效值为三者中的最大值。WY
+			*min = UnCurrCompChanB; //B相电流有效值为三者中的最小值。WY
+			*midd = UnCurrCompChanA; //A相电流有效值为三者中的居中值。WY
+		}
+	}
+	else
+	{
+		if (a < c)
+		{
+			*min = UnCurrCompChanA; //A相电流有效值为三者中的最小值。WY
 
-        }else{          //A>B,C>A :C>A>B
-            *max         = UnCurrCompChanC;
-            *min         = UnCurrCompChanB;
-            *midd        = UnCurrCompChanA;
-        }
-
-    }else{      //A<B
-        if(a<c){        //A<C
-            *min         = UnCurrCompChanA;
-
-            if(b<c){    //A<B,A<C,B<C :A<B<C
-                *max     = UnCurrCompChanC;
-                *midd    = UnCurrCompChanB;
-            }else{      //A<B,A<C,C<B :A<C<B
-                *max     = UnCurrCompChanB;
-                *midd    = UnCurrCompChanC;
-            }
-
-        }else{          //A<B,C<A :C<A<B
-            *min         = UnCurrCompChanC;
-            *max         = UnCurrCompChanB;
-            *midd        = UnCurrCompChanA;
-        }
-    }
+			if (b < c)
+			{
+				*max = UnCurrCompChanC; //C相电流有效值为三者中的最大值。WY
+				*midd = UnCurrCompChanB; //B相电流有效值为三者中的居中值。WY
+			}
+			else
+			{
+				*max = UnCurrCompChanB; //B相电流有效值为三者中的最大值。WY
+				*midd = UnCurrCompChanC; //C相电流有效值为三者中的居中值。WY
+			}
+		}
+		else
+		{
+			*min = UnCurrCompChanC; //C相电流有效值为三者中的最小值。WY
+			*max = UnCurrCompChanB; //B相电流有效值为三者中的最大值。WY
+			*midd = UnCurrCompChanA; //A相电流有效值为三者中的居中值。WY
+		}
+	}
 }
 
-int unbalanceGenFlag =0;
-int maxCh,minCh,middCh;
+int unbalanceGenFlag = 0; //三相不平衡标志位。0：三相平衡（默认）；1：三相不平衡。WY
+
+int maxCh; //三相电流有效值最大者的序号。WY
+int minCh; //三相电流有效值最小者的序号。WY
+int middCh; //三相电流有效值居中者的序号。WY
+
+/*
+ * 调节三相电流不平衡时的步长（单位：V）。WY
+ */
 #define UN_CURR_COMP_STEP_VOLT  0.0003f
 
-void UnCurrCompFUN(void)        //ESC三相不平衡电流补偿
+/*
+ * 功能：检测三相电网电流（有效值）不平衡，据此修正三相负载电压（有效值）目标值。WY
+ */
+void UnCurrCompFUN(void)
 {
+	float tmp = 0; //临时变量。WY
 
-    float tmp = 0;
-    float CurMeanValue = (UnCurrData[0]+UnCurrData[1]+UnCurrData[2])*S1DIV3; //三相电流平均值
-    float CurDiffMAXValue = Max3(UnCurrData[0],UnCurrData[1],UnCurrData[2]);
-    currentUnbalance = (CurDiffMAXValue - CurMeanValue)/CurMeanValue;    //三相电流不平衡度
+	float CurMeanValue = (UnCurrData[0] + UnCurrData[1] + UnCurrData[2]) * S1DIV3;//求解三相电网电流（有效值）平均值。WY
 
-    if(currentUnbalance > TargetCurrentUnbalance){   //不平衡度>界面设定的值,等待1秒进入不平衡调节模式
-        if(CntMs.UNCurrDelay1 >= CNT_MS(1000)){
-            unbalanceGenFlag = TRUE;
-        }
-    }else{
-        CntMs.UNCurrDelay1 = 0;
-    }
+	float CurDiffMAXValue = Max3(UnCurrData[0], UnCurrData[1], UnCurrData[2]); //求解三相电网电流（有效值）的最大值。WY
 
-    //不平衡度<界面设定的值-0.01退出不平衡调节模式,维持住当前的指令电压
-    if(currentUnbalance < TargetCurrentUnbalance - 0.01){
-        if(CntMs.UNCurrDelay2 >= CNT_MS(20000)){
-            unbalanceGenFlag = FALSE;
-        }
-    }else{
-        CntMs.UNCurrDelay2 = 0;
-    }
+	currentUnbalance = (CurDiffMAXValue - CurMeanValue) / CurMeanValue; //求解三相电网电流（有效值）不平衡度。WY
 
-    if(unbalanceGenFlag == TRUE){
-        ChanMax3(UnCurrData[0],UnCurrData[1],UnCurrData[2],&maxCh,&minCh,&middCh);
-        CurrentUnbalanceRegularVoltage[maxCh] -= UN_CURR_COMP_STEP_VOLT;
-        tmp= CurrentUnbalanceRegularVoltage[maxCh];
-        CurrentUnbalanceRegularVoltage[minCh] += UN_CURR_COMP_STEP_VOLT;
-        tmp+=CurrentUnbalanceRegularVoltage[minCh] ;
-        float sum = ESCFlagA.Volttarget + ESCFlagB.Volttarget + ESCFlagC.Volttarget ;// (1+VolttargetCorrA)
+	if (currentUnbalance > TargetCurrentUnbalance) //三相电网电流（有效值）的不平衡度 > 三相电网电流（有效值）的不平衡度上限。WY
+	{
+		if (CntMs.UNCurrDelay1 >= CNT_MS(1000)) //三相电网电流（有效值）不平衡持续时间超过1000ms。WY
+		{
+			unbalanceGenFlag = TRUE; //设备处于三相电网电流（有效值）不平衡状态。WY
+		}
+	}
+	else
+	{
+		CntMs.UNCurrDelay1 = 0; //清零计时器。WY
+	}
 
-        CurrentUnbalanceRegularVoltage[middCh] = sum - tmp ;
-    };
-//    else{
-//        CurrentUnbalanceRegularVoltage [0] =ESCFlagA.Volttarget;
-//        CurrentUnbalanceRegularVoltage [1] =ESCFlagB.Volttarget;
-//        CurrentUnbalanceRegularVoltage [2] =ESCFlagC.Volttarget;
-//    }
-    if(CurrentUnbalanceRegularVoltage[0] > GV_RMS_OVER-25) CurrentUnbalanceRegularVoltage[0] = GV_RMS_OVER-25;
-    if(CurrentUnbalanceRegularVoltage[0] < GV_RMS_UNDER+70) CurrentUnbalanceRegularVoltage[0] = GV_RMS_UNDER+70;
-    if(CurrentUnbalanceRegularVoltage[1] > GV_RMS_OVER-25) CurrentUnbalanceRegularVoltage[1] = GV_RMS_OVER-25;
-    if(CurrentUnbalanceRegularVoltage[1] < GV_RMS_UNDER+70) CurrentUnbalanceRegularVoltage[1] = GV_RMS_UNDER+70;
-    if(CurrentUnbalanceRegularVoltage[2] > GV_RMS_OVER-25) CurrentUnbalanceRegularVoltage[2] = GV_RMS_OVER-25;
-    if(CurrentUnbalanceRegularVoltage[2] < GV_RMS_UNDER+70) CurrentUnbalanceRegularVoltage[2] = GV_RMS_UNDER+70;
+	if (currentUnbalance < TargetCurrentUnbalance - 0.01) //三相电网电流（有效值）不平衡度 < (三相电网电流（有效值）不平衡的上限 - 0.01)。目的：设定调节阈值，防止系统抖动。WY
+	{
+		if (CntMs.UNCurrDelay2 >= CNT_MS(20000)) //持续时间超过20000ms。目的：防止系统抖动。WY
+		{
+			unbalanceGenFlag = FALSE; //设备处于三相电网电流（有效值）不平衡状态。WY
+		}
+	}
+	else
+	{
+		CntMs.UNCurrDelay2 = 0; //清零计时器。WY
+	}
 
+	/*三相电网电流（有效值）不平衡。WY*/
+	if (unbalanceGenFlag == TRUE)
+	{
+		ChanMax3(UnCurrData[0], UnCurrData[1], UnCurrData[2], &maxCh, &minCh, &middCh); //将三相电网电流（有效值）按照降序排序。WY
+		CurrentUnbalanceRegularVoltage[maxCh] -= UN_CURR_COMP_STEP_VOLT; //降低三相电网电流（有效值）最大者对应的电压（有效值）。WY
+		tmp = CurrentUnbalanceRegularVoltage[maxCh];
+		CurrentUnbalanceRegularVoltage[minCh] += UN_CURR_COMP_STEP_VOLT; //提高三相电网电流（有效值）最小者对应的电压（有效值）。WY
+		tmp += CurrentUnbalanceRegularVoltage[minCh];
+		float sum = ESCFlagA.Volttarget + ESCFlagB.Volttarget + ESCFlagC.Volttarget; //负载电压（有效值）目标值的和。WY
+
+		CurrentUnbalanceRegularVoltage[middCh] = sum - tmp; //调节三相电网电流（有效值）居中者对应的电压（有效值）。WY
+	};
+
+	/*处理A相*/
+	if (CurrentUnbalanceRegularVoltage[0] > GV_RMS_OVER - 25) //A相负载电压（有效值）目标值 > 上限值。WY
+	{
+		CurrentUnbalanceRegularVoltage[0] = GV_RMS_OVER - 25; //限幅：限定A相负载电压（有效值）目标值的上限。WY
+	}
+	if (CurrentUnbalanceRegularVoltage[0] < GV_RMS_UNDER + 70) //A相负载电压（有效值）目标值 < 下限值。WY
+	{
+		CurrentUnbalanceRegularVoltage[0] = GV_RMS_UNDER + 70; //限幅：限定A相负载电压（有效值）目标值的下限。WY
+	}
+
+	/*处理B相*/
+	if (CurrentUnbalanceRegularVoltage[1] > GV_RMS_OVER - 25)
+	{
+		CurrentUnbalanceRegularVoltage[1] = GV_RMS_OVER - 25;
+	}
+	if (CurrentUnbalanceRegularVoltage[1] < GV_RMS_UNDER + 70)
+	{
+		CurrentUnbalanceRegularVoltage[1] = GV_RMS_UNDER + 70;
+	}
+
+	/*处理C相*/
+	if (CurrentUnbalanceRegularVoltage[2] > GV_RMS_OVER - 25)
+	{
+		CurrentUnbalanceRegularVoltage[2] = GV_RMS_OVER - 25;
+	}
+	if (CurrentUnbalanceRegularVoltage[2] < GV_RMS_UNDER + 70)
+	{
+		CurrentUnbalanceRegularVoltage[2] = GV_RMS_UNDER + 70;
+	}
 }
 
 
 #endif
 float Esczct_CNTA = 0,Esczct_CNTB = 0,Esczct_CNTC = 0;
 float StepSize = 0.703125;
-float ESC_FeedForward_DutyA = 0,ESC_FeedForward_DutyB = 0,ESC_FeedForward_DutyC = 0;
-float PIOutVoltValueA = 0,PIOutVoltValueB = 0,PIOutVoltValueC = 0;
+
+float ESC_FeedForward_DutyA = 0; //A相PWM占空比前馈值。WY
+float ESC_FeedForward_DutyB = 0; //B相PWM占空比前馈值。WY
+float ESC_FeedForward_DutyC = 0; //C相PWM占空比前馈值。WY
+
+
+float PIOutVoltValueA = 0; //A相PI调节器的输出值。WY
+float PIOutVoltValueB = 0; //B相PI调节器的输出值。WY
+float PIOutVoltValueC = 0; //C相PI调节器的输出值。WY
+
 int ESCLowCurrFlagA = 0,ESCLowCurrFlagB = 0,ESCLowCurrFlagC = 0;
 
 #define LEAD_SAMPLE_INCREMENT_DUTY  0.0f
@@ -1131,226 +881,317 @@ float DBG_leadSampleDecrementDuty = LEAD_SAMPLE_DECREMENT_DUTY;
 //#define RMS_CONSTANT_CURRENT_RATED_75 114       //额定电流
 //#define INS_CONSTANT_CURRENT_RATED_75 198
 
-float RMSDutyLimit(float RMSGridInVAL, float INSGridIn, float target, float PIerr, float LockPhAngle, float *pStorage,int ESCPHASE)
+/*
+ * 功能：根据电网电压是否存在突变，求解PWM占空比。WY
+ *
+ * 输入参数RMSGridInVAL：电网电压（有效值）
+ * 输入参数INSGridIn：电网电压（瞬时值）
+ * 输入参数target：负载电压（有效值）目标值
+ * 输入参数PIerr：PI调节器的输出值
+ * 输入参数LockPhAngle：经锁相环得到的相位
+ * 输出参数pStorage：PWM占空比的前馈值
+ * 输入参数ESCPHASE：相位选择
+ *
+ * 返回值：PWM占空比
+ */
+float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
+				   float INSGridIn, //电网电压（瞬时值）
+				   float target, //负载电压（有效值）目标值
+				   float PIerr, //PI调节器的输出值(用于修正PWM占空比)
+				   float LockPhAngle, //经锁相环得到的相位
+				   float *pStorage, //PWM占空比的前馈值
+				   int ESCPHASE) //相位选择
 {
-//    float dutytmp;
-    ArithFlagA = 2;
-    ArithFlagB = 2;
-    ArithFlagC = 2;
-    TESTVALUE = 0;    //测试使用
-    TESEPIerr = PIerr;
-    testvalue1 = *pStorage;
-    PhaseValue = LockPhAngle;
-    TESTRMSGridInVAL = RMSGridInVAL;
-    TESETarget = target;
-    TESEINSGridIn = INSGridIn;
-    NumeratorValue = INSGridIn-RMSGridInVAL*1.4142*sin(LockPhAngle);//电压突变值 = 当前瞬时值-上个周波的瞬时值;
-    DenominatorVAL = target*1.4142*sin(LockPhAngle);
+	ArithFlagA = 2; //A相电网电流突变标志位。0，存在突变；1，不存在突变。WY
+	ArithFlagB = 2; //B相电网电流突变标志位。0，存在突变；1，不存在突变。WY
+	ArithFlagC = 2; //C相电网电流突变标志位。0，存在突变；1，不存在突变。WY
 
-    //根据输入电压与目标值直接计算出一个大概的占空比
-    if((RMSGridInVAL>10) && (target>10)){             //限制范围,防止数学上的0/0,x/0错误;
-////        FeedVAl = dutytmp = RMSGridIn/target;
-//        if( ((LockPhAngle>=0.3f)          && (LockPhAngle<=(PIVAL-0.3f)))  ||  \
-//            ((LockPhAngle>=(PIVAL+0.3f))  && (LockPhAngle<=(2.0f*PIVAL-0.3f))) ){
-//            FeedVAl = dutytmp1 = INSGridIn/(target*1.4142*sin(LockPhAngle));
-////            dutytmp = 0.9f*dutytmp + 0.1f*dutytmp1;
-//            dutytmp = dutytmp1;
-//        }else{
-//            dutytmp = dutytmp1;
-//        }
+	TESTVALUE = 0; //该变量未使用。WY
+	TESEPIerr = PIerr; //该变量未使用。WY
+	testvalue1 = *pStorage; //该变量未使用。WY
+	PhaseValue = LockPhAngle; //该变量未使用。WY
+	TESTRMSGridInVAL = RMSGridInVAL; //该变量未使用。WY
+	TESETarget = target; //该变量未使用。WY
+	TESEINSGridIn = INSGridIn; //该变量未使用。WY
 
-        if( ((LockPhAngle>=0.3f)          && (LockPhAngle<=(PIVAL-0.3f)))  ||  \
-            ((LockPhAngle>=(PIVAL+0.3f))  && (LockPhAngle<=(2.0f*PIVAL-0.3f))) ){
+	NumeratorValue = INSGridIn - RMSGridInVAL * 1.4142 * sin(LockPhAngle); //电网电压（瞬时值）的突变值 = 电网电压（瞬时值） - 上个周波电网电压（瞬时值）。WY
+	DenominatorVAL = target * 1.4142 * sin(LockPhAngle); //负载电压的目标值（瞬时值）。WY
 
-//            if(StateFlag.VoltageModeFlag == 0){           //升压
-//               if(  (((NumeratorValue < ArithVAL)&&(NumeratorValue > ArithVal)) ||\
-//                    (ESCFlagA.ESCCntMs.HarmDisDelay > CNT_MS(20))) && (TestArithFlag == 1)){/*||(ESCFlagB.ESCCntMs.HarmDisDelay >= CNT_MS(20))||(ESCFlagC.ESCCntMs.HarmDisDelay >= CNT_MS(20))*/
-//                    dutytmp = dutytmp1 = RMSGridInVAL/target;
-//                    ArithFlag = 1;
-//                    if((NumeratorValue < ArithVAL)&&(NumeratorValue > ArithVal)){
-//                        ESCFlagA.ESCCntMs.HarmDisDelay = 0;
-////                        ESCFlagB.ESCCntMs.HarmDisDelay = 0;
-////                        ESCFlagC.ESCCntMs.HarmDisDelay = 0;
-//                    }
-//                }else if((NumeratorValue >= ArithVAL)||(NumeratorValue <= ArithVal)||(TestArithFlag == 0)||\
-//                        (ESCFlagA.VoltIn_rms>=GV_RMS_OVER)||(ESCFlagB.VoltIn_rms>=GV_RMS_OVER)||(ESCFlagC.VoltIn_rms>=GV_RMS_OVER)){  //骤升算法
-//                        if((ESCFlagA.ESCCntMs.HarmDisDelay <= CNT_MS(20))/*||(ESCFlagB.ESCCntMs.HarmDisDelay < CNT_MS(20))||(ESCFlagC.ESCCntMs.HarmDisDelay < CNT_MS(20))*/){
-//                            dutytmp = dutytmp1 = (RMSGridInVAL/target)+((INSGridIn-RMSGridInVAL*1.4142*sin(LockPhAngle))/(target*1.4142*sin(LockPhAngle)));
-//                            ArithFlag = 0;
-//                            TestArithFlag = 0;
-//                        }
-//                        if(ESCFlagA.ESCCntMs.HarmDisDelay > CNT_MS(20)){
-//                            TestArithFlag = 1;
-//                            *pStorage = RMSGridInVAL/target;
-//                        }
-//                }
-//            }else if(StateFlag.VoltageModeFlag == 1){     //降压
-//                dutytmp = dutytmp1 = target/RMSGridInVAL;
-//                ArithFlag = 1;
-//            }
+	if ((RMSGridInVAL > 10) //电网电压（有效值） > 10V。WY
+			&& (target > 10)) //负载电压（有效值）的目标值 > 10V。
+	{
+		 /*电网电压不在过零点附近。WY*/
+		if (((LockPhAngle >= 0.3f)
+				&& (LockPhAngle <= (PIVAL - 0.3f)))
+				|| ((LockPhAngle >= (PIVAL + 0.3f))
+				&& (LockPhAngle <= (2.0f * PIVAL - 0.3f))))
+		{
+			/*升压模式。WY*/
+			if (StateFlag.VoltageModeFlag == 0)
+			{
+				/*处理A相*/
+				if (ESCPHASE == 1)
+				{
+					/*电流不存在突变。WY*/
+					if ((TestArithFlagA == 1) //解锁状态。WY
+							&& (((NumeratorValue < ArithVAL) //电网电压（瞬时值）突变值 < 电网电压（瞬时值）的突变值上限。WY
+							&& (NumeratorValue > ArithVal)) //电网电压（瞬时值）突变值 > 电网电压（瞬时值）的突变值下限。WY
+							|| (ESCFlagA.ESCCntMs.HarmDisDelay > CNT_MS(20)))) //电网电压（瞬时值）突变计时 > 20ms。当电网电压（瞬时值）突变计时 > 20ms时，认为电网电压处于新的稳定状态，而非突变状态。WY
+					{
+						dutytmp = dutytmp1 = RMSGridInVAL / target; //PWM占空比 = 电网电压（有效值） / 负载电压（有效值）目标值。WY
+						ArithFlagA = 1; //A相电网电流不存在突变。WY
 
-            if(StateFlag.VoltageModeFlag == 0){           //升压
-                if(ESCPHASE == 1){
-                    //电压突变值在上下限内,或20ms都不在上下限内,
-                    if(   (TestArithFlagA == 1) && \
-                            (  ( (NumeratorValue < ArithVAL) && (NumeratorValue > ArithVal) ) ||\
-                        (ESCFlagA.ESCCntMs.HarmDisDelay > CNT_MS(20))  )   ){
-                        dutytmp = dutytmp1 = RMSGridInVAL/target;       //低压侧有效值除以目标值,得到要输出的值的前馈值
-                        ArithFlagA = 1;                                 //设为正常补偿状态
+						if ((NumeratorValue < ArithVAL) //电网电压突变值 < 电网电压突变值上限。WY
+								&& (NumeratorValue > ArithVal)) //电网电压突变值 > 电网电压突变值下限。WY
+						{
+							ESCFlagA.ESCCntMs.HarmDisDelay = 0; //清零电网电压突变持续时间。WY
+						}
+					}
+					else if
+					/*电流存在突变。WY*/
+					((NumeratorValue >= ArithVAL) //电网电压（瞬时值）突变值 > 电网电压（瞬时值）突变值上限。WY
+							|| (NumeratorValue <= ArithVal) //电网电压（瞬时值）突变值 < 电网电压（瞬时值）突变值下限。WY
+							|| (TestArithFlagA == 0) //上锁状态。WY
+							|| (ESCFlagA.VoltIn_rms >= GV_RMS_OVER)) //电网电压（有效值） > 电网电压（有效值）上限。WY
+					{
 
-                        if((NumeratorValue < ArithVAL) && (NumeratorValue > ArithVal)){ //电压突变值在上下限内,计数器清零
-                            ESCFlagA.ESCCntMs.HarmDisDelay = 0;                         //计数器清零
-                    }
+						if ((ESCFlagA.ESCCntMs.HarmDisDelay <= CNT_MS(20))) //电网电压突变持续时间 < 20ms。WY
+						{
+							dutytmp = dutytmp1 = (RMSGridInVAL / target)  //电网电压（有效值） / 电网电压（有效值）的目标值。WY
+									+ ((INSGridIn - RMSGridInVAL * SQRT2 * sin(LockPhAngle)) / (target * SQRT2 * sin(LockPhAngle))); //电压突变比例 = (电网电压瞬时值 - 上个周波电网电压的瞬时值) / 负载电压瞬时值的目标值。WY
+							ArithFlagA = 0; //A相电网电流存在突变。WY
+							TestArithFlagA = 0; //上锁。WY
+						}
+						else //电网电压突变计时 > 20ms。WY
+						{
+							TestArithFlagA = 1; //解锁。WY
+							*pStorage = RMSGridInVAL / target; //PWM占空比 = 当前电网电压有效值 / 电网电压有效值的目标值。WY
+						}
+					}
+				}
 
-                    //突变大于上下限,或电压有效值>过压保护值
-                    }else if((NumeratorValue >= ArithVAL) || (NumeratorValue <= ArithVal) ||\
-                        (TestArithFlagA == 0) || (ESCFlagA.VoltIn_rms >= GV_RMS_OVER)){
+				/*处理B相*/
+				if ((((NumeratorValue < ArithVAL) && (NumeratorValue > ArithVal)) || (ESCFlagB.ESCCntMs.HarmDisDelay > CNT_MS(20))) && (TestArithFlagB == 1)
+						&& (ESCPHASE == 2))
+				{
+					dutytmp = dutytmp1 = RMSGridInVAL / target;
+					ArithFlagB = 1;
+					if ((NumeratorValue < ArithVAL) && (NumeratorValue > ArithVal))
+					{
+						ESCFlagB.ESCCntMs.HarmDisDelay = 0;
+					}
+				}
+				else if (((NumeratorValue >= ArithVAL) || (NumeratorValue <= ArithVal) || (TestArithFlagB == 0) || (ESCFlagB.VoltIn_rms >= GV_RMS_OVER))
+						&& (ESCPHASE == 2))
+				{
+					if ((ESCFlagB.ESCCntMs.HarmDisDelay <= CNT_MS(20)))
+					{
+						dutytmp = dutytmp1 = (RMSGridInVAL / target)
+								+ ((INSGridIn - RMSGridInVAL * 1.4142 * sin(LockPhAngle)) / (target * 1.4142 * sin(LockPhAngle)));
+						ArithFlagB = 0;
+						TestArithFlagB = 0;
+					}
+					if (ESCFlagB.ESCCntMs.HarmDisDelay > CNT_MS(20))
+					{
+						TestArithFlagB = 1;
+						*pStorage = RMSGridInVAL / target;
+					}
+				}
 
-                        if((ESCFlagA.ESCCntMs.HarmDisDelay <= CNT_MS(20))){ //计数器在后台++,计数器小于20ms
-                            //电压突变值除以目标值的瞬时值得到了突变比例   然后加上 实时值除以目标值 得到占空比
-                            dutytmp = dutytmp1 = (RMSGridInVAL/target)+\
-                                    (  (INSGridIn - RMSGridInVAL * SQRT2 * sin(LockPhAngle)) / (target * SQRT2 * sin(LockPhAngle))  );
-                            ArithFlagA = 0;     //设为突变状态.
-                            TestArithFlagA = 0;
-                        }else{
-                            TestArithFlagA = 1;
-                            *pStorage = RMSGridInVAL/target;    //JCL?:长时间突变?
-                        }
-                    }else{
-                        //null,
-                        }
-                }
+				/*处理C相*/
+				if ((((NumeratorValue < ArithVAL) && (NumeratorValue > ArithVal)) || (ESCFlagC.ESCCntMs.HarmDisDelay > CNT_MS(20))) && (TestArithFlagC == 1)
+						&& (ESCPHASE == 3))
+				{
+					dutytmp = dutytmp1 = RMSGridInVAL / target;
+					ArithFlagC = 1;
+					if ((NumeratorValue < ArithVAL) && (NumeratorValue > ArithVal))
+					{
+						ESCFlagC.ESCCntMs.HarmDisDelay = 0;
+					}
+				}
+				else if (((NumeratorValue >= ArithVAL) || (NumeratorValue <= ArithVal) || (TestArithFlagC == 0) || (ESCFlagC.VoltIn_rms >= GV_RMS_OVER))
+						&& (ESCPHASE == 3))
+				{
+					if ((ESCFlagC.ESCCntMs.HarmDisDelay <= CNT_MS(20)))
+					{
+						dutytmp = dutytmp1 = (RMSGridInVAL / target)
+								+ ((INSGridIn - RMSGridInVAL * 1.4142 * sin(LockPhAngle)) / (target * 1.4142 * sin(LockPhAngle)));
+						ArithFlagC = 0;
+						TestArithFlagC = 0;
+					}
+					if (ESCFlagC.ESCCntMs.HarmDisDelay > CNT_MS(20))
+					{
+						TestArithFlagC = 1;
+						*pStorage = RMSGridInVAL / target;
+					}
+				}
+			}
+			/*降压模式。WY*/
+			else if (StateFlag.VoltageModeFlag == 1)
+			{
+				dutytmp = dutytmp1 = target / RMSGridInVAL;
+				if (ESCPHASE == 1)
+				{
+					ArithFlagA = 1;
+				}
+				if (ESCPHASE == 2)
+				{
+					ArithFlagB = 1;
+				}
+				if (ESCPHASE == 3)
+				{
+					ArithFlagC = 1;
+				}
+			}
+		}
 
-               if(  (((NumeratorValue < ArithVAL)&&(NumeratorValue > ArithVal)) ||\
-                    (ESCFlagB.ESCCntMs.HarmDisDelay > CNT_MS(20))) && (TestArithFlagB == 1)&&(ESCPHASE == 2) ){
-                    dutytmp = dutytmp1 = RMSGridInVAL/target;
-                    ArithFlagB = 1;
-                    if((NumeratorValue < ArithVAL)&&(NumeratorValue > ArithVal)){
-                        ESCFlagB.ESCCntMs.HarmDisDelay = 0;
-                    }
-                }else if(((NumeratorValue >= ArithVAL)||(NumeratorValue <= ArithVal)||\
-                        (TestArithFlagB == 0)||(ESCFlagB.VoltIn_rms>=GV_RMS_OVER))&&(ESCPHASE == 2)){  //骤升算法
-                        if((ESCFlagB.ESCCntMs.HarmDisDelay <= CNT_MS(20))){
-                            dutytmp = dutytmp1 = (RMSGridInVAL/target)+((INSGridIn-RMSGridInVAL*1.4142*sin(LockPhAngle))/(target*1.4142*sin(LockPhAngle)));
-                            ArithFlagB = 0;
-                            TestArithFlagB = 0;
-                        }
-                        if(ESCFlagB.ESCCntMs.HarmDisDelay > CNT_MS(20)){
-                            TestArithFlagB = 1;
-                            *pStorage = RMSGridInVAL/target;
-                        }
-                }
+		/*限定PWM占空比上限*/
+		if (dutytmp1 > 0.96)
+		{
+			dutytmp1 = 0.96;
+		}
 
-              if(  (((NumeratorValue < ArithVAL)&&(NumeratorValue > ArithVal)) ||\
-                   (ESCFlagC.ESCCntMs.HarmDisDelay > CNT_MS(20))) && (TestArithFlagC == 1)&&(ESCPHASE == 3) ){
-                   dutytmp = dutytmp1 = RMSGridInVAL/target;
-                   ArithFlagC = 1;
-                   if((NumeratorValue < ArithVAL)&&(NumeratorValue > ArithVal)){
-                       ESCFlagC.ESCCntMs.HarmDisDelay = 0;
-                   }
-               }else if(((NumeratorValue >= ArithVAL)||(NumeratorValue <= ArithVal)||\
-                       (TestArithFlagC == 0)||(ESCFlagC.VoltIn_rms>=GV_RMS_OVER))&&(ESCPHASE == 3)){  //骤升算法
-                       if((ESCFlagC.ESCCntMs.HarmDisDelay <= CNT_MS(20))){
-                           dutytmp = dutytmp1 = (RMSGridInVAL/target)+((INSGridIn-RMSGridInVAL*1.4142*sin(LockPhAngle))/(target*1.4142*sin(LockPhAngle)));
-                           ArithFlagC = 0;
-                           TestArithFlagC = 0;
-                       }
-                       if(ESCFlagC.ESCCntMs.HarmDisDelay > CNT_MS(20)){
-                           TestArithFlagC = 1;
-                           *pStorage = RMSGridInVAL/target;
-                       }
-               }
-            }else if(StateFlag.VoltageModeFlag == 1){     //降压
-                dutytmp = dutytmp1 = target/RMSGridInVAL;
-                if(ESCPHASE == 1)     ArithFlagA = 1;
-                if(ESCPHASE == 2)     ArithFlagB = 1;
-                if(ESCPHASE == 3)     ArithFlagC = 1;
-            }
-        }
-        if(dutytmp1 > 0.96)        dutytmp1 = 0.96;       //输入电压高于目标,返回0.96,考虑到PI会自动调节故上限设为0.96
-        if(dutytmp1 < 0.51)         dutytmp1 = 0.51;      //输入电压低于目标,限制到0.7~0.95区间,考虑到PI会自动调节故下限设为0.65
-    }else{
-          dutytmp1 = 0.96;
-    }
+		/*限定PWM占空比下限*/
+		if (dutytmp1 < 0.51)
+		{
+			dutytmp1 = 0.51;
+		}
+	}
+	else //(电网电压有效值 < 10V)或(负载电压有效值的目标值 < 10V)。WY
+	{
+		dutytmp1 = 0.96;
+	}
 
-    //幅值变化斜率控制,每秒变化率390%:=0.00001*25.6k
-    if((ArithFlagA == 1)&&(ESCPHASE == 1)){ //正常状态进入斜率控制.
-        //斜率限制
-        if((dutytmp1 > 0.499) && (dutytmp1 < 0.961)){
-           if(*pStorage > dutytmp1){
-               *pStorage -= 0.0001;
-           }else if(*pStorage < dutytmp1){
-               *pStorage += 0.0001;
-           }else{
-               *pStorage = dutytmp1;
-           }
-        }else if(dutytmp1 > 0.962){
-            *pStorage = dutytmp1 = 0.962;
-        }else if(dutytmp1 < 0.497){
-            *pStorage = dutytmp1 = 0.497;
-        }
+//幅值变化斜率控制,每秒变化率390%:=0.00001*25.6k
 
-        if(StateFlag.VoltageModeFlag == 0){
-            dutytmp1 =  *pStorage - PIerr;
-        }else if(StateFlag.VoltageModeFlag == 1){
-            dutytmp1 =  *pStorage + PIerr;
-        }
-    }
+	/*处理A相*/
+	if ((ArithFlagA == 1) //A相电网电流不存在突变。WY
+			&& (ESCPHASE == 1)) //A相。WY
+	{
+		if ((dutytmp1 > 0.499) && (dutytmp1 < 0.961)) //PWM占空比在范围内。WY
+		{
+			if (*pStorage > dutytmp1) //PWM占空比的前馈值 > PWM占空比。WY
+			{
+				*pStorage -= 0.0001; //微调PWM占空比的前馈值。目的：防止PWM变化太快？WY
+			}
+			else if (*pStorage < dutytmp1) //PWM占空比的前馈值 < PWM占空比。WY
+			{
+				*pStorage += 0.0001; //微调PWM占空比的前馈值。WY
+			}
+			else
+			{
+				*pStorage = dutytmp1; //无需微调PWM占空比的前馈值。WY
+			}
+		}
+		else if (dutytmp1 > 0.962) //PWM占空比超过上限。WY
+		{
+			*pStorage = dutytmp1 = 0.962; //限定PWM占空比的上限。WY
+		}
+		else if (dutytmp1 < 0.497) //PWM占空比低于下限。WY
+		{
+			*pStorage = dutytmp1 = 0.497; //限定PWM占空比的下限。WY
+		}
 
+		/*升压模式。WY*/
+		if (StateFlag.VoltageModeFlag == 0)
+		{
+			dutytmp1 = *pStorage - PIerr; //？？？WY
+		}
+		/*降压模式。WY*/
+		else if (StateFlag.VoltageModeFlag == 1)
+		{
+			dutytmp1 = *pStorage + PIerr;
+		}
+	}
 
-    if((ArithFlagB == 1)&&(ESCPHASE == 2)){
-        //斜率限制
-        if((dutytmp1 > 0.499) && (dutytmp1 < 0.961)){
-           if(*pStorage > dutytmp1){
-               *pStorage -= 0.0001;
-           }else if(*pStorage < dutytmp1){
-               *pStorage += 0.0001;
-           }else{
-               *pStorage = dutytmp1;
-           }
-        }else if(dutytmp1 > 0.962){
-            *pStorage = dutytmp1 = 0.962;
-        }else if(dutytmp1 < 0.497){
-            *pStorage = dutytmp1 = 0.497;
-        }
+	/*处理B相*/
+	if ((ArithFlagB == 1) && (ESCPHASE == 2))
+	{
+		if ((dutytmp1 > 0.499) && (dutytmp1 < 0.961))
+		{
+			if (*pStorage > dutytmp1)
+			{
+				*pStorage -= 0.0001;
+			}
+			else if (*pStorage < dutytmp1)
+			{
+				*pStorage += 0.0001;
+			}
+			else
+			{
+				*pStorage = dutytmp1;
+			}
+		}
+		else if (dutytmp1 > 0.962)
+		{
+			*pStorage = dutytmp1 = 0.962;
+		}
+		else if (dutytmp1 < 0.497)
+		{
+			*pStorage = dutytmp1 = 0.497;
+		}
 
-        if(StateFlag.VoltageModeFlag == 0){
-            dutytmp1 =  *pStorage - PIerr;
-        }else if(StateFlag.VoltageModeFlag == 1){
-            dutytmp1 =  *pStorage + PIerr;
-        }
-    }
+		if (StateFlag.VoltageModeFlag == 0)
+		{
+			dutytmp1 = *pStorage - PIerr;//*pStorage前馈值，PIerr反馈值
+		}
+		else if (StateFlag.VoltageModeFlag == 1)
+		{
+			dutytmp1 = *pStorage + PIerr;
+		}
+	}
 
-    if((ArithFlagC == 1)&&(ESCPHASE == 3)){
+	/*处理C相*/
+	if ((ArithFlagC == 1) && (ESCPHASE == 3))
+	{
 
-        if((dutytmp1 > 0.499) && (dutytmp1 < 0.961)){
-           if(*pStorage > dutytmp1){
-               *pStorage -= 0.0001;
-           }else if(*pStorage < dutytmp1){
-               *pStorage += 0.0001;
-           }else{
-               *pStorage = dutytmp1;
-           }
-        }else if(dutytmp1 > 0.962){
-            *pStorage = dutytmp1 = 0.962;
-        }else if(dutytmp1 < 0.497){
-            *pStorage = dutytmp1 = 0.497;
-        }
+		if ((dutytmp1 > 0.499) && (dutytmp1 < 0.961))
+		{
+			if (*pStorage > dutytmp1)
+			{
+				*pStorage -= 0.0001;
+			}
+			else if (*pStorage < dutytmp1)
+			{
+				*pStorage += 0.0001;
+			}
+			else
+			{
+				*pStorage = dutytmp1;
+			}
+		}
+		else if (dutytmp1 > 0.962)
+		{
+			*pStorage = dutytmp1 = 0.962;
+		}
+		else if (dutytmp1 < 0.497)
+		{
+			*pStorage = dutytmp1 = 0.497;
+		}
 
-        if(StateFlag.VoltageModeFlag == 0){
-            dutytmp1 =  *pStorage - PIerr;
-        }else if(StateFlag.VoltageModeFlag == 1){
-            dutytmp1 =  *pStorage + PIerr;
-        }
-    }
+		if (StateFlag.VoltageModeFlag == 0)
+		{
+			dutytmp1 = *pStorage - PIerr;
+		}
+		else if (StateFlag.VoltageModeFlag == 1)
+		{
+			dutytmp1 = *pStorage + PIerr;
+		}
+	}
 
-    if(dutytmp1 > 0.96){
-        dutytmp1 = 0.96;
-    }
-    if(dutytmp1 < 0.51){
-        dutytmp1 = 0.51;
-    }
-    return dutytmp1;
+	/*限定PWM占空比上限。WY*/
+	if (dutytmp1 > 0.96)
+	{
+		dutytmp1 = 0.96;
+	}
+
+	/*限定PWM占空比下限。WY*/
+	if (dutytmp1 < 0.51)
+	{
+		dutytmp1 = 0.51;
+	}
+
+	return dutytmp1;
 }
 
 
@@ -1360,1232 +1201,760 @@ int T1PR_INT16 = 0;
 float TIPRTEST = 0.805;
 float VoltInF = 0,CurrInF = 0;
 float DEBUGESC_DutyDataA = 0,DEBUGESC_DutyDataB = 0,DEBUGESC_DutyDataC = 0,DEBUGESC_DutyDataD = 0;
-int UnCurrCompCnt=0;
+
+int UnCurrCompCnt = 0; //该变量未使用。WY
+
 int cntaaa=2;
 
-const SMconstantCurr ConstantCurrDefault[3]={{VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0},\
-                                             {VOLT_TARGET_CORR_DEFAULT,0.0f,93.0f,18.0f,75.0f,135.0f,0,0,0},\
-                                             {VOLT_TARGET_CORR_DEFAULT,0.0f,140.0f,23.0f,114.0f,198.0f,0,0,0}}; //分设备容量(存在于flash里面,是const常数,不可修改)
-
-SMconstantCurr ConstantCurr[3]={{VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0},\
-                                {VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0},\
-                                {VOLT_TARGET_CORR_DEFAULT,0.0f,58.0f,13.0f,45.0f,82.0f,0,0,0}};  //分A/B/C三相(存在于内存中,可修改)
-
-float ConstantCurrFSM(SMconstantCurr *pst,float gridCur_rms,float GridCurrF,float CurrTargetValue)
+/*
+ * 不同系列机型的容量参数。WY
+ */
+const SMconstantCurr ConstantCurrDefault[3] =
 {
-//    CurrTargetValueA_30 = pst->CurTarget[(Uint16)(WindCold.BOARD_OVER_TEMP-temp)];
-    //第一段
-    switch(pst->state)
-    {
-    case SM_CONSTANT_CURR_NORMAL:
-        if((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD)||\
-                (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED)||\
-                (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED))
-        {
-            pst->state = SM_CONSTANT_CURR_INS;
-        }else{
-            if((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) && (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD))
-            {
-                pst->state = SM_CONSTANT_CURR_CONSTANT;
-            }else if(gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED){
-                pst->state =  SM_CONSTANT_CURR_NORMAL;
-            }else{
-            }
-        }
+	{
+	  VOLT_TARGET_CORR_DEFAULT, //PI调节器参数。WY
+	  0.0f, //负载电压有效值的目标值的修正系数。WY
+	  58.0f, //电网电流有效值的过载值。WY
+	  13.0f, //该成员未使用。WY
+	  45.0f, //电网电流有效值的额定值。WY
+	  82.0f, // 电网电流瞬时值的限定值。WY
+	  0, //状态机状态（用于描述电网电流）。WY
+	  0, //前一次电网电流状态。WY
+	  0 //计数器。目的：防止状态机频繁切换引发抖动。WY
+	},
 
-        break;
+	{
+	  VOLT_TARGET_CORR_DEFAULT,
+	  0.0f,
+	  93.0f,
+	  18.0f,
+	  75.0f,
+	  135.0f,
+	  0,
+	  0,
+	  0
+	},
 
-    case SM_CONSTANT_CURR_CONSTANT:
-        if((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD)||\
-                (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED)||\
-                (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED))
-        {
-            pst->state = SM_CONSTANT_CURR_INS;
-        }else{
-            if((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) && (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD))
-            {
-                pst->state = SM_CONSTANT_CURR_CONSTANT;
-            }else if(gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED){
-                pst->state =  SM_CONSTANT_CURR_NORMAL;
-            }else{
-            }
-        }
+	{
+	  VOLT_TARGET_CORR_DEFAULT,
+	  0.0f,
+	  140.0f,
+	  23.0f,
+	  114.0f,
+	  198.0f,
+	  0,
+	  0,
+	  0
+	}
+};
 
-        break;
+/*
+ * ABC三相容量参数。WY
+ */
+SMconstantCurr ConstantCurr[3] =
+{
+	{
+	  VOLT_TARGET_CORR_DEFAULT,
+	  0.0f,
+	  58.0f,
+	  13.0f,
+	  45.0f,
+	  82.0f,
+	  0,
+	  0,
+	  0
+	},
 
-    case SM_CONSTANT_CURR_INS:
-        if((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD)||\
-                (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED)||\
-                (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED))
-        {
-            pst->state = SM_CONSTANT_CURR_INS;
-        }else{
-            if((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) && (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD))
-            {
-                pst->state = SM_CONSTANT_CURR_CONSTANT;
-            }else if(gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED){
-                pst->state =  SM_CONSTANT_CURR_NORMAL;
-            }else{
-            }
-        }
+	{
+	  VOLT_TARGET_CORR_DEFAULT,
+	  0.0f,
+	  58.0f,
+	  13.0f,
+	  45.0f,
+	  82.0f,
+	  0,
+	  0,
+	  0
+	},
 
-     break;
+	{
+	  VOLT_TARGET_CORR_DEFAULT,
+	  0.0f,
+	  58.0f,
+	  13.0f,
+	  45.0f,
+	  82.0f,
+	  0,
+	  0,
+	  0
+	}
+};
 
-    case SM_CONSTANT_CURR_STANDBY:
-    default:
-        pst->Prvstate = pst->state = SM_CONSTANT_CURR_NORMAL;
-        pst->CorrPI.i10=0;
-    break;
-    }
 
-    //第二段
-    switch(pst->state)
-    {
-    case SM_CONSTANT_CURR_NORMAL:
-        if(pst->VolttargetCorr < 0){
-            pst->VolttargetCorr += 0.00005;
-        }
+/*
+ * 功能：根据电网电流状态，计算负载电压（有效值）目标值的修正系数。WY
+ *
+ * 输入参数SMconstantCurr：设备容量相关参数
+ * 输入参数gridCur_rms：电网电流有效值
+ * 输入参数GridCurrF：电网电流瞬时值
+ * 输入参数CurrTargetValue：电网电流（有效值）目标值
+ *
+ * 返回值：负载电压有效值的目标值的修正系数
+ */
+float ConstantCurrFSM(SMconstantCurr *pst, float gridCur_rms, float GridCurrF, float CurrTargetValue)
+{
+	/*状态机的跳转逻辑。WY*/
+	switch (pst->state)
+	{
+		 /*电网电流正常。WY*/
+		case SM_CONSTANT_CURR_NORMAL:
+		{
+			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流（有效值 ）> 电网电流（有效值）过载值。WY
+					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流（瞬时值） > 电网电流（瞬时值）额定值上限。WY
+					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流（瞬时值） < 电网电流（瞬时值）额定值下限。WY
+			{
+				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流突变。WY
+			}
+			else
+			{
+				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值 ） > 电网电流（有效值）额定值。WY
+						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流（有效值） < 电网电流（有效值）过载值。WY
+				{
+					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定。WY
+				}
+				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值） < 电网电流（有效值）额定值。WY
+				{
+					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
+				}
+				else
+				{
+				}
+			}
+		}
+			break;
 
-        if(pst->Prvstate == SM_CONSTANT_CURR_CONSTANT){
-            pst->CNT1=10000;
-        }
-        if(pst->CNT1>=0){
-            if(--pst->CNT1==0)
-                pst->CorrPI.i10 = 0;
-        }
-        pst->Prvstate = pst->state;
-        break;
+		/*电网电流恒定。WY*/
+		case SM_CONSTANT_CURR_CONSTANT:
+		{
+			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流（有效值 ）> 电网电流（有效值）过载值。WY
+					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流（瞬时值） > 电网电流（瞬时值）额定值上限。WY
+					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流（瞬时值） < 电网电流（瞬时值）额定值下限。WY
+			{
+				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流突变。WY
+			}
+			else
+			{
+				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值 ） > 电网电流（有效值）额定值。WY
+						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流（有效值） < 电网电流（有效值）过载值。WY
+				{
+					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定。WY
+				}
+				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值） < 电网电流（有效值）额定值。WY
+				{
+					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
+				}
+				else
+				{
+				}
+			}
+		}
+			break;
 
-    case SM_CONSTANT_CURR_CONSTANT:
-        if(pst->Prvstate == SM_CONSTANT_CURR_INS){
-            pst->CorrPI.i10 = pst->VolttargetCorr;
-        }
-        if(pst->Prvstate == SM_CONSTANT_CURR_NORMAL){
-            pst->CorrPI.i10 = pst->VolttargetCorr;
-        }
-        pst->VolttargetCorr = DCL_runPI(&(pst->CorrPI),CurrTargetValue,gridCur_rms);
-//        if(gridCur_rms>60)    SET_FLback(1);//测试debug
-        pst->Prvstate = pst->state;
-        break;
+		/*电网电流突变：WY*/
+		case SM_CONSTANT_CURR_INS:
+		{
+			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流有效值 > 电网电流有效值的过载值。WY
+					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流瞬时值 > 电网电流瞬时值上限。WY
+					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流瞬时值 < 电网电流瞬时值下限。WY
+			{
+				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流突变。WY
+			}
+			else
+			{
+				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流有效值 > 电网电流有效值的额定值。WY
+						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流有效值 < 电网电流有效值的过载值。WY
+				{
+					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定。WY
+				}
+				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流有效值 < 电网电流有效值的额定值。WY
+				{
+					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
+				}
+				else
+				{
+				}
+			}
+		}
+			break;
 
-    case SM_CONSTANT_CURR_INS:
-        pst->VolttargetCorr = -0.5;
-    //                        VolttargetCorrPIA.i10 = -0.5;
-        pst->Prvstate = pst->state;
-        break;
+		case SM_CONSTANT_CURR_STANDBY: //默认设置。WY
+		default:
+		{
+			pst->Prvstate = pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
+			pst->CorrPI.i10 = 0;
+		}
+			break;
+	}
 
-    case SM_CONSTANT_CURR_STANDBY:
-    default:
-        pst->CorrPI.i10=0;
-        break;
-    }
-    return pst->VolttargetCorr;
+	/*状态机的行为。WY*/
+	switch (pst->state)
+	{
+		/*电网电流正常。WY*/
+		case SM_CONSTANT_CURR_NORMAL:
+		{
+			if (pst->VolttargetCorr < 0)
+			{
+				pst->VolttargetCorr += 0.00005; //递增负载电压目标值修正系数。WY
+			}
+
+			if (pst->Prvstate == SM_CONSTANT_CURR_CONSTANT) //上一次状态机事件为：电网电流恒定。WY
+			{
+				pst->CNT1 = 10000; //赋值周期计数器，防止抖动。WY
+			}
+
+			if (pst->CNT1 >= 0)
+			{
+				if (--pst->CNT1 == 0)
+				{
+					pst->CorrPI.i10 = 0;
+				}
+			}
+
+			pst->Prvstate = pst->state; //记录状态机状态。WY
+		}
+			break;
+
+		/*电网电流恒定。WY*/
+		case SM_CONSTANT_CURR_CONSTANT:
+		{
+			if (pst->Prvstate == SM_CONSTANT_CURR_INS) //上一次状态机事件为：电网电流突变。WY
+			{
+				pst->CorrPI.i10 = pst->VolttargetCorr;
+			}
+
+			if (pst->Prvstate == SM_CONSTANT_CURR_NORMAL) //上一次状态机事件为：电网电流正常。WY
+			{
+				pst->CorrPI.i10 = pst->VolttargetCorr;
+			}
+
+			pst->VolttargetCorr = DCL_runPI(&(pst->CorrPI), CurrTargetValue, gridCur_rms); //计算负载电压（有效值）目标值的修正系数。参数不对？？？。WY
+
+			pst->Prvstate = pst->state; //记录状态机状态。WY
+		}
+			break;
+
+		/*电网电流突变*/
+		case SM_CONSTANT_CURR_INS:
+		{
+			pst->VolttargetCorr = -0.5; //不升压。范围？
+
+			pst->Prvstate = pst->state; //记录状态机状态。WY
+		}
+			break;
+
+		/*电网电流初始*/
+		case SM_CONSTANT_CURR_STANDBY:
+		default:
+		{
+			pst->CorrPI.i10 = 0; //清零PI控制器的积分项。WY
+			break;
+		}
+	}
+
+	return pst->VolttargetCorr;
 }
 
+
+/*
+ * 功能：PWM占空比调制。WY
+ * 注意：该函数在ADC-D-1的ISR中被调用。
+ */
 inline void GenModulation(void)
 {
-        DBG_leadSampleIncrementDuty = harmCompPerc;
-        DBG_leadSampleDecrementDuty = -reactPrCompPerc;
-    //    float PwmDutyA = 0,PwmDutyB = 0,PwmDutyC = 0;
-//        int T1PR_INT16 = (int)T1PR;
-        T1PR_INT16 = (int)T1PR;
-//        int16 tmp;
-//        #define GET_DUTY_LIMIT(reg,x) tmp = (int)(T1PR*(x)); (reg) = (tmp)<(T1PR_INT16)? (tmp) :(T1PR_INT16-1);   //CLA提前采样点
+	DBG_leadSampleIncrementDuty = harmCompPerc; //该变量未使用。WY
+	DBG_leadSampleDecrementDuty = -reactPrCompPerc; //该变量未使用。WY
+	T1PR_INT16 = (int) T1PR; //该变量未使用。WY
+
 #if ESC_THREEPHASE
-        if(((StateFlag.VoltageMode==3)||(StateFlag.VoltageMode==0))&&\
-            (StateEventFlag_A == STATE_EVENT_RUN_A)&&(ESCFlagA.PWM_ins_index == 0)&&\
-            (StateEventFlag_B == STATE_EVENT_RUN_B)&&(ESCFlagB.PWM_ins_index == 0)&&\
-            (StateEventFlag_C == STATE_EVENT_RUN_C)&&(ESCFlagC.PWM_ins_index == 0) )//不平衡模式
-        {
-            UnCurrCompCnt=0;
-            UnCurrCompFUN();
-        }else{
-            CurrentUnbalanceRegularVoltage[0] = ESCFlagA.Volttarget;
-            CurrentUnbalanceRegularVoltage[1] = ESCFlagB.Volttarget;
-            CurrentUnbalanceRegularVoltage[2] = ESCFlagC.Volttarget;
-        }
-            if(ESCFlagA.PWM_ins_index != 0){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-    //            ESCFlagA.PWMcurrDirFlag = 0;         //由CPU更新EPwm4,5,6Reg
-                EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-                EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-                EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-                EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-                PIVolA.i10 = 0;                  //清除PI的饱和值
-                PIVolA.i6 = 0;
-                GridCurrPICtrlA.i10 = 0;
-                GridCurrPICtrlA.i6 = 0;
-                ConstantCurr[0].state = SM_CONSTANT_CURR_STANDBY;
-                ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-            }else if((StateEventFlag_A == STATE_EVENT_RUN_A)&&(ESCFlagA.PWM_ins_index == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-    //            ESCFlagA.PWMcurrDirFlag = 1;         //由CLA更新EPwm4,5,6Reg
+	if (((StateFlag.VoltageMode == 3) //不平衡模式。WY
+			|| (StateFlag.VoltageMode == 0)) //升压模式。WY
+			&& (StateEventFlag_A == STATE_EVENT_RUN_A) //A相处于运行状态。WY
+			&& (ESCFlagA.PWM_ins_index == 0) //A相主路处于PWM调制状态。WY
+			&& (StateEventFlag_B == STATE_EVENT_RUN_B) //B相处于运行状态。WY
+			&& (ESCFlagB.PWM_ins_index == 0) //B相主路处于PWM调制状态。WY
+			&& (StateEventFlag_C == STATE_EVENT_RUN_C) //C相处于运行状态。WY
+			&& (ESCFlagC.PWM_ins_index == 0)) //C相主路处于PWM调制状态。WY
+	{
+		UnCurrCompCnt = 0; //该变量未使用。WY
+		UnCurrCompFUN(); //检测三相电网电流（有效值）不平衡，据此修正三相负载电压（有效值）目标值。WY
+	}
+	else
+	{
+		CurrentUnbalanceRegularVoltage[0] = ESCFlagA.Volttarget; //A相负载电压有效值的目标值。WY
+		CurrentUnbalanceRegularVoltage[1] = ESCFlagB.Volttarget; //B相负载电压有效值的目标值。WY
+		CurrentUnbalanceRegularVoltage[2] = ESCFlagC.Volttarget; //C相负载电压有效值的目标值。WY
+	}
 
-                switch(StateFlag.VoltageMode){
-                case 0: //升压模式
-                     //恒流模式
-    //                if(ESCTESTDATA2 == 0){
-    //                    if(WindCold.BOARD_OVER_TEMP - TempData[0] <= ConstantCurr[0].RMS_CONSTANT_CURRENT_DIFF)  //52
-    //                    {
-    //                        CurrTargetValueA_30 = CurTarget_30[(Uint16)(WindCold.BOARD_OVER_TEMP-TempData[0])];
-    //                    }
-    //                    VolttargetCorrA = ConstantCurrFSM(&ConstantCurr[0],gridCurA_rms,GridCurrAF,CurrTargetValueA_30);
-    //                }
-    //                if(ESCTESTDATA2 == 0){
-    //                    if(WindCold.BOARD_OVER_TEMP - TempData[0] <= ConstantCurr[0].RMS_CONSTANT_CURRENT_DIFF)  //52
-    //                    {
-    //                        CurrTargetValueA_50 = CurTarget_50[(Uint16)(WindCold.BOARD_OVER_TEMP-TempData[0])];
-    //                    }
-    //                    if((gridCurA_rms > RMS_CONSTANT_CURRENT_RATED_50)&&(gridCurA_rms < RMS_CONSTANT_CURRENT_OVERLOAD_50)){
-    //                        VolttargetCorrA = DCL_runPI(&VolttargetCorrPIA,CurrTargetValueA_50,gridCurA_rms);
-    //                        ConstantCurrInsFlagA = 0;
-    //                    }else if(gridCurA_rms <= RMS_CONSTANT_CURRENT_RATED_50){
-    //                        if((ConstantCurrInsFlagA == 1)&&(VolttargetCorrA < 0)){
-    //                            VolttargetCorrA = VolttargetCorrA+0.001;
-    //                        }else{
-    //                            VolttargetCorrA = 0;
-    //                        }
-    //                        VolttargetCorrPIA.i10=0;
-    //                    }
-    //                    if((gridCurA_rms >= RMS_CONSTANT_CURRENT_OVERLOAD_50)||(GridCurrAF > INS_CONSTANT_CURRENT_RATED_50)||(GridCurrAF < -INS_CONSTANT_CURRENT_RATED_50)){
-    //                        VolttargetCorrA= -0.5;
-    //                        ConstantCurrInsFlagA = 1;
-    //                    }
-    //                }
-//                    VolttargetCorrA = ConstantCurrFSM(&ConstantCurr[0],gridCurA_rms,GridCurrAF,CurrTargetTemper);
-//                    PIOutVoltValueA = DCL_runPI(&PIVolA,(ESCFlagA.Volttarget*(1+VolttargetCorrA)),VoltOutA_rms);
-//                    ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms,VoltInAF,(ESCFlagA.Volttarget*(1+VolttargetCorrA)),PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA,ESCFlagA.PHASE);
-                    VolttargetCorrA = ConstantCurrFSM(&ConstantCurr[0],gridCurA_rms,GridCurrAF,CurrTargetTemper);
-                    PIOutVoltValueA = DCL_runPI(&PIVolA,(CurrentUnbalanceRegularVoltage[0]*(1+VolttargetCorrA)),VoltOutA_rms);
-                    ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms,VoltInAF,(CurrentUnbalanceRegularVoltage[0]*(1+VolttargetCorrA)),PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA,ESCFlagA.PHASE);
+	/*处理A相*/
+	if (ESCFlagA.PWM_ins_index != 0) //A相主路处于PWM直通状态。WY
+	{
+		EPwm3Regs.CMPA.bit.CMPA = T1PR;//1管直通
+		EPwm3Regs.CMPB.bit.CMPB = T1PR;//2管不直通
+		EPwm4Regs.CMPA.bit.CMPA = T1PR;//3管直通
+		EPwm4Regs.CMPB.bit.CMPB = T1PR;//4管不直通
 
-                    break;
-                case 1://降压模式
-                    PIOutVoltValueA = DCL_runPI(&PIVolA,ESCFlagA.Volttarget,VoltOutA_rms);
-                    ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA,ESCFlagA.PHASE);
-                    break;
-                case 2:break;//升降压模式
-                case 3://不平衡模式
-                    VolttargetCorrA = ConstantCurrFSM(&ConstantCurr[0],gridCurA_rms,GridCurrAF,CurrTargetTemper);
-                    PIOutVoltValueA = DCL_runPI(&PIVolA,CurrentUnbalanceRegularVoltage[0]*(1+VolttargetCorrA),VoltOutA_rms);
-                    ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms,VoltInAF,CurrentUnbalanceRegularVoltage[0],PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA,ESCFlagA.PHASE);
-                    break;
-                case 4://无功模式
-                    PIOutVoltValueA = DCL_runPI(&PIVolA,ESCFlagA.Volttarget,VoltOutA_rms);
-                    dbg_reactive=ReactivePowerComFUN(Esc_VoltPhaseA,GridRealCurErrA);
-                    ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA,ESCFlagA.PHASE)-dbg_reactive;
-     //                       ReactivePowerComFUN(Esc_VoltPhaseA,GridRealCurErrA);
-                    break;
-            }
+		PIVolA.i10 = 0;//清除PI的饱和值
+		PIVolA.i6 = 0;
 
-                T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32)(T1PR * ((ESCFlagA.ESC_DutyData + (negCurCompPerc/2))>1.0f ? 1.0f: ESCFlagA.ESC_DutyData + (negCurCompPerc/2))))/*<<16*/;
-                T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32)(T1PR * ((ESCFlagA.ESC_DutyData - (negCurCompPerc/2))>1.0f ? 1.0f: ESCFlagA.ESC_DutyData - (negCurCompPerc/2))))/*<<16*/;
-                T1PRmulESC_DutyDataA = ((int32)(T1PR * ESCFlagA.ESC_DutyData))/*<<16*/;
-                if(VoltInAF >= 35){                 //电压正半波   UAIP+/UAIN+为1时,无互锁逻辑  //硬件新加互锁逻辑判断的电压值与软件采样的电压值在相位上相差约200us,所以这个范围值要设大一些,把硬件判断电压值包进去.
-                    EPwm3Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //2
-                    EPwm3Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //1,buck管
-                    EPwm4Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                    EPwm4Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-                }else if(VoltInAF <= (-35)){        //电压负半波
-                   EPwm3Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-                   EPwm3Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-                   EPwm4Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //4
-                   EPwm4Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //3,buck管
-                }else{
-                    if((VoltInAF >= 0)&&(VoltInAF < 35)){         //NESPWS20-220524REV2功率板--NPC3CA10020220518REV1合成板
-                        if(GridCurrAF >= 0){
-                            EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                            EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                            EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                            EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                        }else{
-                            EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                            EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                            EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                            EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                        }
-                    }else if((VoltInAF < 0)&&(VoltInAF > (-35))){
-                        if(GridCurrAF >= 0){
-                            EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                            EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                            EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                            EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                        }else{
-                            EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                            EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                            EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                            EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                        }
-                    }
-                }
-            }else{
-    //            ESCFlagA.PWMcurrDirFlag = 0;
-                PIVolA.i10 = 0;                 //清除PI的饱和值
-                PIVolA.i6 = 0;
-                GridCurrPICtrlA.i10 = 0;
-                GridCurrPICtrlA.i6 = 0;
-                ConstantCurr[0].state = SM_CONSTANT_CURR_STANDBY;
-                EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-                EPwm3Regs.CMPB.bit.CMPB = T1PR;        //2管
-                EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管
-                EPwm4Regs.CMPB.bit.CMPB = T1PR;        //4管
-                ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-            }
+		GridCurrPICtrlA.i10 = 0;
+		GridCurrPICtrlA.i6 = 0;
 
+		ConstantCurr[0].state = SM_CONSTANT_CURR_STANDBY; //初始化状态机。WY
 
-            if(ESCFlagB.PWM_ins_index != 0){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-    //            ESCFlagB.PWMcurrDirFlag = 0;
-                EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-                EPwm5Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-                EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-                EPwm6Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-                PIVolB.i10 = 0;                 //清除PI的饱和值
-                PIVolB.i6 = 0;
-                GridCurrPICtrlB.i10 = 0;
-                GridCurrPICtrlB.i6 = 0;
-                ConstantCurr[1].state = SM_CONSTANT_CURR_STANDBY;
-                ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
+		ESC_FeedForward_DutyA = 1; //A相PWM占空比前馈值。WY
+	}
+	else if ((StateEventFlag_A == STATE_EVENT_RUN_A) //A相处于运行状态。WY
+			&& (ESCFlagA.PWM_ins_index == 0)) //A相主路处于PWM调制状态。WY
+	{
+		switch (StateFlag.VoltageMode) //选择工作模式。WY
+		{
+			case 0: //升压模式。WY
+			{
+				VolttargetCorrA = ConstantCurrFSM(&ConstantCurr[0], gridCurA_rms, GridCurrAF, CurrTargetTemper); //根据电网电流状态，计算负载电压（有效值）目标值的修正系数。WY
+				PIOutVoltValueA = DCL_runPI(&PIVolA, (CurrentUnbalanceRegularVoltage[0] * (1 + VolttargetCorrA)), VoltOutA_rms); //求解PI控制器的输出值。WY
+				ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms, VoltInAF, (CurrentUnbalanceRegularVoltage[0] * (1 + VolttargetCorrA)), PIOutVoltValueA,
+														Esc_VoltPhaseA, &ESC_FeedForward_DutyA, ESCFlagA.PHASE);
+			}
+				break;
 
-            }else if((StateEventFlag_B == STATE_EVENT_RUN_B)&&(ESCFlagB.PWM_ins_index == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-    //            ESCFlagB.PWMcurrDirFlag = 1;
+			case 1: //降压模式。WY
+			{
+				PIOutVoltValueA = DCL_runPI(&PIVolA, ESCFlagA.Volttarget, VoltOutA_rms);
+				ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms, VoltInAF, ESCFlagA.Volttarget, PIOutVoltValueA, Esc_VoltPhaseA, &ESC_FeedForward_DutyA,
+														ESCFlagA.PHASE);
+			}
+				break;
 
-                switch(StateFlag.VoltageMode){
-                case 0: //升压模式
-//                    VolttargetCorrB = ConstantCurrFSM(&ConstantCurr[1],gridCurB_rms,GridCurrBF,CurrTargetTemper);
-//                    PIOutVoltValueB = DCL_runPI(&PIVolB,(ESCFlagB.Volttarget*(1+VolttargetCorrB)),VoltOutB_rms);
-//                    ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms,VoltInBF,(ESCFlagB.Volttarget*(1+VolttargetCorrB)),PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB,ESCFlagB.PHASE);
-                    VolttargetCorrB = ConstantCurrFSM(&ConstantCurr[1],gridCurB_rms,GridCurrBF,CurrTargetTemper);
-                    PIOutVoltValueB = DCL_runPI(&PIVolB,(CurrentUnbalanceRegularVoltage[1]*(1+VolttargetCorrB)),VoltOutB_rms);
-                    ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms,VoltInBF,(CurrentUnbalanceRegularVoltage[1]*(1+VolttargetCorrB)),PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB,ESCFlagB.PHASE);
-                    break;
-                case 1: //升压模式
-                    PIOutVoltValueB = DCL_runPI(&PIVolB,ESCFlagB.Volttarget,VoltOutB_rms);
-                    ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB,ESCFlagB.PHASE);
-                    break;
-                case 2:
-                    break;//升降压模式
-                case 3://不平衡模式
-                    VolttargetCorrB = ConstantCurrFSM(&ConstantCurr[1],gridCurB_rms,GridCurrBF,CurrTargetTemper);
-                    PIOutVoltValueB = DCL_runPI(&PIVolB,CurrentUnbalanceRegularVoltage[1]*(1+VolttargetCorrB),VoltOutB_rms);
-                    ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms,VoltInBF,CurrentUnbalanceRegularVoltage[1],PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB,ESCFlagB.PHASE);
-                    break;
-                case 4://无功模式
-                    PIOutVoltValueB = DCL_runPI(&PIVolB,ESCFlagB.Volttarget,VoltOutB_rms);
-                    ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB,ESCFlagB.PHASE)-\
-                            ReactivePowerComFUN(Esc_VoltPhaseB,GridRealCurErrB);
-                    break;
-            }
+			case 2: //升降压模式。WY
+				break;
 
-                T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32)(T1PR * ((ESCFlagB.ESC_DutyData + (negCurCompPerc/2))>1.0f ? 1.0f: ESCFlagB.ESC_DutyData + (negCurCompPerc/2))))/*<<16*/;
-                T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32)(T1PR * ((ESCFlagB.ESC_DutyData - (negCurCompPerc/2))>1.0f ? 1.0f: ESCFlagB.ESC_DutyData - (negCurCompPerc/2))))/*<<16*/;
-                T1PRmulESC_DutyDataB = ((int32)(T1PR * ESCFlagB.ESC_DutyData))/*<<16*/;
-                if(VoltInBF >= 35){                 //电压正半波
-                    EPwm5Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //2
-                    EPwm5Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //1,buck管
-                    EPwm6Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                    EPwm6Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-                }else if(VoltInBF <= (-35)){         //电压负半波
-                   EPwm5Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-                   EPwm5Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-                   EPwm6Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //4
-                   EPwm6Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //3,buck管
-                }else{
-                    if((VoltInBF >= 0)&&(VoltInBF < 35)){
-                        if(GridCurrBF >= 0){
-                            EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-                            EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-                            EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-                            EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-                        }else{
-                            EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-                            EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-                            EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-                            EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-                        }
-                    }else if((VoltInBF < 0)&&(VoltInBF > (-35))){
-                        if(GridCurrBF >= 0){
-                            EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-                            EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-                            EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-                            EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-                        }else{
-                            EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-                            EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-                            EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-                            EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-                        }
-                    }
-                }
-            }else{
-    //            ESCFlagB.PWMcurrDirFlag = 0;
-                PIVolB.i10 = 0;                 //清除PI的饱和值
-                PIVolB.i6 = 0;
-                GridCurrPICtrlB.i10 = 0;
-                GridCurrPICtrlB.i6 = 0;
-                ConstantCurr[1].state = SM_CONSTANT_CURR_STANDBY;
-                EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-                EPwm5Regs.CMPB.bit.CMPB = T1PR;        //2管
-                EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管
-                EPwm6Regs.CMPB.bit.CMPB = T1PR;        //4管
-                ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-            }
+			case 3: //不平衡模式。WY
+			{
+				VolttargetCorrA = ConstantCurrFSM(&ConstantCurr[0], gridCurA_rms, GridCurrAF, CurrTargetTemper);
+				PIOutVoltValueA = DCL_runPI(&PIVolA, CurrentUnbalanceRegularVoltage[0] * (1 + VolttargetCorrA), VoltOutA_rms);
+				ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms, VoltInAF, CurrentUnbalanceRegularVoltage[0], PIOutVoltValueA, Esc_VoltPhaseA,
+														&ESC_FeedForward_DutyA, ESCFlagA.PHASE);
+			}
+				break;
 
+			case 4: //无功补偿模式。WY
+			{
+				PIOutVoltValueA = DCL_runPI(&PIVolA, ESCFlagA.Volttarget, VoltOutA_rms);
+				dbg_reactive = ReactivePowerComFUN(Esc_VoltPhaseA, GridRealCurErrA);
+				ESCFlagA.ESC_DutyData = RMSDutyLimit(VoltInA_rms, VoltInAF, ESCFlagA.Volttarget, PIOutVoltValueA, Esc_VoltPhaseA, &ESC_FeedForward_DutyA,
+														ESCFlagA.PHASE) - dbg_reactive;
+			}
+				break;
+		}
 
-            if(ESCFlagC.PWM_ins_index != 0){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-    //            ESCFlagC.PWMcurrDirFlag = 0;
-                EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-                EPwm7Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-                EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-                EPwm8Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-                PIVolC.i10 = 0;                 //清除PI的饱和值
-                PIVolC.i6 = 0;
-                GridCurrPICtrlC.i10 = 0;
-                GridCurrPICtrlC.i6 = 0;
-                ConstantCurr[2].state = SM_CONSTANT_CURR_STANDBY;
-                ESC_FeedForward_DutyC =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-            }else if((StateEventFlag_C == STATE_EVENT_RUN_C)&&(ESCFlagC.PWM_ins_index == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-    //            ESCFlagC.PWMcurrDirFlag = 1;
+		T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32) (T1PR * ((ESCFlagA.ESC_DutyData + (negCurCompPerc / 2)) > 1.0f ?
+				1.0f : ESCFlagA.ESC_DutyData + (negCurCompPerc / 2))));
 
-                switch(StateFlag.VoltageMode){
-                case 0: //升压模式
-                    //恒流模式
-//                    VolttargetCorrC = ConstantCurrFSM(&ConstantCurr[2],gridCurC_rms,GridCurrCF,CurrTargetTemper);
-//                    PIOutVoltValueC = DCL_runPI(&PIVolC,(ESCFlagC.Volttarget*(1+VolttargetCorrC)),VoltOutC_rms);       //PI闭环跟踪
-//                    ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms,VoltInCF,(ESCFlagC.Volttarget*(1+VolttargetCorrC)),PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC,ESCFlagC.PHASE);
-                    VolttargetCorrC = ConstantCurrFSM(&ConstantCurr[2],gridCurC_rms,GridCurrCF,CurrTargetTemper);
-                    PIOutVoltValueC = DCL_runPI(&PIVolC,(CurrentUnbalanceRegularVoltage[2]*(1+VolttargetCorrC)),VoltOutC_rms);       //PI闭环跟踪
-                    ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms,VoltInCF,(CurrentUnbalanceRegularVoltage[2]*(1+VolttargetCorrC)),PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC,ESCFlagC.PHASE);
-                    break;
-                case 1: //降压模式
-                    PIOutVoltValueC = DCL_runPI(&PIVolC,ESCFlagC.Volttarget,VoltOutC_rms);       //PI闭环跟踪
-                    ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms,VoltInCF,ESCFlagC.Volttarget,PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC,ESCFlagC.PHASE);
-                    break;
-                case 2:
-                    break;//升降压模式
-                case 3://不平衡模式
-                    VolttargetCorrC = ConstantCurrFSM(&ConstantCurr[2],gridCurC_rms,GridCurrCF,CurrTargetTemper);
-                    PIOutVoltValueC = DCL_runPI(&PIVolC,CurrentUnbalanceRegularVoltage[2]*(1+VolttargetCorrC),VoltOutC_rms);       //PI闭环跟踪
-                    ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms,VoltInCF,CurrentUnbalanceRegularVoltage[2],PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC,ESCFlagC.PHASE);
-                    break;
-                case 4://无功模式
-                    PIOutVoltValueC = DCL_runPI(&PIVolC,ESCFlagC.Volttarget,VoltOutC_rms);       //PI闭环跟踪
-                    ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms,VoltInCF,ESCFlagC.Volttarget,PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC,ESCFlagC.PHASE)-\
-                            ReactivePowerComFUN(Esc_VoltPhaseC,GridRealCurErrC);
-                    break;
-                }
+		T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32) (T1PR * ((ESCFlagA.ESC_DutyData - (negCurCompPerc / 2)) > 1.0f ?
+				1.0f : ESCFlagA.ESC_DutyData - (negCurCompPerc / 2))));
 
-                T1PRmulESC_DutyDataCaddnegCurCompPerc = ((int32)(T1PR * ((ESCFlagC.ESC_DutyData + (negCurCompPerc/2))>1.0f ? 1.0f: ESCFlagC.ESC_DutyData + (negCurCompPerc/2))))/*<<16*/;
-                T1PRmulESC_DutyDataCsubnegCurCompPerc = ((int32)(T1PR * ((ESCFlagC.ESC_DutyData - (negCurCompPerc/2))>1.0f ? 1.0f: ESCFlagC.ESC_DutyData - (negCurCompPerc/2))))/*<<16*/;
-                T1PRmulESC_DutyDataC = ((int32)(T1PR * ESCFlagC.ESC_DutyData))/*<<16*/;
-                if(VoltInCF >= 35){                  //电压正半波
-                    EPwm7Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;  //2
-                    EPwm7Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;  //1,buck管
-                    EPwm8Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                    EPwm8Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-                }else if(VoltInCF <= (-35)){         //电压负半波
-                    EPwm7Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-                    EPwm7Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-                    EPwm8Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;  //4
-                    EPwm8Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;  //3,buck管
-                }else{
-                    if((VoltInCF >= 0)&&(VoltInCF < 35)){
-                        if(GridCurrCF >= 0){
-                            EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //1管
-                            EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //2管
-                            EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //3管
-                            EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //4管
-                        }else{
-                            EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //1管
-                            EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //2管
-                            EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //3管
-                            EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //4管
-                        }
-                    }else if((VoltInCF < 0)&&(VoltInCF > (-35))){
-                        if(GridCurrCF >= 0){
-                            EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //1管
-                            EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //2管
-                            EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //3管
-                            EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //4管
-                        }else{
-                            EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //1管
-                            EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //2管
-                            EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //3管
-                            EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //4管
-                        }
-                    }
-                }
-            }else{
-    //            ESCFlagC.PWMcurrDirFlag = 0;
-                PIVolC.i10 = 0;                 //清除PI的饱和值
-                PIVolC.i6 = 0;
-                GridCurrPICtrlC.i10 = 0;
-                GridCurrPICtrlC.i6 = 0;
-                ConstantCurr[2].state = SM_CONSTANT_CURR_STANDBY;
-                EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-                EPwm7Regs.CMPB.bit.CMPB = T1PR;        //2管
-                EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管
-                EPwm8Regs.CMPB.bit.CMPB = T1PR;        //4管
-                ESC_FeedForward_DutyC =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-            }
-#elif ESC_SINGLEPHASE
-        if((PWM_ins_indexA != 0)||(PhaseControl&0x04)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            ESCFlagA.PWMcurrDirFlag = 0;         //由CPU更新EPwm4,5,6Reg
-            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-            EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-            PIVolA.i10 = 0;                  //清除PI的饱和值
-            PIVolA.i6 = 0;
-            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }else if((StateEventFlag_A == STATE_EVENT_RUN_A)&&(PWM_ins_indexA == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            ESCFlagA.PWMcurrDirFlag = 1;         //由CLA更新EPwm4,5,6Reg
-            PIOutVoltValueA = DCL_runPI(&PIVolA,ESCFlagA.Volttarget,VoltOutA_rms);
-        if(StateFlag.VoltageModeFlag == 0){
-//            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-            ESC_DutyDataA = TIPRTEST;
-        }else if(StateFlag.VoltageModeFlag == 1){
-//            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-            ESC_DutyDataA = TIPRTEST;
-        }
-            T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataA = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
+		T1PRmulESC_DutyDataA = ((int32) (T1PR * ESCFlagA.ESC_DutyData));
 
-            if(VoltInAF >= 25){                 //电压正半波
-                EPwm3Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //2
-                EPwm3Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //1,buck管
-                EPwm4Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                EPwm4Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-            }else if(VoltInAF <= (-25)){         //电压负半波
-               EPwm3Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-               EPwm3Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-               EPwm4Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //4
-               EPwm4Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //3,buck管
-            }else{
-                if((VoltInAF > 0)&&(VoltInAF < 25)){         //NESPWS20-220524REV2功率板--NPC3CA10020220518REV1合成板
-                    if(GridCurrAF > 0){
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                    }
-                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-                    if(GridCurrAF > 0){
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                    }
-                }
-            }
-        }else{
-//            ESCFlagA.PWMcurrDirFlag = 0;
-            PIVolA.i10 = 0;                 //清除PI的饱和值
-            PIVolA.i6 = 0;
-            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm3Regs.CMPB.bit.CMPB = T1PR;        //2管
-            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管
-            EPwm4Regs.CMPB.bit.CMPB = T1PR;        //4管
-            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }
+		if (VoltInAF >= 35)
+		{//电压正半波   UAIP+/UAIN+为1时,无互锁逻辑  //硬件新加互锁逻辑判断的电压值与软件采样的电压值在相位上相差约200us,所以这个范围值要设大一些,把硬件判断电压值包进去.
+			EPwm3Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;//2
+			EPwm3Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;//1,buck管
+			EPwm4Regs.CMPB.bit.CMPB = 0;//4,常通,续流管
+			EPwm4Regs.CMPA.bit.CMPA = T1PR;//3,常通,续流管       //3,常关
+		}
+		else if (VoltInAF <= (-35))
+		{//电压负半波
+			EPwm3Regs.CMPB.bit.CMPB = 0;//2,常通,续流管
+			EPwm3Regs.CMPA.bit.CMPA = T1PR;//1,常通续流管        //1,低
+			EPwm4Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;//4
+			EPwm4Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;//3,buck管
+		}
+		else
+		{
+			if ((VoltInAF >= 0) && (VoltInAF < 35))
+			{//NESPWS20-220524REV2功率板--NPC3CA10020220518REV1合成板
+				if (GridCurrAF >= 0)
+				{
+					EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//1管
+					EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//2管
+					EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//3管
+					EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//4管
+				}
+				else
+				{
+					EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//1管
+					EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//2管
+					EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//3管
+					EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//4管
+				}
+			}
+			else if ((VoltInAF < 0) && (VoltInAF > (-35)))
+			{
+				if (GridCurrAF >= 0)
+				{
+					EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//1管
+					EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//2管
+					EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//3管
+					EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//4管
+				}
+				else
+				{
+					EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//1管
+					EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc);//2管
+					EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//3管
+					EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc);//4管
+				}
+			}
+		}
+	}
+	else //A相处于非运行状态。WY
+	{
+		PIVolA.i10 = 0;//清除PI的饱和值
+		PIVolA.i6 = 0;
+		GridCurrPICtrlA.i10 = 0;
+		GridCurrPICtrlA.i6 = 0;
+		ConstantCurr[0].state = SM_CONSTANT_CURR_STANDBY;
+		EPwm3Regs.CMPA.bit.CMPA = T1PR;//1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
+		EPwm3Regs.CMPB.bit.CMPB = T1PR;//2管
+		EPwm4Regs.CMPA.bit.CMPA = T1PR;//3管
+		EPwm4Regs.CMPB.bit.CMPB = T1PR;//4管
+		ESC_FeedForward_DutyA = 1;//运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
+	}
 
-#elif ESC_ONEINTWOPHASE
-        if((PWM_ins_indexA != 0)||(PhaseControl&0x04)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            ESCFlagA.PWMcurrDirFlag = 0;         //由CPU更新EPwm4,5,6Reg
-            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-            EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-            PIVolA.i10 = 0;                  //清除PI的饱和值
-            PIVolA.i6 = 0;
-            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }else if((StateEventFlag_A == STATE_EVENT_RUN_A)&&(PWM_ins_indexA == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            ESCFlagA.PWMcurrDirFlag = 1;         //由CLA更新EPwm4,5,6Reg
-            PIOutVoltValueA = DCL_runPI(&PIVolA,ESCFlagA.Volttarget,VoltOutA_rms);
-        if(StateFlag.VoltageModeFlag == 0){
-//            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-            ESC_DutyDataA = TIPRTEST;
-        }else if(StateFlag.VoltageModeFlag == 1){
-//            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-            ESC_DutyDataA = TIPRTEST;
-        }
-            T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataA = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
-            if(VoltInAF >= 25){                 //电压正半波
-                EPwm3Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //2
-                EPwm3Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //1,buck管
-                EPwm4Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                EPwm4Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-            }else if(VoltInAF <= (-25)){         //电压负半波
-               EPwm3Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-               EPwm3Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-               EPwm4Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //4
-               EPwm4Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //3,buck管
-            }else{
-                if((VoltInAF > 0)&&(VoltInAF < 25)){         //NESPWS20-220524REV2功率板--NPC3CA10020220518REV1合成板
-                    if(GridCurrAF > 0){
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                    }
-                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-                    if(GridCurrAF > 0){
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                    }
-                }
-            }
-        }else{
-//            ESCFlagA.PWMcurrDirFlag = 0;
-            PIVolA.i10 = 0;                 //清除PI的饱和值
-            PIVolA.i6 = 0;
-            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm3Regs.CMPB.bit.CMPB = T1PR;        //2管
-            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管
-            EPwm4Regs.CMPB.bit.CMPB = T1PR;        //4管
-            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }
+	/*处理B相*/
+	if (ESCFlagB.PWM_ins_index != 0)
+	{
+		EPwm5Regs.CMPA.bit.CMPA = T1PR;
+		EPwm5Regs.CMPB.bit.CMPB = T1PR;
+		EPwm6Regs.CMPA.bit.CMPA = T1PR;
+		EPwm6Regs.CMPB.bit.CMPB = T1PR;
+		PIVolB.i10 = 0;
+		PIVolB.i6 = 0;
+		GridCurrPICtrlB.i10 = 0;
+		GridCurrPICtrlB.i6 = 0;
+		ConstantCurr[1].state = SM_CONSTANT_CURR_STANDBY;
+		ESC_FeedForward_DutyB = 1;
 
-        if((PWM_ins_indexB != 0)||(PhaseControl&0x02)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            ESCFlagB.PWMcurrDirFlag = 0;
-            EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm5Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-            EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-            EPwm6Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-            PIVolB.i10 = 0;                 //清除PI的饱和值
-            PIVolB.i6 = 0;
-            ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
+	}
+	else if ((StateEventFlag_B == STATE_EVENT_RUN_B) && (ESCFlagB.PWM_ins_index == 0))
+	{
+		switch (StateFlag.VoltageMode)
+		{
+			case 0:
+				VolttargetCorrB = ConstantCurrFSM(&ConstantCurr[1], gridCurB_rms, GridCurrBF, CurrTargetTemper);
+				PIOutVoltValueB = DCL_runPI(&PIVolB, (CurrentUnbalanceRegularVoltage[1] * (1 + VolttargetCorrB)), VoltOutB_rms);
+				ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms, VoltInBF, (CurrentUnbalanceRegularVoltage[1] * (1 + VolttargetCorrB)), PIOutVoltValueB,
+														Esc_VoltPhaseB, &ESC_FeedForward_DutyB, ESCFlagB.PHASE);
+				break;
+			case 1:
+				PIOutVoltValueB = DCL_runPI(&PIVolB, ESCFlagB.Volttarget, VoltOutB_rms);
+				ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms, VoltInBF, ESCFlagB.Volttarget, PIOutVoltValueB, Esc_VoltPhaseB, &ESC_FeedForward_DutyB,
+														ESCFlagB.PHASE);
+				break;
+			case 2:
+				break;
+			case 3:
+				VolttargetCorrB = ConstantCurrFSM(&ConstantCurr[1], gridCurB_rms, GridCurrBF, CurrTargetTemper);
+				PIOutVoltValueB = DCL_runPI(&PIVolB, CurrentUnbalanceRegularVoltage[1] * (1 + VolttargetCorrB), VoltOutB_rms);
+				ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms, VoltInBF, CurrentUnbalanceRegularVoltage[1], PIOutVoltValueB, Esc_VoltPhaseB,
+														&ESC_FeedForward_DutyB, ESCFlagB.PHASE);
+				break;
+			case 4:
+				PIOutVoltValueB = DCL_runPI(&PIVolB, ESCFlagB.Volttarget, VoltOutB_rms);
+				ESCFlagB.ESC_DutyData = RMSDutyLimit(VoltInB_rms, VoltInBF, ESCFlagB.Volttarget, PIOutVoltValueB, Esc_VoltPhaseB, &ESC_FeedForward_DutyB,
+														ESCFlagB.PHASE) -\
+ ReactivePowerComFUN(Esc_VoltPhaseB, GridRealCurErrB);
+				break;
+		}
 
-        }else if((StateEventFlag_B == STATE_EVENT_RUN_B)&&(PWM_ins_indexB == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            ESCFlagB.PWMcurrDirFlag = 1;
-//            PIOutVoltValueB = DCL_runPI(&PIVolB,ESCFlagB.Volttarget,VoltOutB_rms);
-//        if(StateFlag.VoltageModeFlag == 0){
-////            ESC_DutyDataB = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB);
-//            ESC_DutyDataB = 0.8;
-//        }else if(StateFlag.VoltageModeFlag == 1){
-////            ESC_DutyDataB = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB);
-//            ESC_DutyDataB = 0.8;
-//        }
-            T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataB = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
-            if(VoltInAF >= 25){                 //电压正半波
-                EPwm5Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //2
-                EPwm5Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //1,buck管
-                EPwm6Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                EPwm6Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-            }else if(VoltInAF <= (-25)){         //电压负半波
-               EPwm5Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-               EPwm5Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-               EPwm6Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //4
-               EPwm6Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //3,buck管
-            }else{
-                if((VoltInAF > 0)&&(VoltInAF < 25)){
-                    if(GridCurrAF > 0){
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-                    }
-                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-                    if(GridCurrAF > 0){
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-                    }
-                }
-            }
-        }else{
-//            ESCFlagB.PWMcurrDirFlag = 0;
-            PIVolB.i10 = 0;                 //清除PI的饱和值
-            PIVolB.i6 = 0;
-            EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm5Regs.CMPB.bit.CMPB = T1PR;        //2管
-            EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管
-            EPwm6Regs.CMPB.bit.CMPB = T1PR;        //4管
-            ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }
-#elif ESC_ONEINTHREEPHASE
-        if((PWM_ins_indexA != 0)||(PhaseControl&0x04)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            ESCFlagA.PWMcurrDirFlag = 0;         //由CPU更新EPwm4,5,6Reg
-            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-            EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-            PIVolA.i10 = 0;                  //清除PI的饱和值
-            PIVolA.i6 = 0;
-            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }else if((StateEventFlag_A == STATE_EVENT_RUN_A)&&(PWM_ins_indexA == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            ESCFlagA.PWMcurrDirFlag = 1;         //由CLA更新EPwm4,5,6Reg
-            PIOutVoltValueA = DCL_runPI(&PIVolA,ESCFlagA.Volttarget,VoltOutA_rms);
-        if(StateFlag.VoltageModeFlag == 0){
-//            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-            ESC_DutyDataA = TIPRTEST;
-        }else if(StateFlag.VoltageModeFlag == 1){
-//            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-            ESC_DutyDataA = TIPRTEST;
-        }
-            T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataA = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
-            if(VoltInAF >= 25){                 //电压正半波
-                EPwm3Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //2
-                EPwm3Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //1,buck管
-                EPwm4Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                EPwm4Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-            }else if(VoltInAF <= (-25)){         //电压负半波
-               EPwm3Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-               EPwm3Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-               EPwm4Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //4
-               EPwm4Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //3,buck管
-            }else{
-                if((VoltInAF > 0)&&(VoltInAF < 25)){         //NESPWS20-220524REV2功率板--NPC3CA10020220518REV1合成板
-                    if(GridCurrAF > 0){
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                    }
-                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-                    if(GridCurrAF > 0){
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-                    }
-                }
-            }
-        }else{
-//            ESCFlagA.PWMcurrDirFlag = 0;
-            PIVolA.i10 = 0;                 //清除PI的饱和值
-            PIVolA.i6 = 0;
-            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm3Regs.CMPB.bit.CMPB = T1PR;        //2管
-            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管
-            EPwm4Regs.CMPB.bit.CMPB = T1PR;        //4管
-            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }
+		T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32) (T1PR * ((ESCFlagB.ESC_DutyData + (negCurCompPerc / 2)) > 1.0f ?
+				1.0f : ESCFlagB.ESC_DutyData + (negCurCompPerc / 2))));
+		T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32) (T1PR * ((ESCFlagB.ESC_DutyData - (negCurCompPerc / 2)) > 1.0f ?
+				1.0f : ESCFlagB.ESC_DutyData - (negCurCompPerc / 2))));
+		T1PRmulESC_DutyDataB = ((int32) (T1PR * ESCFlagB.ESC_DutyData));
+		if (VoltInBF >= 35)
+		{
+			EPwm5Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;
+			EPwm5Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;
+			EPwm6Regs.CMPB.bit.CMPB = 0;
+			EPwm6Regs.CMPA.bit.CMPA = T1PR;
+		}
+		else if (VoltInBF <= (-35))
+		{
+			EPwm5Regs.CMPB.bit.CMPB = 0;
+			EPwm5Regs.CMPA.bit.CMPA = T1PR;
+			EPwm6Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;
+			EPwm6Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;
+		}
+		else
+		{
+			if ((VoltInBF >= 0) && (VoltInBF < 35))
+			{
+				if (GridCurrBF >= 0)
+				{
+					EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+					EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+					EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+					EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+				}
+				else
+				{
+					EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+					EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+					EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+					EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+				}
+			}
+			else if ((VoltInBF < 0) && (VoltInBF > (-35)))
+			{
+				if (GridCurrBF >= 0)
+				{
+					EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+					EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+					EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+					EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+				}
+				else
+				{
+					EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+					EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc);
+					EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+					EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc);
+				}
+			}
+		}
+	}
+	else
+	{
+		PIVolB.i10 = 0;
+		PIVolB.i6 = 0;
+		GridCurrPICtrlB.i10 = 0;
+		GridCurrPICtrlB.i6 = 0;
+		ConstantCurr[1].state = SM_CONSTANT_CURR_STANDBY;
+		EPwm5Regs.CMPA.bit.CMPA = T1PR;
+		EPwm5Regs.CMPB.bit.CMPB = T1PR;
+		EPwm6Regs.CMPA.bit.CMPA = T1PR;
+		EPwm6Regs.CMPB.bit.CMPB = T1PR;
+		ESC_FeedForward_DutyB = 1;
+	}
 
-        if((PWM_ins_indexB != 0)||(PhaseControl&0x02)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            ESCFlagB.PWMcurrDirFlag = 0;
-            EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm5Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-            EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-            EPwm6Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-            PIVolB.i10 = 0;                 //清除PI的饱和值
-            PIVolB.i6 = 0;
-            ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
+	/*处理C相*/
+	if (ESCFlagC.PWM_ins_index != 0)
+	{
+		EPwm7Regs.CMPA.bit.CMPA = T1PR;
+		EPwm7Regs.CMPB.bit.CMPB = T1PR;
+		EPwm8Regs.CMPA.bit.CMPA = T1PR;
+		EPwm8Regs.CMPB.bit.CMPB = T1PR;
+		PIVolC.i10 = 0;
+		PIVolC.i6 = 0;
+		GridCurrPICtrlC.i10 = 0;
+		GridCurrPICtrlC.i6 = 0;
+		ConstantCurr[2].state = SM_CONSTANT_CURR_STANDBY;
+		ESC_FeedForward_DutyC = 1;
+	}
+	else if ((StateEventFlag_C == STATE_EVENT_RUN_C) && (ESCFlagC.PWM_ins_index == 0))
+	{
+		switch (StateFlag.VoltageMode)
+		{
+			case 0:
+				VolttargetCorrC = ConstantCurrFSM(&ConstantCurr[2], gridCurC_rms, GridCurrCF, CurrTargetTemper);
+				PIOutVoltValueC = DCL_runPI(&PIVolC, (CurrentUnbalanceRegularVoltage[2] * (1 + VolttargetCorrC)), VoltOutC_rms);
+				ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms, VoltInCF, (CurrentUnbalanceRegularVoltage[2] * (1 + VolttargetCorrC)), PIOutVoltValueC,
+														Esc_VoltPhaseC, &ESC_FeedForward_DutyC, ESCFlagC.PHASE);
+				break;
+			case 1:
+				PIOutVoltValueC = DCL_runPI(&PIVolC, ESCFlagC.Volttarget, VoltOutC_rms);
+				ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms, VoltInCF, ESCFlagC.Volttarget, PIOutVoltValueC, Esc_VoltPhaseC, &ESC_FeedForward_DutyC,
+														ESCFlagC.PHASE);
+				break;
+			case 2:
+				break;
+			case 3:
+				VolttargetCorrC = ConstantCurrFSM(&ConstantCurr[2], gridCurC_rms, GridCurrCF, CurrTargetTemper);
+				PIOutVoltValueC = DCL_runPI(&PIVolC, CurrentUnbalanceRegularVoltage[2] * (1 + VolttargetCorrC), VoltOutC_rms);
+				ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms, VoltInCF, CurrentUnbalanceRegularVoltage[2], PIOutVoltValueC, Esc_VoltPhaseC,
+														&ESC_FeedForward_DutyC, ESCFlagC.PHASE);
+				break;
+			case 4:
+				PIOutVoltValueC = DCL_runPI(&PIVolC, ESCFlagC.Volttarget, VoltOutC_rms);
+				ESCFlagC.ESC_DutyData = RMSDutyLimit(VoltInC_rms, VoltInCF, ESCFlagC.Volttarget, PIOutVoltValueC, Esc_VoltPhaseC, &ESC_FeedForward_DutyC,
+														ESCFlagC.PHASE) -\
+ ReactivePowerComFUN(Esc_VoltPhaseC, GridRealCurErrC);
+				break;
+		}
 
-        }else if((StateEventFlag_B == STATE_EVENT_RUN_B)&&(PWM_ins_indexB == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            ESCFlagB.PWMcurrDirFlag = 1;
-//            PIOutVoltValueB = DCL_runPI(&PIVolB,ESCFlagB.Volttarget,VoltOutB_rms);
-//        if(StateFlag.VoltageModeFlag == 0){
-////            ESC_DutyDataB = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB);
-//            ESC_DutyDataB = 0.8;
-//        }else if(StateFlag.VoltageModeFlag == 1){
-////            ESC_DutyDataB = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB);
-//            ESC_DutyDataB = 0.8;
-//        }
-//            T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataB + negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataB + negCurCompPerc)));
-//            T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataB - negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataB - negCurCompPerc)));
-            T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataB = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
-            if(VoltInAF >= 25){                 //电压正半波
-                EPwm5Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //2
-                EPwm5Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //1,buck管
-                EPwm6Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                EPwm6Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-            }else if(VoltInAF <= (-25)){         //电压负半波
-               EPwm5Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-               EPwm5Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-               EPwm6Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //4
-               EPwm6Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //3,buck管
-            }else{
-                if((VoltInAF > 0)&&(VoltInAF < 25)){
-                    if(GridCurrAF > 0){
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-                    }
-                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-                    if(GridCurrAF > 0){
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-                    }
-                }
-            }
-        }else{
-//            ESCFlagB.PWMcurrDirFlag = 0;
-            PIVolB.i10 = 0;                 //清除PI的饱和值
-            PIVolB.i6 = 0;
-            EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm5Regs.CMPB.bit.CMPB = T1PR;        //2管
-            EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管
-            EPwm6Regs.CMPB.bit.CMPB = T1PR;        //4管
-            ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }
-
-        if((PWM_ins_indexC != 0)||(PhaseControl&0x01)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            ESCFlagC.PWMcurrDirFlag = 0;
-            EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm7Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-            EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-            EPwm8Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-            PIVolC.i10 = 0;                 //清除PI的饱和值
-            PIVolC.i6 = 0;
-            ESC_FeedForward_DutyC =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-
-        }else if((StateEventFlag_C == STATE_EVENT_RUN_C)&&(PWM_ins_indexC == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            ESCFlagC.PWMcurrDirFlag = 1;
-//            PIOutVoltValueC = DCL_runPI(&PIVolC,ESCFlagC.Volttarget,VoltOutC_rms);       //PI闭环跟踪
-//            if(StateFlag.VoltageModeFlag == 0){   //升压
-////                ESC_DutyDataC = RMSDutyLimit(VoltInC_rms,VoltInCF,ESCFlagC.Volttarget,PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC);
-//                ESC_DutyDataC = 0.8;
-//            }else if(StateFlag.VoltageModeFlag == 1){   //降压
-////                ESC_DutyDataC = RMSDutyLimit(VoltInC_rms,VoltInCF,ESCFlagC.Volttarget,PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC);
-//                ESC_DutyDataC = 0.8;
-//            }
-            T1PRmulESC_DutyDataCaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataCsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-            T1PRmulESC_DutyDataC = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
-
-            if(VoltInAF >= 25){                 //电压正半波
-                EPwm7Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;  //2
-                EPwm7Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;  //1,buck管
-                EPwm8Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-                EPwm8Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-           }else if(VoltInAF <= (-25)){         //电压负半波
-               EPwm7Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-               EPwm7Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-               EPwm8Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;  //4
-               EPwm8Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;  //3,buck管
-            }else{
-                if((VoltInAF > 0)&&(VoltInAF < 25)){
-                    if(GridCurrAF > 0){
-                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //1管
-                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //2管
-                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //3管
-                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //1管
-                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //2管
-                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //3管
-                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //4管
-                    }
-                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-                    if(GridCurrAF > 0){
-                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //1管
-                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //2管
-                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //3管
-                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //4管
-                    }else{
-                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //1管
-                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //2管
-                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //3管
-                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //4管
-                    }
-                }
-            }
-        }else{
-//            ESCFlagC.PWMcurrDirFlag = 0;
-            PIVolC.i10 = 0;                 //清除PI的饱和值
-            PIVolC.i6 = 0;
-            EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-            EPwm7Regs.CMPB.bit.CMPB = T1PR;        //2管
-            EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管
-            EPwm8Regs.CMPB.bit.CMPB = T1PR;        //4管
-            ESC_FeedForward_DutyC =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-        }
-
+		T1PRmulESC_DutyDataCaddnegCurCompPerc = ((int32) (T1PR * ((ESCFlagC.ESC_DutyData + (negCurCompPerc / 2)) > 1.0f ?
+				1.0f : ESCFlagC.ESC_DutyData + (negCurCompPerc / 2))));
+		T1PRmulESC_DutyDataCsubnegCurCompPerc = ((int32) (T1PR * ((ESCFlagC.ESC_DutyData - (negCurCompPerc / 2)) > 1.0f ?
+				1.0f : ESCFlagC.ESC_DutyData - (negCurCompPerc / 2))));
+		T1PRmulESC_DutyDataC = ((int32) (T1PR * ESCFlagC.ESC_DutyData));
+		if (VoltInCF >= 35)
+		{
+			EPwm7Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;
+			EPwm7Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;
+			EPwm8Regs.CMPB.bit.CMPB = 0;
+			EPwm8Regs.CMPA.bit.CMPA = T1PR;
+		}
+		else if (VoltInCF <= (-35))
+		{
+			EPwm7Regs.CMPB.bit.CMPB = 0;
+			EPwm7Regs.CMPA.bit.CMPA = T1PR;
+			EPwm8Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;
+			EPwm8Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;
+		}
+		else
+		{
+			if ((VoltInCF >= 0) && (VoltInCF < 35))
+			{
+				if (GridCurrCF >= 0)
+				{
+					EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+					EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+					EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+					EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+				}
+				else
+				{
+					EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+					EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+					EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+					EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+				}
+			}
+			else if ((VoltInCF < 0) && (VoltInCF > (-35)))
+			{
+				if (GridCurrCF >= 0)
+				{
+					EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+					EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+					EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+					EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+				}
+				else
+				{
+					EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+					EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc);
+					EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+					EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc);
+				}
+			}
+		}
+	}
+	else
+	{
+		PIVolC.i10 = 0;
+		PIVolC.i6 = 0;
+		GridCurrPICtrlC.i10 = 0;
+		GridCurrPICtrlC.i6 = 0;
+		ConstantCurr[2].state = SM_CONSTANT_CURR_STANDBY;
+		EPwm7Regs.CMPA.bit.CMPA = T1PR;
+		EPwm7Regs.CMPB.bit.CMPB = T1PR;
+		EPwm8Regs.CMPA.bit.CMPA = T1PR;
+		EPwm8Regs.CMPB.bit.CMPB = T1PR;
+		ESC_FeedForward_DutyC = 1;
+	}
 #endif
-//        if((PWM_ins_indexA != 0)||(PhaseControl&0x04)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            PWMcurrDirFlagA = 0;         //由CPU更新EPwm4,5,6Reg
-//            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管直通      //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//            EPwm3Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//            EPwm4Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//            PIVolA.i10 = 0;                  //清除PI的饱和值
-//            PIVolA.i6 = 0;
-//            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-//        }else if((StateEventFlag == STATE_EVENT_RUN)&&(PWM_ins_indexA == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            PWMcurrDirFlagA = 1;         //由CLA更新EPwm4,5,6Reg
-//            PIOutVoltValueA = DCL_runPI(&PIVolA,ESCFlagA.Volttarget,VoltOutA_rms);
-//        if(StateFlag.VoltageModeFlag == 0){
-////            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-//            ESC_DutyDataA = TIPRTEST;
-//        }else if(StateFlag.VoltageModeFlag == 1){
-////            ESC_DutyDataA = RMSDutyLimit(VoltInA_rms,VoltInAF,ESCFlagA.Volttarget,PIOutVoltValueA,Esc_VoltPhaseA,&ESC_FeedForward_DutyA);
-//            ESC_DutyDataA = TIPRTEST;
-//        }
-////            T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataA + negCurCompPerc)));
-////            T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataA - negCurCompPerc)));
-//            T1PRmulESC_DutyDataAaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA + (negCurCompPerc/2))))/*<<16*/;
-//            T1PRmulESC_DutyDataAsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataA - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataA - (negCurCompPerc/2))))/*<<16*/;
-//            T1PRmulESC_DutyDataA = ((int32)(T1PR * ESC_DutyDataA))/*<<16*/;
-//            //在预计的续流点之前产生AD采样脉冲,由CLA函数处理电流过零点的续流方向
-////            GET_DUTY_LIMIT(EPwm9Regs.CMPB.bit.CMPB ,ESC_DutyDataA - DBG_leadSampleDecrementDuty);     //A
-////            GET_DUTY_LIMIT(EPwm9Regs.CMPA.bit.CMPA ,ESC_DutyDataA - DBG_leadSampleIncrementDuty);
-//
-//            if(VoltInAF >= 25){                 //电压正半波
-//                EPwm3Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //2
-//                EPwm3Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //1,buck管
-//                EPwm4Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-//                EPwm4Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-//            }else if(VoltInAF <= (-25)){         //电压负半波
-//               EPwm3Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-//               EPwm3Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-//               EPwm4Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataA;  //4
-//               EPwm4Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataA;  //3,buck管
-//            }else{
-////                if((VoltInAF > 0)&&(VoltInAF < 25)){
-////                    if(GridCurrAF > 0){
-////                        SET_FLback(0);//测试debug
-////                        SET_BYPASS_FEEDBACK(0);//测试debug
-////                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-////                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-////                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-////                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-////            }else{
-////                        SET_FLback(0);//测试debug
-////                        SET_BYPASS_FEEDBACK(1);//测试debug
-////                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-////                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-////                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-////                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-////                    }
-////                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-////                    if(GridCurrAF > 0){
-////                        SET_FLback(1);//测试debug
-////                        SET_BYPASS_FEEDBACK(0);//测试debug
-////                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-////                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-////                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-////                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-////                    }else{
-////                        SET_FLback(1);//测试debug
-////                        SET_BYPASS_FEEDBACK(1);//测试debug
-////                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-////                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-////                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-////                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-////                }
-////            }
-//                if((VoltInAF > 0)&&(VoltInAF < 25)){         //NESPWS20-220524REV2功率板--NPC3CA10020220518REV1合成板
-//                    if(GridCurrAF > 0){
-////                        SET_FLback(0);//测试debug
-////                        SET_BYPASS_FEEDBACK(0);//测试debug
-//                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-//                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-//                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-//                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-//                    }else{
-////                        SET_FLback(0);//测试debug
-////                        SET_BYPASS_FEEDBACK(1);//测试debug
-//                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-//                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-//                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-//                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-//                    }
-//                }else if((VoltInAF < 0)&&(VoltInAF > (-25))){
-//                    if(GridCurrAF > 0){
-////                        SET_FLback(1);//测试debug
-////                        SET_BYPASS_FEEDBACK(0);//测试debug
-//                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //1管
-//                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //2管
-//                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //3管
-//                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //4管
-//        }else{
-////                        SET_FLback(1);//测试debug
-////                        SET_BYPASS_FEEDBACK(1);//测试debug
-//                        EPwm3Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //1管
-//                        EPwm3Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAaddnegCurCompPerc); //2管
-//                        EPwm4Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //3管
-//                        EPwm4Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataAsubnegCurCompPerc); //4管
-//                    }
-//                }
-//            }
-//        }else{
-//            PWMcurrDirFlagA = 0;
-//            PIVolA.i10 = 0;                 //清除PI的饱和值
-//            PIVolA.i6 = 0;
-//            EPwm3Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//            EPwm3Regs.CMPB.bit.CMPB = T1PR;        //2管
-//            EPwm4Regs.CMPA.bit.CMPA = T1PR;     //3管
-//            EPwm4Regs.CMPB.bit.CMPB = T1PR;        //4管
-//            ESC_FeedForward_DutyA =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-//        }
-//
-//        if((PWM_ins_indexB != 0)||(PhaseControl&0x02)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            PWMcurrDirFlagB = 0;
-//            EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//            EPwm5Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//            EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//            EPwm6Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//            PIVolB.i10 = 0;                 //清除PI的饱和值
-//            PIVolB.i6 = 0;
-//            ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-//
-//        }else if((StateEventFlag == STATE_EVENT_RUN)&&(PWM_ins_indexB == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            PWMcurrDirFlagB = 1;
-//            PIOutVoltValueB = DCL_runPI(&PIVolB,ESCFlagB.Volttarget,VoltOutB_rms);
-//        if(StateFlag.VoltageModeFlag == 0){
-////            ESC_DutyDataB = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB);
-//            ESC_DutyDataB = 0.8;
-//        }else if(StateFlag.VoltageModeFlag == 1){
-////            ESC_DutyDataB = RMSDutyLimit(VoltInB_rms,VoltInBF,ESCFlagB.Volttarget,PIOutVoltValueB,Esc_VoltPhaseB,&ESC_FeedForward_DutyB);
-//            ESC_DutyDataB = 0.8;
-//        }
-////            T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataB + negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataB + negCurCompPerc)));
-////            T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataB - negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataB - negCurCompPerc)));
-//            T1PRmulESC_DutyDataBaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataB + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataB + (negCurCompPerc/2))))/*<<16*/;
-//            T1PRmulESC_DutyDataBsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataB - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataB - (negCurCompPerc/2))))/*<<16*/;
-//            T1PRmulESC_DutyDataB = ((int32)(T1PR * ESC_DutyDataB))/*<<16*/;
-//            //在预计的续流点之前产生AD采样脉冲,由CLA函数处理电流过零点的续流方向
-////            GET_DUTY_LIMIT(EPwm10Regs.CMPB.bit.CMPB ,ESC_DutyDataB - DBG_leadSampleDecrementDuty);     //B
-////            GET_DUTY_LIMIT(EPwm10Regs.CMPA.bit.CMPA ,ESC_DutyDataB - DBG_leadSampleIncrementDuty);
-//
-//            if(VoltInBF >= 25){                 //电压正半波
-//                EPwm5Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //2
-//                EPwm5Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //1,buck管
-//                EPwm6Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-//                EPwm6Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-//            }else if(VoltInBF <= (-25)){         //电压负半波
-//               EPwm5Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-//               EPwm5Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-//               EPwm6Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataB;  //4
-//               EPwm6Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataB;  //3,buck管
-//            }else{
-//                if((VoltInBF > 0)&&(VoltInBF < 25)){
-//                    if(GridCurrBF > 0){
-//                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-//                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-//                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-//                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-//                    }else{
-//                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-//                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-//                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-//                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-//                    }
-//                }else if((VoltInBF < 0)&&(VoltInBF > (-25))){
-//                    if(GridCurrBF > 0){
-//                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //1管
-//                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //2管
-//                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //3管
-//                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //4管
-//                    }else{
-//                        EPwm5Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //1管
-//                        EPwm5Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBsubnegCurCompPerc); //2管
-//                        EPwm6Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //3管
-//                        EPwm6Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataBaddnegCurCompPerc); //4管
-//                    }
-//                }
-//            }
-//        }else{
-//            PWMcurrDirFlagB = 0;
-//            PIVolB.i10 = 0;                 //清除PI的饱和值
-//            PIVolB.i6 = 0;
-//            EPwm5Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//            EPwm5Regs.CMPB.bit.CMPB = T1PR;        //2管
-//            EPwm6Regs.CMPA.bit.CMPA = T1PR;     //3管
-//            EPwm6Regs.CMPB.bit.CMPB = T1PR;        //4管
-//            ESC_FeedForward_DutyB =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-//        }
-//
-//        if((PWM_ins_indexC != 0)||(PhaseControl&0x01)){         //重要,    在待机和运行切换之间有个占空比为100的脉冲波形.
-//            PWMcurrDirFlagC = 0;
-//            EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管直通  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//            EPwm7Regs.CMPB.bit.CMPB = T1PR;     //2管不直通
-//            EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管直通
-//            EPwm8Regs.CMPB.bit.CMPB = T1PR;     //4管不直通
-//            PIVolC.i10 = 0;                 //清除PI的饱和值
-//            PIVolC.i6 = 0;
-//            ESC_FeedForward_DutyC =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-//
-//        }else if((StateEventFlag == STATE_EVENT_RUN)&&(PWM_ins_indexC == 0)){   //进入正式IGBT运行状态之后才进行占空比的加,减运算
-//            PWMcurrDirFlagC = 1;
-//            PIOutVoltValueC = DCL_runPI(&PIVolC,ESCFlagC.Volttarget,VoltOutC_rms);       //PI闭环跟踪
-//            if(StateFlag.VoltageModeFlag == 0){   //升压
-////                ESC_DutyDataC = RMSDutyLimit(VoltInC_rms,VoltInCF,ESCFlagC.Volttarget,PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC);
-//                ESC_DutyDataC = 0.8;
-//            }else if(StateFlag.VoltageModeFlag == 1){   //降压
-////                ESC_DutyDataC = RMSDutyLimit(VoltInC_rms,VoltInCF,ESCFlagC.Volttarget,PIOutVoltValueC,Esc_VoltPhaseC,&ESC_FeedForward_DutyC);
-//                ESC_DutyDataC = 0.8;
-//            }
-////            T1PRmulESC_DutyDataCaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataC + negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataC + negCurCompPerc)));
-////            T1PRmulESC_DutyDataCsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataC - negCurCompPerc)>1.0f ? 1.0f: ESC_DutyDataC - negCurCompPerc)));
-//            T1PRmulESC_DutyDataCaddnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataC + (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataC + (negCurCompPerc/2))))/*<<16*/;
-//            T1PRmulESC_DutyDataCsubnegCurCompPerc = ((int32)(T1PR * ((ESC_DutyDataC - (negCurCompPerc/2))>1.0f ? 1.0f: ESC_DutyDataC - (negCurCompPerc/2))))/*<<16*/;
-//            T1PRmulESC_DutyDataC = ((int32)(T1PR * ESC_DutyDataC))/*<<16*/;
-//
-////            //在预计的续流点之前产生AD采样脉冲,由CLA函数处理电流过零点的续流方向
-////            GET_DUTY_LIMIT(EPwm11Regs.CMPB.bit.CMPB ,ESC_DutyDataC - DBG_leadSampleDecrementDuty);     //C
-////            GET_DUTY_LIMIT(EPwm11Regs.CMPA.bit.CMPA ,ESC_DutyDataC - DBG_leadSampleIncrementDuty);
-//            if(VoltInCF >= 25){                 //电压正半波
-//                EPwm7Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;  //2
-//                EPwm7Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;  //1,buck管
-//                EPwm8Regs.CMPB.bit.CMPB = 0;                 //4,常通,续流管
-//                EPwm8Regs.CMPA.bit.CMPA = T1PR;              //3,常通,续流管       //3,常关
-//           }else if(VoltInCF <= (-25)){         //电压负半波
-//               EPwm7Regs.CMPB.bit.CMPB = 0;                 //2,常通,续流管
-//               EPwm7Regs.CMPA.bit.CMPA = T1PR;              //1,常通续流管        //1,低
-//               EPwm8Regs.CMPB.bit.CMPB = T1PRmulESC_DutyDataC;  //4
-//               EPwm8Regs.CMPA.bit.CMPA = T1PRmulESC_DutyDataC;  //3,buck管
-//            }else{
-//                if((VoltInCF > 0)&&(VoltInCF < 25)){
-//                    if(GridCurrCF > 0){
-//                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //1管
-//                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //2管
-//                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //3管
-//                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //4管
-//                    }else{
-//                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //1管
-//                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //2管
-//                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //3管
-//                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //4管
-//                    }
-//                }else if((VoltInCF < 0)&&(VoltInCF > (-25))){
-//                    if(GridCurrCF > 0){
-//                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //1管
-//                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //2管
-//                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //3管
-//                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //4管
-//                    }else{
-//                        EPwm7Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //1管
-//                        EPwm7Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCsubnegCurCompPerc); //2管
-//                        EPwm8Regs.CMPA.bit.CMPA = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //3管
-//                        EPwm8Regs.CMPB.bit.CMPB = (T1PRmulESC_DutyDataCaddnegCurCompPerc); //4管
-//                    }
-//                }
-//            }
-//        }else{
-//            PWMcurrDirFlagC = 0;
-//            PIVolC.i10 = 0;                 //清除PI的饱和值
-//            PIVolC.i6 = 0;
-//            EPwm7Regs.CMPA.bit.CMPA = T1PR;     //1管  //自冷硬件逻辑限制,CMPA,CMPB都给周期值,并不是四个管子全通.
-//            EPwm7Regs.CMPB.bit.CMPB = T1PR;        //2管
-//            EPwm8Regs.CMPA.bit.CMPA = T1PR;     //3管
-//            EPwm8Regs.CMPB.bit.CMPB = T1PR;        //4管
-//            ESC_FeedForward_DutyC =1;        //运行条件下,未开启补偿,应该1管要给满占空比,初始状态必须设置成100%占空比
-//        }
 }
 
 /*
  * ADCD-1的中断服务函数。WY
+ * 说明：中断频率20K，中断周期50us。
  */
-void ADCD1INT(void)     //ADC interrupt function   //50us
+void ADCD1INT(void)
 {
-	FaultFastDetectInInt();//20K
-	VoltSlidPosCnt();//20K
-	GenModulation();//20K
-	ADPosCnt();
-	GetVolAndInvCurr();//20K
+	FaultFastDetectInInt(); //快速故障检测。WY
+	VoltSlidPosCnt(); //构造正弦波。WY
+	GenModulation(); //PWM调制。WY
+	ADPosCnt(); //产生节拍。WY
+	GetVolAndInvCurr(); //校正零偏。WY
 
 	switch (T1PRPwmFrequency)
 	{
 		case 0:
+		{
+			/*
+			 * 按照节拍，间隔执行不同功能的函数。WY
+			 * 目的：降低函数的调用频率，压缩AD中断服务函数的执行时间。
+			 */
 			switch (ADBufPos)
 			{
 				case 0:
-					SetHeatPulse();//心跳  10K
-					PLLrun();//锁相  10K
+				{
+					SetHeatPulse(); //产生DSP心跳脉冲。WY
+					PLLrun(); //锁相  10K
 					SigPhDQComput();//无功计算 10k
+				}
 					break;
+
 				case 1:
-					Swi_post(RMSstart);
+				{
+					Swi_post(RMSstart); //释放RTOS信号量。WY
 					RmsCalcIn();//10K
 					FirstRmsCalc();//5K
+				}
 					break;
+
 				case 2:
+				{
 					StateFeedBackJudge();
-					SetHeatPulse();//心跳
+					SetHeatPulse(); //产生DSP心跳脉冲。WY
 					PLLrun();//锁相
 					SigPhDQComput();
+				}
 					break;
+
 				case 3:
+				{
 					RmsCalcIn();
+				}
 					break;
+
 				case 4:
-					SetHeatPulse();//心跳
+				{
+					SetHeatPulse(); //产生DSP心跳脉冲。WY
 					PLLrun();//锁相
 					SigPhDQComput();
+				}
 					break;
+
 				case 5:
-					Swi_post(RMSstart);
+				{
+					Swi_post(RMSstart); //释放RTOS信号量。WY
 					FirstRmsCalc();//
-//            SigPhDQinput();                 //2.5K
 					RmsCalcIn();
+				}
 					break;
+
 				case 6:
-					SetHeatPulse();//心跳
+				{
+					SetHeatPulse(); //产生DSP心跳脉冲。WY
 					PLLrun();//锁相
 					SigPhDQComput();
+				}
 					break;
+
 				case 7:
+				{
 					RmsCalcIn();
+				}
 					break;
 			}
+		}
 			break;
 	}
-	FaultRecordProg();//20K
-	AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1;
+
+	FaultRecordProg(); //故障录波。WY
+	AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //清除ADC-D-1的中断标志位。WY
 }
 
 void RMSswi(void)

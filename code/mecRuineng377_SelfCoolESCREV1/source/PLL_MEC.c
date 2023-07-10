@@ -41,114 +41,112 @@ SPLL_3ph_DDSRF SPLL_CUR = {\
         0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0.1f,0,0,0,0,0};
 
 
-PIcalc UdcPICtrl			=UDC_PI_CTRL_DEFAULT;
-PIcalc UdcPIBalance			=UDC_PI_BALANCE_DEFAULT;
+PIcalc UdcPICtrl =UDC_PI_CTRL_DEFAULT;
+PIcalc UdcPIBalance =UDC_PI_BALANCE_DEFAULT;
 
-PIcalc GridCurrPICtrlA      =UDC_PI_GRID_REACTIVE_DEFAULT;
-PIcalc GridCurrPICtrlB      =UDC_PI_GRID_REACTIVE_DEFAULT;
-PIcalc GridCurrPICtrlC      =UDC_PI_GRID_REACTIVE_DEFAULT;
-PIcalc VolttargetCorrPIA    =VOLT_TARGET_CORR_DEFAULT;
-PIcalc VolttargetCorrPIB    =VOLT_TARGET_CORR_DEFAULT;
-PIcalc VolttargetCorrPIC    =VOLT_TARGET_CORR_DEFAULT;
-PIcalc PICurrInnerA			=CURR_PI_INNER_DEFAULT;
-PIcalc PICurrInnerB			=CURR_PI_INNER_DEFAULT;
-PIcalc PICurrInnerC			=CURR_PI_INNER_DEFAULT;
-PIcalc OutInvUVCurrD                    = PI_Vol_UV;
-PIcalc OutInvUVCurrQ                    = PI_Vol_UV;
-PIcalc OutInvUVCurrRMS                  = PI_Vol_UV;
-PIcalc PIVolA							= PI_Vol;
-PIcalc PIVolB							= PI_Vol;
-PIcalc PIVolC							= PI_Vol;
-PIcalc PIFanCtl                         = PI_Vol;
-PIcalc PIIvrA							= PI_Cur;
-PIcalc PIIvrB							= PI_Cur;
-PIcalc PIIvrC							= PI_Cur;
-PIcalc PIIvrQ							= PI_Cur;
-PIcalc PIIvrND							= PI_Cur;
-PIcalc PIIvrNQ							= PI_Cur;
-//PIcalc FFTPICtrl[2][CALIBRATION_COEFF_LEN]     =FFT_PI_CTRL_DEFAULT;
+PIcalc GridCurrPICtrlA =UDC_PI_GRID_REACTIVE_DEFAULT;
+PIcalc GridCurrPICtrlB =UDC_PI_GRID_REACTIVE_DEFAULT;
+PIcalc GridCurrPICtrlC =UDC_PI_GRID_REACTIVE_DEFAULT;
+
+PIcalc VolttargetCorrPIA =VOLT_TARGET_CORR_DEFAULT;
+PIcalc VolttargetCorrPIB =VOLT_TARGET_CORR_DEFAULT;
+PIcalc VolttargetCorrPIC =VOLT_TARGET_CORR_DEFAULT;
+
+PIcalc PICurrInnerA =CURR_PI_INNER_DEFAULT;
+PIcalc PICurrInnerB =CURR_PI_INNER_DEFAULT;
+PIcalc PICurrInnerC =CURR_PI_INNER_DEFAULT;
+PIcalc OutInvUVCurrD = PI_Vol_UV;
+PIcalc OutInvUVCurrQ = PI_Vol_UV;
+PIcalc OutInvUVCurrRMS = PI_Vol_UV;
+
+/*
+ * A相：PI控制器参数。WY
+ */
+PIcalc PIVolA = PI_Vol;
+PIcalc PIVolB = PI_Vol;
+PIcalc PIVolC = PI_Vol;
+
+PIcalc PIFanCtl = PI_Vol;
+PIcalc PIIvrA = PI_Cur;
+PIcalc PIIvrB = PI_Cur;
+PIcalc PIIvrC = PI_Cur;
+PIcalc PIIvrQ = PI_Cur;
+PIcalc PIIvrND = PI_Cur;
+PIcalc PIIvrNQ = PI_Cur;
 int Esc_NUM[32];
 int i = 0;
 
-//.ebss END ////////////////////////////////////////////////////////
-
-//mode,0:上电初始化 1:通信程序初始化
+/*
+ * 功能：初始化PI控制器参数。WY
+ * 输入参数mode：工作模式。0：上电初始化；1：通信程序初始化。
+ */
 void InitCtrlParam(int mode)
 {
-	if(mode==0) SPLL[0].PLLPICtrl.i10		=2*PI*POWERGRID_FREQ;	//JCL认为在运行中修改可能会引起过流.
-
-    GridCurrPICtrlA.Kp      =kp_Dc;
-    GridCurrPICtrlA.Ki      =ki_Dc;
-    GridCurrPICtrlA.Umax    = PIlim_Udc;
-    GridCurrPICtrlA.Umin    =-PIlim_Udc;
-    GridCurrPICtrlB.Kp      =kp_Dc;
-    GridCurrPICtrlB.Ki      =ki_Dc;
-    GridCurrPICtrlB.Umax    = PIlim_Udc;
-    GridCurrPICtrlB.Umin    =-PIlim_Udc;
-    GridCurrPICtrlC.Kp      =kp_Dc;
-    GridCurrPICtrlC.Ki      =ki_Dc;
-    GridCurrPICtrlC.Umax    = PIlim_Udc;
-    GridCurrPICtrlC.Umin    =-PIlim_Udc;
-
-    ConstantCurr[0].CorrPI.Kp        =kp_Dc_Div*0.0001;
-    ConstantCurr[0].CorrPI.Ki        =ki_Dc_Div;
-    ConstantCurr[0].CorrPI.Umax      =0;
-    ConstantCurr[0].CorrPI.Umin      =-(DC_ERR_LIMIT*0.1);
-
-    ConstantCurr[1].CorrPI.Kp        =kp_Dc_Div*0.0001;
-    ConstantCurr[1].CorrPI.Ki        =ki_Dc_Div;
-    ConstantCurr[1].CorrPI.Umax      =0;
-    ConstantCurr[1].CorrPI.Umin      =-(DC_ERR_LIMIT*0.1);
-
-    ConstantCurr[2].CorrPI.Kp        =kp_Dc_Div*0.0001;
-    ConstantCurr[2].CorrPI.Ki        =ki_Dc_Div;
-    ConstantCurr[2].CorrPI.Umax      =0;
-    ConstantCurr[2].CorrPI.Umin      =-(DC_ERR_LIMIT*0.1);
-
-
-
-	UdcPIBalance.Kp		=kp_Dc_Div;
-	UdcPIBalance.Ki		=ki_Dc_Div;
-	UdcPIBalance.Umax	= DC_ERR_LIMIT;
-	UdcPIBalance.Umin	=-DC_ERR_LIMIT;
-
-	PICurrInnerA.Kp		=kp_Cur;
-	PICurrInnerA.Umax	= PIlim_I;
-	PICurrInnerA.Umin	=-PIlim_I;
-	PICurrInnerB.Kp		=kp_Cur;
-	PICurrInnerB.Umax	= PIlim_I;
-	PICurrInnerB.Umin	=-PIlim_I;
-	PICurrInnerC.Kp		=kp_Cur;
-	PICurrInnerC.Umax	= PIlim_I;
-	PICurrInnerC.Umin	=-PIlim_I;
-	if(!StateFlag.spwmFlag){		//PR控制开启.关闭PI的I系数
-		PICurrInnerA.Ki		=0;//ki_Cur;
-		PICurrInnerB.Ki		=0;//ki_Cur;
-		PICurrInnerC.Ki		=0;//ki_Cur;
-	}else{
-		PICurrInnerA.Ki		=ki_Cur;
-		PICurrInnerB.Ki		=ki_Cur;
-		PICurrInnerC.Ki		=ki_Cur;
+	if (mode == 0)
+	{
+		SPLL[0].PLLPICtrl.i10 = 2 * PI * POWERGRID_FREQ;
 	}
 
-    EPwm1Regs.CMPA.bit.CMPA =SampleLead;
-//    EPwm2Regs.CMPA.bit.CMPA = T1PR - SampleLead;
-//    EPwm7Regs.CMPA.bit.CMPA =forwardPoints;         //重要!!:延时进入此中断.
+	GridCurrPICtrlA.Kp = kp_Dc;
+	GridCurrPICtrlA.Ki = ki_Dc;
+	GridCurrPICtrlA.Umax = PIlim_Udc;
+	GridCurrPICtrlA.Umin = -PIlim_Udc;
+	GridCurrPICtrlB.Kp = kp_Dc;
+	GridCurrPICtrlB.Ki = ki_Dc;
+	GridCurrPICtrlB.Umax = PIlim_Udc;
+	GridCurrPICtrlB.Umin = -PIlim_Udc;
+	GridCurrPICtrlC.Kp = kp_Dc;
+	GridCurrPICtrlC.Ki = ki_Dc;
+	GridCurrPICtrlC.Umax = PIlim_Udc;
+	GridCurrPICtrlC.Umin = -PIlim_Udc;
 
-/*    if(mode==0){
-        EPwm4Regs.TBPRD = T1PR;
-        EPwm5Regs.TBPRD = T1PR;
-        EPwm6Regs.TBPRD = T1PR;
-        EPwm7Regs.TBPRD = T1PR;
-        EPwm1Regs.TBPRD = T1PR-1;
- //       EPwm2Regs.TBPRD = T1PR;
+	/*A相PI控制器参数。WY*/
+	ConstantCurr[0].CorrPI.Kp = kp_Dc_Div * 0.0001;
+	ConstantCurr[0].CorrPI.Ki = ki_Dc_Div;
+	ConstantCurr[0].CorrPI.Umax = 0;
+	ConstantCurr[0].CorrPI.Umin = -(DC_ERR_LIMIT * 0.1);
 
-	//	pwmPeriodLimit = T1PR;
-		quarterPeriod = T1PR * 0.5;
-		PWM_PERIOD_MAX = T1PR + 10;
-		PWM_PERIOD_MIN = T1PR - 10;
-//		IntPRcoeff();
-	}*/
+	/*B相PI控制器参数。WY*/
+	ConstantCurr[1].CorrPI.Kp = kp_Dc_Div*0.0001;
+	ConstantCurr[1].CorrPI.Ki = ki_Dc_Div;
+	ConstantCurr[1].CorrPI.Umax = 0;
+	ConstantCurr[1].CorrPI.Umin = -(DC_ERR_LIMIT*0.1);
+
+	/*C相PI控制器参数。WY*/
+	ConstantCurr[2].CorrPI.Kp = kp_Dc_Div*0.0001;
+	ConstantCurr[2].CorrPI.Ki = ki_Dc_Div;
+	ConstantCurr[2].CorrPI.Umax = 0;
+	ConstantCurr[2].CorrPI.Umin = -(DC_ERR_LIMIT*0.1);
+
+	UdcPIBalance.Kp = kp_Dc_Div;
+	UdcPIBalance.Ki = ki_Dc_Div;
+	UdcPIBalance.Umax = DC_ERR_LIMIT;
+	UdcPIBalance.Umin = -DC_ERR_LIMIT;
+
+	PICurrInnerA.Kp = kp_Cur;
+	PICurrInnerA.Umax = PIlim_I;
+	PICurrInnerA.Umin = -PIlim_I;
+	PICurrInnerB.Kp = kp_Cur;
+	PICurrInnerB.Umax = PIlim_I;
+	PICurrInnerB.Umin = -PIlim_I;
+	PICurrInnerC.Kp = kp_Cur;
+	PICurrInnerC.Umax = PIlim_I;
+	PICurrInnerC.Umin = -PIlim_I;
+
+	if(!StateFlag.spwmFlag)
+	{//PR控制开启.关闭PI的I系数
+		PICurrInnerA.Ki =0;//ki_Cur;
+		PICurrInnerB.Ki =0;//ki_Cur;
+		PICurrInnerC.Ki =0;//ki_Cur;
+	}
+	else
+	{
+		PICurrInnerA.Ki =ki_Cur;
+		PICurrInnerB.Ki =ki_Cur;
+		PICurrInnerC.Ki =ki_Cur;
+	}
+
+	EPwm1Regs.CMPA.bit.CMPA =SampleLead;
 }
 
 void HarmonicLoading(void)          //取谐波数组
@@ -529,10 +527,6 @@ void ManufacturerParametersRefresh(void)
 	PIVolB.Ki = PIVolC.Ki = PIVolA.Ki = VolKi*0.01;
 	PIVolB.Umax = PIVolC.Umax = PIVolA.Umax = VoltDerivative;
 	PIVolB.Umin = PIVolC.Umin = PIVolA.Umin = -VoltDerivative;
-//	PIFanCtl.Kp = manualubanlanccurA;
-//	PIFanCtl.Ki = manualubanlanccurB;
-//	PIFanCtl.Umax = manualubanlanccurC;
-//	PIFanCtl.Umin = -manualubanlanccurC;
 	SetWaveRecordMode(FaultRecSel.RecordMode);
 
 	OUTCUR_OVER_INS_NEG		=-OUTCUR_OVER_INS;
@@ -553,22 +547,6 @@ void ManufacturerParametersRefresh(void)
     outputCurBypassCurrA    = bypassCurrRatio;
     outputCurBypassCurrB    = bypassCurrRatio;
     outputCurBypassCurrC    = bypassCurrRatio;
-
-//	if(StateFlag.VoltageModeFlag == 0){           //升压
-//        outputCurRatioCurrA     = -outputCurRatio;       //主电抗电流系数A
-//        outputCurRatioCurrB     = outputCurRatio;
-//        outputCurRatioCurrC     = outputCurRatio;
-//        outputCurBypassCurrA    = -dcVoltUpRatio;       //旁路电流系数A
-//        outputCurBypassCurrB    = dcVoltUpRatio;
-//        outputCurBypassCurrC    = dcVoltUpRatio;
-//	}else if(StateFlag.VoltageModeFlag == 1){     //降压
-//	    outputCurRatioCurrA     = -outputCurRatio;
-//	    outputCurRatioCurrB     = -outputCurRatio;
-//	    outputCurRatioCurrC     = -outputCurRatio;
-//        outputCurBypassCurrA    = -dcVoltUpRatio;
-//        outputCurBypassCurrB    = -dcVoltUpRatio;
-//        outputCurBypassCurrC    = -dcVoltUpRatio;
-//	}
 
 	if(sPWM%1000 != 0){
 	   switch(sPWM%10){
@@ -625,61 +603,8 @@ void ManufacturerParametersRefresh(void)
 	CorrectingAD();							//电压相序
 	CorrectingCT();							//电流相序
 	DirectionCT();							//电流方向
-
-//	Esc_NUM[0] = Esc_NUM[31] = 1;
-//	for(i=1;i<16;i++)
-//	{
-//	    Esc_NUM[31-i] = Esc_NUM[i] = Esc_NUM[i-1] - ((1-reactPrCompPerc)/16);
-//	}
-//	i = 0;
 }
 
-//void VirtuPreferencesRefresh(void)
-//{
-//	struct VARIZERO 			*pOrg= &VariZeroOffset;
-//	struct VARIZERO 			*pRat= &VariZeroOffsetRatio;
-//
-//	VirtulAD.gridVoltAB			= SETUP_RATIO_CHANGE(pOrg->gridVoltAB		,pRat->gridVoltAB);
-//	VirtulAD.gridVoltBC			= SETUP_RATIO_CHANGE(pOrg->gridVoltBC		,pRat->gridVoltBC);
-//	VirtulAD.gridVoltCA			= SETUP_RATIO_CHANGE(pOrg->gridVoltCA		,pRat->gridVoltCA);
-//	VirtulAD_loadCurrentA = VirtulAD.loadCurrentA	\
-//	                            = SETUP_RATIO_CHANGE(pOrg->loadCurrentA		,pRat->loadCurrentA);
-//	VirtulAD_loadCurrentB = VirtulAD.loadCurrentB	\
-//	                            = SETUP_RATIO_CHANGE(pOrg->loadCurrentB		,pRat->loadCurrentB);
-//	VirtulAD_loadCurrentC = VirtulAD.loadCurrentC	\
-//	                            = SETUP_RATIO_CHANGE(pOrg->loadCurrentC		,pRat->loadCurrentC);
-//	VirtulAD.apfOutputCurA		= SETUP_RATIO_CHANGE(pOrg->apfOutputCurA	,pRat->apfOutputCurA);
-//	VirtulAD.apfOutputCurB		= SETUP_RATIO_CHANGE(pOrg->apfOutputCurB	,pRat->apfOutputCurB);
-//	VirtulAD.apfOutputCurC		= SETUP_RATIO_CHANGE(pOrg->apfOutputCurC	,pRat->apfOutputCurC);
-//	VirtulAD.temDspBroad		= SETUP_RATIO_CHANGE(pOrg->temDspBroad		,pRat->temDspBroad);
-//	VirtulAD.temperature1		= SETUP_RATIO_CHANGE(pOrg->temperature1		,pRat->temperature1);
-//	VirtulAD.temperature2		= SETUP_RATIO_CHANGE(pOrg->temperature2		,pRat->temperature2);
-//	VirtulAD.dcBusVoltUp		= SETUP_RATIO_CHANGE(pOrg->dcBusVoltUp		,pRat->dcBusVoltUp);
-//	VirtulAD.dcBusVoltDn		= SETUP_RATIO_CHANGE(pOrg->dcBusVoltDn		,pRat->dcBusVoltDn);
-//	VirtulAD.GridVoltDevcoef	= SETUP_RATIO_CHANGE(pOrg->GridVoltDevcoef	,pRat->GridVoltDevcoef);
-//	VirtulAD.DcBusVUpDevcoef	= SETUP_RATIO_CHANGE(pOrg->DcBusVUpDevcoef	,pRat->DcBusVUpDevcoef);
-//	VirtulAD.DcBusVDnDevcoef	= SETUP_RATIO_CHANGE(pOrg->DcBusVDnDevcoef	,pRat->DcBusVDnDevcoef);
-//	VirtulAD.ApfOutCuDevcoef	= SETUP_RATIO_CHANGE(pOrg->ApfOutCuDevcoef	,pRat->ApfOutCuDevcoef);
-//	VirtulAD.CTOutCurDevcoef	= SETUP_RATIO_CHANGE(pOrg->CTOutCurDevcoef	,pRat->CTOutCurDevcoef);
-//	gridVoltRatio				= gridVoltRatioVirtu+VirtulAD.GridVoltDevcoef;
-//	dcVoltUpRatio				= dcVoltUpRatioVirtu+VirtulAD.DcBusVUpDevcoef;
-//	loadVoltRatio				= loadVoltRatioVirtu+VirtulAD.DcBusVDnDevcoef;
-//#if CUR_HUOER_DIR_IGBT == 1     //Holzer sensor direction,指向系统,所以逆变侧电流得取反
-//    outputCurRatio          = -(outputCurRatioVirtu+VirtulAD.ApfOutCuDevcoef);
-//    if(StateFlag.VoltageModeFlag == 0){
-//        outputCurRatioCurrA     = -outputCurRatio;
-//        outputCurRatioCurrB     = outputCurRatio;
-//        outputCurRatioCurrC     = outputCurRatio;
-//    }else if(StateFlag.VoltageModeFlag == 1){
-//        outputCurRatioCurrA     = -outputCurRatio;
-//        outputCurRatioCurrB     = -outputCurRatio;
-//        outputCurRatioCurrC     = -outputCurRatio;
-//    }
-//#else
-//    outputCurRatio          =  (outputCurRatioVirtu+VirtulAD.ApfOutCuDevcoef);
-//#endif
-//	transfRatio					= transfRatioVirtu+VirtulAD.CTOutCurDevcoef;
-//}
 
 void VirtuPreferencesRefresh(void)         //界面显示零偏值(程序当中使用的零偏值 = 界面下发零偏值,倍率)
 {
@@ -885,13 +810,9 @@ void PLLrun(void)
 const DF22BLOCK PRCtrlSrcBK[41]         = PRCTRL_BLOCK_DEFAULT;
 const float PRCtrlSrcFulc[41*2]         = PRCTRL_BLOCK_FULC;
 const int PRCtrlEn[PRCTRL_COEFF_LEN]    =PRCTRL_COEFF_EN;
-//#pragma DATA_SECTION(PRCtrlFulcFirst,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlBKFirst,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlABK,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlBBK,"EBSS3");
-//#pragma DATA_SECTION(PRCtrlCBK,"EBSS3");
+
 float PRCtrlFulcFirst[PRCTRL_COEFF_LEN*2],PRCtrlBKFirst[PRCTRL_COEFF_LEN*2];
-//DF22 PRCtrlA[(PRCTRL_COEFF_LEN)],PRCtrlB[(PRCTRL_COEFF_LEN)],PRCtrlC[(PRCTRL_COEFF_LEN)];
+
 DF22BLOCK PRCtrlABK[(PRCTRL_COEFF_LEN)],PRCtrlBBK[(PRCTRL_COEFF_LEN)],PRCtrlCBK[(PRCTRL_COEFF_LEN)];
 #pragma CODE_SECTION(AdjustFulkPRcoeff, "ram2func");
 void AdjustFulkPRcoeff(void)

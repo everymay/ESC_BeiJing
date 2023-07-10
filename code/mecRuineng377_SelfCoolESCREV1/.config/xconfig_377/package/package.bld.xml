@@ -7,7 +7,7 @@
         <srcFile name="package/cfg/377_p28FP.c"/>
     </sources>
     <configscripts>
-        <srcFile name="D:/WorkSpace_v8/escselfcool/377.cfg"/>
+        <srcFile name="F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/377.cfg"/>
     </configscripts>
     <makefiles>
         <srcFile name="package.mak" src="package.bld"/>
@@ -25,7 +25,7 @@
             platform="ti.platforms.sim28xx"
             isa="28FP"
             suffix="28FP"
-            rootDir="D:/TI/ccsv8/tools/compiler/ti-cgt-c2000_18.1.2.LTS"
+            rootDir="E:/APP/TI/CCS/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS"
             os="undefined"
             rts="ti.targets.rts2800">
             <model endian="little"
@@ -44,7 +44,7 @@
         isPartial="false"
         xCfgScript="package/cfg/377_p28FP.cfg"
         xCfgPrefix="package/cfg/377_p28FP"
-        cfgScript="D:/WorkSpace_v8/escselfcool/377.cfg"
+        cfgScript="F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/377.cfg"
         cfgArgs="null"
         />
     </configurations>
@@ -56,7 +56,7 @@
         profile="release"
         xCfgScript="package/cfg/377_p28FP.cfg"
         xCfgPrefix="package/cfg/377_p28FP"
-        cfgScript="D:/WorkSpace_v8/escselfcool/377.cfg"
+        cfgScript="F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/377.cfg"
         cfgArgs="null"
         />
     </executables>

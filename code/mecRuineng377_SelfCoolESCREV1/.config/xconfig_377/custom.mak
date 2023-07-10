@@ -7,5 +7,5 @@
 #       or equal to the generated config header
 #
 linker.cmd: package/cfg/377_p28FP.xdl
-	$(SED) 's"^\"\(package/cfg/377_p28FPcfg.cmd\)\"$""\"D:/WorkSpace_v8/escselfcool/.config/xconfig_377/\1\""' package/cfg/377_p28FP.xdl > $@
+	$(SED) 's"^\"\(package/cfg/377_p28FPcfg.cmd\)\"$""\"F:/Project/ESC/code/mecRuineng377_SelfCoolESCREV1/.config/xconfig_377/\1\""' package/cfg/377_p28FP.xdl > $@
 	-$(SETDATE) -r:max package/cfg/377_p28FP.h compiler.opt compiler.opt.defs

@@ -403,15 +403,15 @@ void InitGpio_NewBoard(void)
 	GpioCtrlRegs.GPCDIR.bit.GPIO93 = 1; //GPIO输出模式。WY
 	GpioCtrlRegs.GPCPUD.bit.GPIO93 = 0; //使能上拉。WY
 
-	/*A相小继电器*/
+	/*A相直流电容充电继电器*/
 	GpioCtrlRegs.GPDDIR.bit.GPIO105 = 1; //GPIO输出模式。WY
 	GpioCtrlRegs.GPDPUD.bit.GPIO105 = 0; //使能上拉。WY
 
-	/*B相小继电器*/
+	/*B相直流电容充电继电器*/
 	GpioCtrlRegs.GPCDIR.bit.GPIO76 = 1; //GPIO输出模式。WY
 	GpioCtrlRegs.GPCPUD.bit.GPIO76 = 0; //使能上拉。WY
 
-	/*C相小继电器*/
+	/*C相直流电容充电继电器*/
 	GpioCtrlRegs.GPBDIR.bit.GPIO43 = 1; //GPIO输出模式。WY
 	GpioCtrlRegs.GPBPUD.bit.GPIO43 = 0; //使能上拉。WY
 
@@ -439,7 +439,7 @@ void InitGpio_NewBoard(void)
 	GpioCtrlRegs.GPDDIR.bit.GPIO104 = 1; //GPIO输出模式。WY
 	GpioCtrlRegs.GPDPUD.bit.GPIO104 = 0; //使能上拉。WY
 
-	GpioDataRegs.GPFSET.bit.GPIO163 = 1; //？WY
+	GpioDataRegs.GPFSET.bit.GPIO163 = 1; //未使用。WY
 
 	GpioDataRegs.GPCSET.bit.GPIO79 = 1;	//A相主路磁保持继电器断开。WY
 	GpioDataRegs.GPCSET.bit.GPIO78 = 1; //A相旁路磁保持继电器断开。WY

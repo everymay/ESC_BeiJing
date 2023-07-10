@@ -167,7 +167,12 @@
     //板载输出
     #define SET_PULSE(VAL)                    if(VAL) GpioDataRegs.GPDSET.bit.GPIO110 = 1; else GpioDataRegs.GPDCLEAR.bit.GPIO110 = 1
     #define GET_PULSE()                               GpioDataRegs.GPDDAT.bit.GPIO110             //心跳检测
+
+	/*
+	 * 翻转GPIO电平。WY
+	 */
     #define TOGGLE_PULSE()                            GpioDataRegs.GPDTOGGLE.bit.GPIO110 = 1;
+
     #define SET_MAIN_CONTACT_OFF(VAL)         if(VAL) GpioDataRegs.GPFSET.bit.GPIO163 = 1; else GpioDataRegs.GPFCLEAR.bit.GPIO163 = 1
 	#define GET_MAIN_CONTACT_OFF()                    GpioDataRegs.GPFDAT.bit.GPIO163             //磁保持继电器分闸
 
@@ -264,7 +269,7 @@
     #define GET_BYPASS_CONTACT_ACTION_C               GpioDataRegs.GPEDAT.bit.GPIO152             // C相旁路磁保持继电器
 
 	/*
-	 * 配置A相旁路晶闸管状态。WY
+	 * 设置A相旁路晶闸管状态。WY
 	 * VAL = 0：开通；
 	 * VAL = 1：关断。
 	 */
@@ -272,7 +277,7 @@
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO154 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO154 = 1  //SCRA_EN
 
    	/*
-	 * 配置B相旁路晶闸管状态。WY
+	 * 设置B相旁路晶闸管状态。WY
 	 * VAL = 0：开通；
 	 * VAL = 1：关断。
 	 */
@@ -280,7 +285,7 @@
                                                  if(VAL) GpioDataRegs.GPESET.bit.GPIO153 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO153 = 1  //SCRB_EN
 
    	/*
-	 * 配置C相旁路晶闸管状态。WY
+	 * 设置C相旁路晶闸管状态。WY
 	 * VAL = 0：开通；
 	 * VAL = 1：关断。
 	 */
@@ -321,10 +326,17 @@
     #define STOP_INSTRUCTION                          GpioDataRegs.GPEDAT.bit.GPIO157             // 急停按钮
 
 	/*
-	 * 15V电源。WY
+	 * 15V电源掉电检测引脚。WY
 	 */
     #define GET_CTRL24_POWER                          GpioDataRegs.GPADAT.bit.GPIO1               // 15V控制电掉电检测
+
+	/*
+	 * 启停15V电源。WY
+	 * 0：停止；
+	 * 1：启动。
+	 */
     #define SET_POWER_CTRL(VAL)               if(VAL) GpioDataRegs.GPDSET.bit.GPIO104 = 1; else GpioDataRegs.GPDCLEAR.bit.GPIO104 = 1
+
     #define GET_POWER_CTRL                            GpioDataRegs.GPDDAT.bit.GPIO104             // 控制15V电源供电引脚
 
     #define GET_GC_OVER_A                             GpioDataRegs.GPCDAT.bit.GPIO94              // A相硬件过流检测引脚
@@ -337,9 +349,33 @@
     #define SET_GV_VOL_CTRL_C(VAL)            if(VAL) GpioDataRegs.GPBSET.bit.GPIO43 = 1; else GpioDataRegs.GPBCLEAR.bit.GPIO43 = 1    //C相控制外加小继电器(防止在运输过程中磁保持发生误动作,上电没有预充电直接炸机,在输入磁保持和直流电容之间加一个小继电器,在上电几秒钟之后再开通)
     #define GET_GV_VOL_CTRL_C                         GpioDataRegs.GPBDAT.bit.GPIO43
     #define SET_FLback(VAL)                   if(VAL) GpioDataRegs.GPCSET.bit.GPIO91 = 1; else GpioDataRegs.GPCCLEAR.bit.GPIO91 = 1
-    #define GET_FLback                                GpioDataRegs.GPCDAT.bit.GPIO91              // 防雷反馈
+
+
+
+	/*
+	 * 防雷检测引脚。WY
+	 * 0：正常；
+	 * 1：异常。
+	 */
+    #define GET_FLback                                GpioDataRegs.GPCDAT.bit.GPIO91
+
     #define SET_BYPASS_FEEDBACK(VAL)          if(VAL) GpioDataRegs.GPCSET.bit.GPIO92 = 1; else GpioDataRegs.GPCCLEAR.bit.GPIO92 = 1
-    #define GET_BYPASS_FEEDBACK                       GpioDataRegs.GPCDAT.bit.GPIO92              // 旁路微断反馈
+
+	/*
+	 * 微型断路器检测引脚。WY
+	 * 0，断开；
+	 * 1，闭合。
+	 */
+//    #define GET_BYPASS_FEEDBACK                       GpioDataRegs.GPCDAT.bit.GPIO92
+
+	/*
+	 * 微型断路器检测引脚。WY
+	 * 0，断开；
+	 * 1，闭合。
+	 *
+	 * 由于硬件中去除了微型断路器引脚检测功能，为了保证程序兼容性，将微型断路器检测引脚恒设为1，表示：微型断路器始终闭合。
+	 */
+	#define GET_BYPASS_FEEDBACK 1
 
     #define SET_BOARDRUNNING_LED(VAL)         if(VAL) GpioDataRegs.GPBSET.bit.GPIO59 = 1; else GpioDataRegs.GPBCLEAR.bit.GPIO59 = 1
     #define GET_BOARDRUNNING_LED                      GpioDataRegs.GPBDAT.bit.GPIO59    //-板载-设备运行指示灯
@@ -367,28 +403,51 @@
 
 #endif
 
-//    #define SET_IGBT_EN1(VAL)    \
-//    if(VAL == 0){          \
-//        ErrorRecord.B.REC_IGBT_EN = 0;\
-//        GpioDataRegs.GPECLEAR.bit.GPIO156 = 1;\
-//        GpioDataRegs.GPFCLEAR.bit.GPIO164 = 1;\
-//        GpioDataRegs.GPCCLEAR.bit.GPIO93 = 1;\
-//    }else{\
-//        ErrorRecord.B.REC_IGBT_EN = 1;\
-//        GpioDataRegs.GPESET.bit.GPIO156 = 1;\
-//        GpioDataRegs.GPFSET.bit.GPIO164 = 1;\
-//        GpioDataRegs.GPCSET.bit.GPIO93 = 1;\
-//    }
+
+	/*
+	 * A相硬件PWM使能
+     * 0：失能；
+	 * 1：使能。
+	 */
     #define SET_IGBT_ENA(VAL)     if(VAL) {if((GET_POWER_CTRL == 0)&&(StateEventFlag_A != STATE_EVENT_STANDBY_A)){SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                              GpioDataRegs.GPESET.bit.GPIO156 = 1; }else GpioDataRegs.GPECLEAR.bit.GPIO156 = 1
+
+	/*
+	 * B相硬件PWM使能
+     * 0：失能；
+	 * 1：使能。
+	 */
     #define SET_IGBT_ENB(VAL)     if(VAL) {if((GET_POWER_CTRL == 0)&&(StateEventFlag_B != STATE_EVENT_STANDBY_B)){SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                              GpioDataRegs.GPFSET.bit.GPIO164 = 1; }else GpioDataRegs.GPFCLEAR.bit.GPIO164 = 1
+
+	/*
+	 * C相硬件PWM使能
+     * 0：失能；
+	 * 1：使能。
+	 */
     #define SET_IGBT_ENC(VAL)     if(VAL) {if((GET_POWER_CTRL == 0)&&(StateEventFlag_C != STATE_EVENT_STANDBY_C)){SET_POWER_CTRL(1); Delayus(TIME_WRITE_15VOLT_REDAY);}\
                                              GpioDataRegs.GPCSET.bit.GPIO93  = 1; }else GpioDataRegs.GPCCLEAR.bit.GPIO93  = 1
 
-    #define GET_IGBT_ENA                          GpioDataRegs.GPEDAT.bit.GPIO156       //A相PWM使能
-    #define GET_IGBT_ENB                          GpioDataRegs.GPFDAT.bit.GPIO164       //B相PWM使能
-    #define GET_IGBT_ENC                          GpioDataRegs.GPCDAT.bit.GPIO93        //C相PWM使能
+	/*
+	 * A相硬件PWM使能检测引脚
+     * 0：失能；
+	 * 1：使能。
+	 */
+    #define GET_IGBT_ENA                          GpioDataRegs.GPEDAT.bit.GPIO156
+
+	/*
+	 * B相硬件PWM使能检测引脚
+     * 0：失能；
+	 * 1：使能。
+	 */
+    #define GET_IGBT_ENB                          GpioDataRegs.GPFDAT.bit.GPIO164
+
+	/*
+	 * C相硬件PWM使能检测引脚
+     * 0：失能；
+	 * 1：使能。
+	 */
+    #define GET_IGBT_ENC                          GpioDataRegs.GPCDAT.bit.GPIO93
 
 
 
@@ -413,30 +472,27 @@
 #define IGBT_FAULT    	 		    IGBT_DISABLE
 #define IGBT_FEEDBACK_FAULT_FLAG    0
 
-// bit7:debug;      bit6:warning;       bit5:reserve;       bit4:fault;     bit3~0:state
-//#define STATE_EVENT_STANDBY		    0               //初始状态(正常停机)
-//#define STATE_EVENT_RECHARGE 	    1               //充电状态
-//#define STATE_EVENT_RUN 		    2               //正常运行
-//#define STATE_EVENT_STOP		    3               //正常停机
-//#define STATE_EVENT_WAIT 		    5               //待机状态
-//#define STATE_EVENT_BEFORERUN	    6               //正常运行前的准备状态.
-//#define STATE_EVENT_DISCHARGE	    8               //放电状态
-//#define STATE_EVENT_FAULT 		    9               //故障停机
-//#define STATE_EVENT_WARNING		    10              //告警状态
-//#define STATE_EVENT_ALARM           11              //警报状态
-//#define ORIGINAL_STATE			    12              //自动复位_初始状态
-//#define AUTO_DETECTION_STATE 	    13              //自动复位_自检状态
-//#define TWEAK_STATE	 			    14              //自动复位_调整状态
-//#define INSPECTION_STATE		    15              //自动复位_正常状态
+/*A相：初始状态（正常停机）。WY*/
+#define STATE_EVENT_STANDBY_A         0
 
-#define STATE_EVENT_STANDBY_A         0               //初始状态(正常停机)
-#define STATE_EVENT_RECHARGE_A        1               //充电状态
-#define STATE_EVENT_RUN_A             2               //正常运行
-#define STATE_EVENT_STOP_A            3               //正常停机
-#define STATE_EVENT_WAIT_A            4               //待机状态
+/*A相：预充电状态。WY*/
+#define STATE_EVENT_RECHARGE_A        1
+
+/*A相：运行状态。WY*/
+#define STATE_EVENT_RUN_A             2
+
+/*A相：主动停机状态。WY*/
+#define STATE_EVENT_STOP_A            3
+
+/*A相：待机状态。WY*/
+#define STATE_EVENT_WAIT_A            4
+
 #define STATE_EVENT_BEFORERUN_A       5               //正常运行前的准备状态.
 #define STATE_EVENT_DISCHARGE_A       6               //放电状态
-#define STATE_EVENT_FAULT_A           7               //故障停机
+
+/*A相：故障停机状态。WY*/
+#define STATE_EVENT_FAULT_A           7
+
 #define STATE_EVENT_WARNING_A         8              //告警状态
 #define STATE_EVENT_ALARM_A           9              //警报状态
 #define ORIGINAL_STATE_A              10              //自动复位_初始状态
@@ -444,13 +500,24 @@
 #define TWEAK_STATE_A                 12              //自动复位_调整状态
 #define INSPECTION_STATE_A            13              //自动复位_正常状态
 
+/*B相：初始状态（正常停机）。WY*/
 #define STATE_EVENT_STANDBY_B         0               //初始状态(正常停机)
+
+/*B相：预充电状态。WY*/
 #define STATE_EVENT_RECHARGE_B        1               //充电状态
+
+/*B相：运行状态。WY*/
 #define STATE_EVENT_RUN_B             2               //正常运行
+
+/*B相：主动停机状态。WY*/
 #define STATE_EVENT_STOP_B            3               //正常停机
+
+/*B相：待机状态。WY*/
 #define STATE_EVENT_WAIT_B            4               //待机状态
 #define STATE_EVENT_BEFORERUN_B       5               //正常运行前的准备状态.
 #define STATE_EVENT_DISCHARGE_B       6               //放电状态
+
+/*B相：故障停机状态。WY*/
 #define STATE_EVENT_FAULT_B           7               //故障停机
 #define STATE_EVENT_WARNING_B         8              //告警状态
 #define STATE_EVENT_ALARM_B           9              //警报状态
@@ -459,14 +526,26 @@
 #define TWEAK_STATE_B                 12              //自动复位_调整状态
 #define INSPECTION_STATE_B            13              //自动复位_正常状态
 
+/*C相：初始状态（正常停机）。WY*/
 #define STATE_EVENT_STANDBY_C         0               //初始状态(正常停机)
+
+/*C相：预充电状态。WY*/
 #define STATE_EVENT_RECHARGE_C        1               //充电状态
+
+/*C相：运行状态。WY*/
 #define STATE_EVENT_RUN_C             2               //正常运行
+
+/*C相：主动停机状态。WY*/
 #define STATE_EVENT_STOP_C            3               //正常停机
+
+/*C相：待机状态。WY*/
 #define STATE_EVENT_WAIT_C            4               //待机状态
 #define STATE_EVENT_BEFORERUN_C       5               //正常运行前的准备状态.
 #define STATE_EVENT_DISCHARGE_C       6               //放电状态
+
+/*C相：故障停机状态。WY*/
 #define STATE_EVENT_FAULT_C           7               //故障停机
+
 #define STATE_EVENT_WARNING_C         8              //告警状态
 #define STATE_EVENT_ALARM_C           9              //警报状态
 #define ORIGINAL_STATE_C              10              //自动复位_初始状态

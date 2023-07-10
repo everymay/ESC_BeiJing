@@ -182,30 +182,53 @@ extern float DCL_runPIDc(PID *p, float rk, float yk, float lk);
 
 /*** PI controller ***/
 
+/*
+ * PI控制器参数。WY
+ */
 typedef volatile struct {
-	float Kp;		// [0] proportional gain
- 	float Ki;		// [2] integral gain
- 	float i10;		// [4] I storage
-	float Umax;		// [6] upper saturation limit
-	float Umin;		// [8] lower saturation limit
-	float i6;		// [A] saturation storage
+	float Kp; //比例项增益。WY
+ 	float Ki; //积分项增益。WY
+ 	float i10; //积分项。WY
+	float Umax; //控制器输出上限。WY
+	float Umin; //控制器输出下限。WY
+	float i6; //控制器输出饱和标志位。0：饱和；1：不饱和。WY
 } PIcalc;
+
 extern PIcalc OutInvUVCurrD,OutInvUVCurrQ,OutInvUVCurrRMS;
 #define	PI_DEFAULTS { 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 1.0f }
 
+/*
+ * 功能：PI控制器。WY
+ *
+ * 输入参数p：PI控制器参数
+ * 输入参数rk：目标值
+ * 输入参数Yk：当前值
+ *
+ * 返回值：PI控制器输出值
+ */
 extern float DCL_runPI(PIcalc *p, float rk, float yk);
+
 extern float DCL_runPI_Group(PIcalc *p, float *in,float *out,int N);
 extern float RunPIRE(PIcalc *p, float rk, float yk);
 #define PLL_PI_CTRL_DEFAULT     { 180.0f, 3200.0f, PI2*POWERGRID_FREQ, 51.5*PI2, 48.5*PI2,1}
 #define UDC_PI_CTRL_DEFAULT 	{ 0.7f, 0.01f, 0, 10.0f, -10.0f,1}
 #define UDC_PI_BALANCE_DEFAULT 	{ 0.3f, 0.01f, 0, 5.0f, -5.0f,1}
 #define UDC_PI_GRID_REACTIVE_DEFAULT    { 0.3f, 0.01f, 0, 0.5f, -0.5f,1}
+
+/*
+ * PI控制器参数。WY
+ */
 #define VOLT_TARGET_CORR_DEFAULT        { 0.003f, 0.0001f, 0, 1.0f, 0.6f,1}
+
 #define CURR_PI_INNER_DEFAULT 	{ 0.3f, 0.000f, 0, 1.0f, -1.0f,1}
 #define OUTINVCURR_DEFAULT 		{ 0.3f, 0.100f, 0, 100.0f, -100.0f,1}
-#define PI_Vol 					{ 0.075f, 0.025f, 0, 250, -250,1}
 
-#define PI_Vol_UV               { 0.075f, 0.025f, 0, 30, 0,0}
+/*
+ * PI控制器参数。WY
+ */
+#define PI_Vol 					{ 0.075f, 0.025f, 0, 250, -250, 1}
+
+#define PI_Vol_UV               { 0.075f, 0.025f, 0, 30, 0, 0}
 
 #define PI_Cur 					{ 0.015f, 0.0001f, 0, 1.5, 0.7}
 #define FFT_PI_CTRL_DEFAULT     {{ 0.015f, 0.0001f, 0, 1.5, 0.7},{ 0.015f, 0.0001f, 0, 1.5, 0.7},{ 0.015f, 0.0001f, 0, 1.5, 0.7}}
@@ -572,24 +595,38 @@ extern PIcalc GridCurrPICtrlA,GridCurrPICtrlB,GridCurrPICtrlC;
 extern PIcalc VolttargetCorrPIA,VolttargetCorrPIB,VolttargetCorrPIC;
 
 typedef volatile struct {
-    PIcalc CorrPI;
-    float VolttargetCorr;
-    float RMS_CONSTANT_CURRENT_OVERLOAD;
-    float RMS_CONSTANT_CURRENT_DIFF;
-    float RMS_CONSTANT_CURRENT_RATED;
-    float INS_CONSTANT_CURRENT_RATED;
-    int state;
-    int Prvstate;
-    int CNT1;
-//    int *CurTarget;
-
+    PIcalc CorrPI; //PI控制器相关参数。WY
+    float VolttargetCorr; //负载电压有效值的目标值的修正系数（范围：-0.5 ~ 0）。WY
+    float RMS_CONSTANT_CURRENT_OVERLOAD; //电网电流有效值的过载值。WY
+    float RMS_CONSTANT_CURRENT_DIFF; //该成员未使用。WY
+    float RMS_CONSTANT_CURRENT_RATED; //电网电流有效值的额定值。WY
+    float INS_CONSTANT_CURRENT_RATED; // 电网电流瞬时值的额定值。WY
+    int state; //状态机状态（用于描述电网电流）。WY
+    int Prvstate; //前一次电网电流状态。WY
+    int CNT1; //计数器。目的：防止状态机频繁切换引发抖动。WY
 }SMconstantCurr;
+
 extern SMconstantCurr ConstantCurr[3];
 extern const SMconstantCurr ConstantCurrDefault[3];
+
+/*状态机事件：电网电流突变。WY*/
 #define SM_CONSTANT_CURR_INS 3
+
+/*
+ * 状态机事件：电网电流恒定。WY
+ * 说明：要使得状态机进入【电网电流恒定】模式，需满足下列条件：
+    1. 电网电力有效值 > 电网电流有效值的额定值；
+    2. 电网电流有效值 < 电网电流有效值的过载值。
+ * 在【电网电流恒定】模式下，不再以负载电压目标值为调节对象。
+ */
 #define SM_CONSTANT_CURR_CONSTANT 2
+
+/*状态机事件：电网电流正常。WY*/
 #define SM_CONSTANT_CURR_NORMAL 1
+
+/*状态机事件：电网电流初始。WY*/
 #define SM_CONSTANT_CURR_STANDBY 0
+
 #if PR_CTRL==1
 //extern DF22 PRCtrlA[(PRCTRL_COEFF_LEN)],PRCtrlB[(PRCTRL_COEFF_LEN)],PRCtrlC[(PRCTRL_COEFF_LEN)];
 extern DF22BLOCK PRCtrlABK[(PRCTRL_COEFF_LEN)],PRCtrlBBK[(PRCTRL_COEFF_LEN)],PRCtrlCBK[(PRCTRL_COEFF_LEN)];

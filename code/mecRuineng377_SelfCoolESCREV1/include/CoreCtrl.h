@@ -12,18 +12,18 @@
 #include "Cla_data.h"
 #include "CLAmath.h"
 
-#define TESTMODE 					0	//测试模式打开
+#define TESTMODE 					0	//娴嬭瘯妯″紡鎵撳紑
 #if TESTMODE
-#define RELESE_HIGHVOLTAGE 			0	//定义高电压正式发布的程序
-#define TEST_RUNPORCESS				0	//定义不合闸投运程序
-#define TEST_NULLPULSE				0	//定义空脉冲程序
-#define TEST_IGBTFAULTDISABLE		0	//IGBT故障关断
-#define TEST_IO						0	//定义IO测试程序
-#define TEST_VIRTUALSOURCE			0	//定义虚拟源输入模式
-#define TEST_DEBUGFFT               0   //定义调试FFT
-#define TEST_RUNTIME				0   //注意,上口绝对不能带电.此模式直接运行IGBT程序.
-#define DEBUG_WAVE_INNER 			0	//IO口输出脉冲测试运行时间0:关闭1:CPU控制 2:CLA控制
-//#define DEBUG_NO_MAIN_CONTACT_ON  	0	//低压调试阶段不投单元内接触器
+#define RELESE_HIGHVOLTAGE 			0	//瀹氫箟楂樼數鍘嬫寮忓彂甯冪殑绋嬪簭
+#define TEST_RUNPORCESS				0	//瀹氫箟涓嶅悎闂告姇杩愮▼搴�
+#define TEST_NULLPULSE				0	//瀹氫箟绌鸿剦鍐茬▼搴�
+#define TEST_IGBTFAULTDISABLE		0	//IGBT鏁呴殰鍏虫柇
+#define TEST_IO						0	//瀹氫箟IO娴嬭瘯绋嬪簭
+#define TEST_VIRTUALSOURCE			0	//瀹氫箟铏氭嫙婧愯緭鍏ユā寮�
+#define TEST_DEBUGFFT               0   //瀹氫箟璋冭瘯FFT
+#define TEST_RUNTIME				0   //娉ㄦ剰,涓婂彛缁濆涓嶈兘甯︾數.姝ゆā寮忕洿鎺ヨ繍琛孖GBT绋嬪簭.
+#define DEBUG_WAVE_INNER 			0	//IO鍙ｈ緭鍑鸿剦鍐叉祴璇曡繍琛屾椂闂�0:鍏抽棴1:CPU鎺у埗 2:CLA鎺у埗
+//#define DEBUG_NO_MAIN_CONTACT_ON  	0	//浣庡帇璋冭瘯闃舵涓嶆姇鍗曞厓鍐呮帴瑙﹀櫒
 #endif
 
 #define  COMMUNCICATION_VERSION		3
@@ -35,15 +35,15 @@
 #define  THREE_LEVEL_PWM            1       //0:Two level 1:three level
 #define  HEATPULSE                  1
 
-#define  ESC_SINGLEPHASECTRL        0       //单相ESC设备
-#define  ESC_THREEPHASECTRL         1       //三相ESC设备
+#define  ESC_SINGLEPHASECTRL        0       //鍗曠浉ESC璁惧
+#define  ESC_THREEPHASECTRL         1       //涓夌浉ESC璁惧
 
-#define  ESC_SINGLEPHASE            0       //单相ESC设备
-#define  ESC_THREEPHASE             1       //三相ESC设备
-#define  ESC_ONEINTWOPHASE          0       //两相并成一相设备,PWM输出都由A相控制
-#define  ESC_ONEINTHREEPHASE        0       //三相并成一相设备,PWM输出都由A相控制
+#define  ESC_SINGLEPHASE            0       //鍗曠浉ESC璁惧
+#define  ESC_THREEPHASE             1       //涓夌浉ESC璁惧
+#define  ESC_ONEINTWOPHASE          0       //涓ょ浉骞舵垚涓�鐩歌澶�,PWM杈撳嚭閮界敱A鐩告帶鍒�
+#define  ESC_ONEINTHREEPHASE        0       //涓夌浉骞舵垚涓�鐩歌澶�,PWM杈撳嚭閮界敱A鐩告帶鍒�
 
-//--------------------------------例程定义DMA---------------------------------//
+//--------------------------------渚嬬▼瀹氫箟DMA---------------------------------//
 #define CALIBRATION_COEFF_LEN       15
 
 #define GENERATOR_COEFF_LEN         9
@@ -56,13 +56,13 @@
 #define RFFT_SIZE                   (1 << RFFT_STAGES)              //Define the length of the FFT
 #define MAGCORR(x)                  ((x)*FFT_MAGTIUTE_COEFF)
 #define PWMFREQUENCY_cla            12800
-#define CLAADTEMPBUFLEN             4           //每隔4个点,由CPU往ADBuffA缓冲区放一次,因为DMA不支持CLA
+#define CLAADTEMPBUFLEN             4           //姣忛殧4涓偣,鐢盋PU寰�ADBuffA缂撳啿鍖烘斁涓�娆�,鍥犱负DMA涓嶆敮鎸丆LA
 
 extern Uint16 ADGROUP_NUM;
 extern Uint16 ADGROUP_MODE;
 extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 
-#define CAPPERIODVAL                1/100000000     //时钟频率周期值
+#define CAPPERIODVAL                1/100000000     //鏃堕挓棰戠巼鍛ㄦ湡鍊�
 
 #define EPwmRegsAQCSFRCclear 2
 #define EPwmRegsAQCSFRC   1
@@ -88,24 +88,24 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 //    #define WAVE_REC_FFT_MODE_DATA2 5
 //#endif
 //2:In phase carrier (three phase carrier frequency with same phase, suitable for three wire); 1: inverting carrier (carrier free frequency harmonic, suitable for four wire)
-//2:同相载波(三相有同相位载波频率,适用于三相三线);1:反相载波(无载波频率谐波,适用于三相四线)
+//2:鍚岀浉杞芥尝(涓夌浉鏈夊悓鐩镐綅杞芥尝棰戠巼,閫傜敤浜庝笁鐩镐笁绾�);1:鍙嶇浉杞芥尝(鏃犺浇娉㈤鐜囪皭娉�,閫傜敤浜庝笁鐩稿洓绾�)
 #define  PWM_CARRIER_PHASE_OPPOSITION      1
 #if  THREE_LEVEL_PWM  == 1
-    #define NPC3CA10020210330REV1   1       // 低压ESC
-    #define TNMD150A200415REV1      0       //S-100kva T5 三电平
+    #define NPC3CA10020210330REV1   1       // 浣庡帇ESC
+    #define TNMD150A200415REV1      0       //S-100kva T5 涓夌數骞�
 #else
-    #define TNMD150A200415REV1      0       //S-100kva T5 三电平
+    #define TNMD150A200415REV1      0       //S-100kva T5 涓夌數骞�
 #endif
 
 #if  THREE_LEVEL_PWM == 1 && NMECA161126REV4_200 == 1
-	#define PROJ_OUYAJIXIE			1		//ou ya ji xie欧亚机械项目660(要在三电平大机箱为1时有效)
+	#define PROJ_OUYAJIXIE			1		//ou ya ji xie娆т簹鏈烘椤圭洰660(瑕佸湪涓夌數骞冲ぇ鏈虹涓�1鏃舵湁鏁�)
 #endif
 
-    #define NESPW20220307REV1       1       //NPC3CA10020220210REV4-合成版
+    #define NESPW20220307REV1       1       //NPC3CA10020220210REV4-鍚堟垚鐗�
 
-//硬件版本号(主版本号):
-//000**~326**:系列版本号,在新系列,新拓扑.
-//***00~***99: 同系列因为项目的不同,或硬件稍作修改
+//纭欢鐗堟湰鍙�(涓荤増鏈彿):
+//000**~326**:绯诲垪鐗堟湰鍙�,鍦ㄦ柊绯诲垪,鏂版嫇鎵�.
+//***00~***99: 鍚岀郴鍒楀洜涓洪」鐩殑涓嶅悓,鎴栫‖浠剁◢浣滀慨鏀�
 #if  THREE_LEVEL_PWM  == 1
     #if NPC3CA10020210330REV1 == 1
         #define DSPSOFT_VERSION_MAJOR   (int16)1680 //(range:0~326**)
@@ -113,9 +113,9 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
         #define DSPSOFT_VERSION_MAJOR   (int16)1680 //(range:0~326**)
     #endif
 #endif
-//子版本号
-//000**~326**:PWM频率
-//***00~***99:子版本号.软件发布时与上一版不同,此版本号+1.
+//瀛愮増鏈彿
+//000**~326**:PWM棰戠巼
+//***00~***99:瀛愮増鏈彿.杞欢鍙戝竷鏃朵笌涓婁竴鐗堜笉鍚�,姝ょ増鏈彿+1.
 #if  THREE_LEVEL_PWM == 1
 	#define VERSION_CHILD 	 		(int16)10	//(range:0~99)
 #endif
@@ -153,7 +153,7 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 	#define IFFT_PHASE_STEP PI2/(2*PWMFREQUENCY/50)
 	#define VarMeanStep     (2*PWMFREQUENCY/4)
 #elif PWM_FREQUENCE_16KHZ
-    #define PWMFREQUENCY  20000							//PWM switching frequency and Current loop frequency//开关频率40K  AD中断频率20K
+    #define PWMFREQUENCY  20000							//PWM switching frequency and Current loop frequency//寮�鍏抽鐜�40K  AD涓柇棰戠巼20K
 	#define IFFT_PHASE_STEP PI2/(PWMFREQUENCY/50)
 	#define VarMeanStep     (PWMFREQUENCY/2.5f)
 #endif
@@ -163,9 +163,9 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 #define WAVERECORDLEN 500								//Debug window points
 #define CTRLSTEP_ALGORITHM   	(1.0f/CTRLFREQUENCY)			//Other module control step
 #define CTRLSTEP_ALGORITHM_F 	(1.0f/(10000))			//Current loop control step
-#define FUNDPOINT               (PWMFREQUENCY/POWERGRID_FREQ) //Fundamental point基波点数
-#define GEN_FUNDPOINT           (PWMFREQUENCY/POWERGRID_FREQ) //波形产生基波点数
-#define VOLT_FUNDPOINT			(PWMFREQUENCY/POWERGRID_FREQ)	//Fundamental point基波点数    //电网电压采样点
+#define FUNDPOINT               (PWMFREQUENCY/POWERGRID_FREQ) //Fundamental point鍩烘尝鐐规暟
+#define GEN_FUNDPOINT           (PWMFREQUENCY/POWERGRID_FREQ) //娉㈠舰浜х敓鍩烘尝鐐规暟
+#define VOLT_FUNDPOINT			(PWMFREQUENCY/POWERGRID_FREQ)	//Fundamental point鍩烘尝鐐规暟    //鐢电綉鐢靛帇閲囨牱鐐�
 #define MEANPOINTHALF           ((VOLT_FUNDPOINT/4) + 1)
 
 //#define	RFFT_STAGES					8
@@ -191,7 +191,7 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 //#define GENERATOR_COEFF_LEN 		9
 #define PRCTRL_COEFF_LEN 			14							//Note that the assembly file should be modified
 #define SINE_LOOKTABLE_LEN 			512
-#define ADTEMPBUFLEN 				(RFFT_SIZE+14)       //AD临时缓冲区
+#define ADTEMPBUFLEN 				(RFFT_SIZE+14)       //AD涓存椂缂撳啿鍖�
 #define PI 							(3.141593f)
 #define PI2 						(2*PI)
 #define PI100                       (314.1592653f)
@@ -213,7 +213,7 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 #define REACTLIMITPH				1.6
 #define REACTLIMIT                  (REACTLIMITPH*SQRT3)
 #define SQUARE(x) 					((x)*(x)*SQRT2*SQRT2)
-#define DEADLIMIT 					0.975						//调制比限幅(死区)
+#define DEADLIMIT 					0.975						//璋冨埗姣旈檺骞�(姝诲尯)
 #define POWER_CONV_RATIO 			((1.0f/1000.0f)/SQRT3)
 #define POWER_CONV_RATIO_CAP		(1.0f/1000.0f)
 #define	REACTPIUPLIMIT				1.5
@@ -255,31 +255,22 @@ extern Uint16 WAVE_REC_FFT_MODE_DATA2;
 #define FLVNEW_HARMZ_LIMIT_CORR (1.0f-FLVPRV_HARMZ_LIMIT_CORR)
 #define FLVPRV_CAPAREACT_Z_CORR (0.975f)						//CapaUnbalZCorr
 #define FLVNEW_CAPAREACT_Z_CORR (1.0f-FLVPRV_CAPAREACT_Z_CORR)
-//out:输出值 x:输入 slot:槽位
+//out:杈撳嚭鍊� x:杈撳叆 slot:妲戒綅
 #define FLVFUN(out,x,Slot)	FlvSlot[FLVSLOT_##Slot]*=FLVPRV_##Slot;\
 							FlvSlot[FLVSLOT_##Slot]+=x;\
 						out=FlvSlot[FLVSLOT_##Slot]*FLVNEW_##Slot;
 
-inline float Max3(float a,float b,float c) {
-    return (a>b)?(a>c?a:c):(b>c?b:c);
+/*
+ * 功能：求解3个数值中的最大值。WY
+ * 输入参数a：参数A
+ * 输入参数b：参数B
+ * 输入参数c：参数C
+ */
+inline float Max3(float a, float b, float c)
+{
+	return (a > b) ? (a > c ?a : c) : (b > c ? b : c);
 }
 
-//inline float Min3(float a,float b,float c) {
-//    return (a<b)?(a<c?a:c):(b<c?b:c);
-//}
-//
-//inline int getMid3Number(float a,float b,float c){
-//    return a>b ? (b>c ? 1:(a>c ? 2:0)):(b>c ? (a>c ? 0:2):1);
-//}
-//Amplitude scaling algorithm
-//allCap:Total capacity, after this function, the total capacity = total capacity - the input capacity
-//in:the input capacity corr:Capacity scaling factor
-//
-//#define CurrLimitPri(allCap,in,corr) capTmp=(in)*(in); \
-//									 if( (allCap)>=(capTmp) ){ (allCap)-= (capTmp);(corr)=1.0f; }\
-//									 else{ (corr)=sqrt(allCap)/(in); (allCap)=0; }
-
-//////////
 #define MEANPOINT               (CTRLFREQUENCY/POWERGRID_FREQ)
 #define MEANPOINT_QUARTER       (MEANPOINT/4)
 #define MEANPOINT_QUARTER_NUM   ((MEANPOINT/4)+1)
@@ -370,11 +361,11 @@ inline float Max3(float a,float b,float c) {
 
 
 //#define CLASET_DBG_IO1(VAL)            if(VAL) GpioDataRegs.GPESET.bit.GPIO158 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO158 = 1
-//#define CLAGET_DBG_IO1()                       GpioDataRegs.GPEDAT.bit.GPIO158      //-调试输出1
+//#define CLAGET_DBG_IO1()                       GpioDataRegs.GPEDAT.bit.GPIO158      //-璋冭瘯杈撳嚭1
 //#define CLASET_DBG_IO2(VAL)            if(VAL) GpioDataRegs.GPESET.bit.GPIO157 = 1; else GpioDataRegs.GPECLEAR.bit.GPIO157 = 1
-//#define CLAGET_DBG_IO2()                       GpioDataRegs.GPEDAT.bit.GPIO157      //-调试输出2
+//#define CLAGET_DBG_IO2()                       GpioDataRegs.GPEDAT.bit.GPIO157      //-璋冭瘯杈撳嚭2
 //#define CLASET_DBG_IO3(VAL)            if(VAL) GpioDataRegs.GPCSET.bit.GPIO91 = 1; else GpioDataRegs.GPCCLEAR.bit.GPIO91 = 1
-//#define CLAGET_DBG_IO3()                       GpioDataRegs.GPCDAT.bit.GPIO91      //-调试输出3
+//#define CLAGET_DBG_IO3()                       GpioDataRegs.GPCDAT.bit.GPIO91      //-璋冭瘯杈撳嚭3
 
 
 #define CALIBRATION_COEFF_DEFAULTS {\
@@ -562,7 +553,7 @@ struct SET_FFT_STORAGE_RATIO_STRUCT{
 #define CNT_MS(time_ms) (int)((time_ms)/5)	//
 #define CNT_SEC(time_sec) (int)((time_sec))		//
 #define TIME_WRITE_15VOLT_REDAY      2000
-#define POWERCTRLCNT_15V         600 //使用该参数一开始是为了防止控制15V上电掉电的三极管在频繁的脉冲动作下,烧毁;但是实际问题是三极管工作在放大区了,现已调试好,可以频繁动作.
+#define POWERCTRLCNT_15V         600 //浣跨敤璇ュ弬鏁颁竴寮�濮嬫槸涓轰簡闃叉鎺у埗15V涓婄數鎺夌數鐨勪笁鏋佺鍦ㄩ绻佺殑鑴夊啿鍔ㄤ綔涓�,鐑ф瘉;浣嗘槸瀹為檯闂鏄笁鏋佺宸ヤ綔鍦ㄦ斁澶у尯浜�,鐜板凡璋冭瘯濂�,鍙互棰戠箒鍔ㄤ綔.
 #define TIME_STANDBY_DELAY       600
 
 //extern float RFFTin1Buff[RFFT_SIZE];
@@ -580,50 +571,50 @@ extern float TestLoadCur[3][GEN_FUNDPOINT];
 //extern long ADBufPos;
 
 
-//#define Seed            (Uint16)((ADC_RU_VWTEMP+ADC_RU_UVTEMP+ADC_RU_NETC+ADC_RU_NETA+ADC_RU_NETB)*0.2+Time.MicroSec)   //随机数
+//#define Seed            (Uint16)((ADC_RU_VWTEMP+ADC_RU_UVTEMP+ADC_RU_NETC+ADC_RU_NETA+ADC_RU_NETB)*0.2+Time.MicroSec)   //闅忔満鏁�
 //#define Seed            (Uint16)((ADC_RU_TEMP1+ADC_RU_TEMP0+ADC_RU_HVA+ADC_RU_HVB+ADC_RU_HVC)*0.2+Time.MicroSec)
 
-//#define ADC_RU_HVA       ( AdcaResultRegs.ADCRESULT5)          //A0  ESC高压侧AN
-//#define ADC_RU_HVB       ( AdcbResultRegs.ADCRESULT1)          //B4  ESC高压侧BN
-//#define ADC_RU_HVC       ( AdcaResultRegs.ADCRESULT0)          //A4  ESC高压侧CN
+//#define ADC_RU_HVA       ( AdcaResultRegs.ADCRESULT5)          //A0  ESC楂樺帇渚N
+//#define ADC_RU_HVB       ( AdcbResultRegs.ADCRESULT1)          //B4  ESC楂樺帇渚N
+//#define ADC_RU_HVC       ( AdcaResultRegs.ADCRESULT0)          //A4  ESC楂樺帇渚N
 //
-//#define ADC_RU_LVA       ( AdcbResultRegs.ADCRESULT2)          //B2  ESC低压侧AN
-//#define ADC_RU_LVB       ( AdcdResultRegs.ADCRESULT1)          //D1  ESC低压侧BN
-//#define ADC_RU_LVC       ( AdccResultRegs.ADCRESULT0)          //C2  ESC低压侧CN
+//#define ADC_RU_LVA       ( AdcbResultRegs.ADCRESULT2)          //B2  ESC浣庡帇渚N
+//#define ADC_RU_LVB       ( AdcdResultRegs.ADCRESULT1)          //D1  ESC浣庡帇渚N
+//#define ADC_RU_LVC       ( AdccResultRegs.ADCRESULT0)          //C2  ESC浣庡帇渚N
 
-////NDVDSP37 210118 REV5.1/NPC3CA10020 211110 REV3/NESPW220114REV1 硬件电压采样通道与软件电压采样通道输出不符,需要找出原因??????---LJH
-//#define ADC_RU_HVA       ( AdcbResultRegs.ADCRESULT1)          //A0  ESC高压侧AN
-//#define ADC_RU_HVB       ( AdcaResultRegs.ADCRESULT0)          //B4  ESC高压侧BN
-//#define ADC_RU_HVC       ( AdcaResultRegs.ADCRESULT5)          //A4  ESC高压侧CN
+////NDVDSP37 210118 REV5.1/NPC3CA10020 211110 REV3/NESPW220114REV1 纭欢鐢靛帇閲囨牱閫氶亾涓庤蒋浠剁數鍘嬮噰鏍烽�氶亾杈撳嚭涓嶇,闇�瑕佹壘鍑哄師鍥�??????---LJH
+//#define ADC_RU_HVA       ( AdcbResultRegs.ADCRESULT1)          //A0  ESC楂樺帇渚N
+//#define ADC_RU_HVB       ( AdcaResultRegs.ADCRESULT0)          //B4  ESC楂樺帇渚N
+//#define ADC_RU_HVC       ( AdcaResultRegs.ADCRESULT5)          //A4  ESC楂樺帇渚N
 //
-//#define ADC_RU_LVA       ( AdcdResultRegs.ADCRESULT1)          //B2  ESC低压侧AN
-//#define ADC_RU_LVB       ( AdccResultRegs.ADCRESULT0)          //D1  ESC低压侧BN
-//#define ADC_RU_LVC       ( AdcbResultRegs.ADCRESULT2)          //C2  ESC低压侧CN
+//#define ADC_RU_LVA       ( AdcdResultRegs.ADCRESULT1)          //B2  ESC浣庡帇渚N
+//#define ADC_RU_LVB       ( AdccResultRegs.ADCRESULT0)          //D1  ESC浣庡帇渚N
+//#define ADC_RU_LVC       ( AdcbResultRegs.ADCRESULT2)          //C2  ESC浣庡帇渚N
 
-#define ADC_RU_IMA       ( AdcaResultRegs.ADCRESULT0)          //A2  ESC主电抗电网电流A
-#define ADC_RU_IMB       ( AdccResultRegs.ADCRESULT0)          //C3  ESC主电抗电网电流B
-#define ADC_RU_IMC       ( AdcdResultRegs.ADCRESULT0)          //D5  ESC主电抗电网电流C
+#define ADC_RU_IMA       ( AdcaResultRegs.ADCRESULT0)          //A2  ESC涓荤數鎶楃數缃戠數娴丄
+#define ADC_RU_IMB       ( AdccResultRegs.ADCRESULT0)          //C3  ESC涓荤數鎶楃數缃戠數娴丅
+#define ADC_RU_IMC       ( AdcdResultRegs.ADCRESULT0)          //D5  ESC涓荤數鎶楃數缃戠數娴丆
 
-#define ADC_RU_IBYA      ( AdcaResultRegs.ADCRESULT5)          //A0  ESC旁路电流A(ISU)
-#define ADC_RU_IBYB      ( AdcbResultRegs.ADCRESULT2)          //B2  ESC旁路电流B(ISV)
-#define ADC_RU_IBYC      ( AdcdResultRegs.ADCRESULT4)          //D4  ESC旁路电流C(ISW)
+#define ADC_RU_IBYA      ( AdcaResultRegs.ADCRESULT5)          //A0  ESC鏃佽矾鐢垫祦A(ISU)
+#define ADC_RU_IBYB      ( AdcbResultRegs.ADCRESULT2)          //B2  ESC鏃佽矾鐢垫祦B(ISV)
+#define ADC_RU_IBYC      ( AdcdResultRegs.ADCRESULT4)          //D4  ESC鏃佽矾鐢垫祦C(ISW)
 
-#define ADC_DC_UA        ( AdcdResultRegs.ADCRESULT3)          //D3  ESC A相直流电容电压IOU
-#define ADC_DC_UB        ( AdcaResultRegs.ADCRESULT1)          //A5  ESC B相直流电容电压IOV
-#define ADC_DC_UC        ( AdccResultRegs.ADCRESULT1)          //C4  ESC C相直流电容电压IOW
+#define ADC_DC_UA        ( AdcdResultRegs.ADCRESULT3)          //D3  ESC A鐩哥洿娴佺數瀹圭數鍘婭OU
+#define ADC_DC_UB        ( AdcaResultRegs.ADCRESULT1)          //A5  ESC B鐩哥洿娴佺數瀹圭數鍘婭OV
+#define ADC_DC_UC        ( AdccResultRegs.ADCRESULT1)          //C4  ESC C鐩哥洿娴佺數瀹圭數鍘婭OW
 
-#define ADC_RU_HVA       ( AdcaResultRegs.ADCRESULT2)          //A15 ESC高压侧AN
-#define ADC_RU_LVA       ( AdcdResultRegs.ADCRESULT1)          //D1  ESC低压侧AN
+#define ADC_RU_HVA       ( AdcaResultRegs.ADCRESULT2)          //A15 ESC楂樺帇渚N
+#define ADC_RU_LVA       ( AdcdResultRegs.ADCRESULT1)          //D1  ESC浣庡帇渚N
 
-#define ADC_RU_HVB       ( AdcbResultRegs.ADCRESULT1)          //B4  ESC高压侧BN
-#define ADC_RU_LVB       ( AdcbResultRegs.ADCRESULT0)          //B5  ESC低压侧BN
+#define ADC_RU_HVB       ( AdcbResultRegs.ADCRESULT1)          //B4  ESC楂樺帇渚N
+#define ADC_RU_LVB       ( AdcbResultRegs.ADCRESULT0)          //B5  ESC浣庡帇渚N
 
-#define ADC_RU_HVC       ( AdccResultRegs.ADCRESULT3)          //C2  ESC高压侧CN
-#define ADC_RU_LVC       ( AdcaResultRegs.ADCRESULT4)          //A4  ESC低压侧CN
+#define ADC_RU_HVC       ( AdccResultRegs.ADCRESULT3)          //C2  ESC楂樺帇渚N
+#define ADC_RU_LVC       ( AdcaResultRegs.ADCRESULT4)          //A4  ESC浣庡帇渚N
 
-#define ADC_RU_TEMP0     ( AdcbResultRegs.ADCRESULT3)          //B1 ESC 测试温度T1
-#define ADC_RU_TEMP1     ( AdcdResultRegs.ADCRESULT2)          //D2 ESC 测试温度T2
-#define ADC_RU_TEMP2     ( AdccResultRegs.ADCRESULT2)          //C5 ESC 测试温度T3
+#define ADC_RU_TEMP0     ( AdcbResultRegs.ADCRESULT3)          //B1 ESC 娴嬭瘯娓╁害T1
+#define ADC_RU_TEMP1     ( AdcdResultRegs.ADCRESULT2)          //D2 ESC 娴嬭瘯娓╁害T2
+#define ADC_RU_TEMP2     ( AdccResultRegs.ADCRESULT2)          //C5 ESC 娴嬭瘯娓╁害T3
 
 
 //#define IO_OUTPUT(IO,VAL) (IO)=(VAL);asm(" RPT #7 || NOP") ;asm(" RPT #7 || NOP")
@@ -637,12 +628,12 @@ extern float TestLoadCur[3][GEN_FUNDPOINT];
 
 
 inline float CLAPhaseLimit(float x){
-//    int tmp=CLAdiv(x,PI2);  //取整
+//    int tmp=CLAdiv(x,PI2);  //鍙栨暣
     return(x-PI2*(int)CLAdiv(x,PI2));
 }
 
 inline float PhaseLimit(float x){
-    return(x-PI2*(int)(x/PI2)); //取整,FS$$DIV,注意x必须大于0
+    return(x-PI2*(int)(x/PI2)); //鍙栨暣,FS$$DIV,娉ㄦ剰x蹇呴』澶т簬0
 }
 
 inline Uint16 PhaseLimitI(Uint16 x){
@@ -677,7 +668,7 @@ inline Uint16 PhaseLimitI(Uint16 x){
 //y(n) = y(n-1) + K*T*u(n)
 //ynz1:y(n-1)
 //u:Integral variable
-inline float32 IntergrateBackEuler(float32 u,float32 ynz1)     //积分函数
+inline float32 IntergrateBackEuler(float32 u,float32 ynz1)     //绉垎鍑芥暟
 {
 	return ynz1+u*CTRLSTEP_ALGORITHM_F;
 }

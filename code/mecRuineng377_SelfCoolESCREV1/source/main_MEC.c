@@ -19,8 +19,8 @@
 #pragma	CODE_SECTION(EPWM7INT ,"ram2func")
 
 /*
- * 文件版本：V2023.6.15
- * 修改日期：2023年6月15日
+ * 文件版本：V2023.7.10
+ * 修改日期：2023年7月10日
  */
 
 void main(void)
@@ -34,8 +34,8 @@ void main(void)
 	MemCopy(&Cla1ConstLoadStart, &Cla1ConstLoadEnd, &Cla1ConstRunStart);
 
     InitFlash_Bank0(); //初始化Flash。WY
-    CLA_configClaMemory(); //配置CLA存储空间。WY
-    CLA_initCpu1Cla1(); //初始化CLA。WY
+    CLA_configClaMemory(); //配置CLA存储空间。注意：本项目中未使用CLA。WY
+    CLA_initCpu1Cla1(); //初始化CLA。注意：本项目中未使用CLA。WY
 
     InitSciGpio(); //配置SCI（串口）。WY
 	InitCapGroupAct(); //此函数与电容投切相关，删除？？WY
@@ -50,10 +50,10 @@ void main(void)
 	InitGpio_NewBoard(); //配置GPIO。WY
     InitBeforeReadROM(); //读取铁电参数前的初始化操作。WY
 	OutputGpioInit_NEWBOARD(); //初始化GPIO。WY
-	ReadSpiPara();
+	ReadSpiPara(); //铁电存储芯片。WY
 
     initDPLL(&SPLL[0]); //锁相系数初始化的位置一定要放在铁电读取数据之后.
-    initDPLL(&SPLL[1]);
+    initDPLL(&SPLL[1]); //虚拟alfbet锁相，三相独立。
     initDPLL(&SPLL[2]);
 
     InitAfterReadROM(); //读取铁电后的初始化操作。WY
@@ -61,12 +61,11 @@ void main(void)
 	InitCtrlParam(0); //初始化控制参数。WY
 	InitParameters();			//Initialization of key parameters
 	DMAInitialize(); //本项目未启用DMA。WY
-	FFTInit(); //此函数无意义。WY
     InitAdc(); //配置ADC。WY
     InitEPwmGpio(); //配置EPWM相关的引脚。WY
     InitEPwm(); //配置EPWM。WY
 
-	Log_info1("start bios====%d", 0);
+	Log_info1("start bios====%d", 0); //打印日志
     BIOS_start(); //启动BIOS。WY
 
 }
@@ -76,17 +75,20 @@ void main(void)
  * 					13电磁兼容实验 14外壳防护实验 15结构和外观
  */
 
-void  TINT0_ISR(void)      // CPU-Timer 0
+/*此中断未使用。WY*/
+void  TINT0_ISR(void)
 {
     StopCpuTimer0();
 }
 
-void EPWM7INT(void)    // EPWM-4
+/*此中断未使用。WY*/
+void EPWM7INT(void)
 {
 	EPwm7Regs.ETCLR.bit.INT = 1;		//epwm4周期中断复位
 }
 
-interrupt void ECAP4_INT_ISR(void)     // eCAP4 Interrupt
+/*此中断未使用。WY*/
+interrupt void ECAP4_INT_ISR(void)
 {
 	ECap4Regs.ECCLR.bit.CEVT1 = 1;
 	ECap4Regs.ECCLR.bit.INT = 1;
