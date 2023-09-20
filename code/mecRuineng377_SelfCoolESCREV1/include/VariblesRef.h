@@ -247,20 +247,15 @@
 #define TotalHarmDistorionLoadCurrC		8
 
 #define shift(v,shift) (((Uint16)(v) << (shift))&((Uint16)1 << (shift)))
-#define SETUP_RATIO_CHANGE(original,ratio) (ratio) ? (float)(original)/(ratio) : (original)
+
+/*
+ * 触控屏下发参数时，调节参数变比。WY
+ */
+#define SETUP_RATIO_CHANGE(original, ratio) (ratio) ? (float)(original) / (ratio) : (original)
+
 #define GridFundaVoltD (SPLL[0].GridPLLVoltD)
 #define GridFundaVoltQ (SPLL[0].GridPLLVoltQ)
 
-//extern float GridPLLVoltD;
-//extern float GridPLLVoltQ;
-//extern float GridPLLVoltDp;
-//extern float GridPLLVoltQp;
-//extern float GridPLLVoltDn;
-//extern float GridPLLVoltQn;
-//extern float GridPLLVoltDpf;
-//extern float GridPLLVoltQpf;
-//extern float GridPLLVoltDnf;
-//extern float GridPLLVoltQnf;
 extern float GridFundaVoltND;
 extern float GridFundaVoltNQ;
 extern float PLLVoltD;
@@ -958,6 +953,9 @@ struct STRU_FAURCD{
 };
 extern struct STRU_FAURCD RecordFlash;
 
+/*
+ * 计时器。WY
+ */
 struct STRU_CNT_MS{
 	int inputStart;
 	int inputStop;
@@ -1016,7 +1014,7 @@ struct STRU_CNT_SEC{
 	int cntForCurMax;
 	int OverTimeCount;
 	int StopDelay;
-	int BypassSwitch;
+	int BypassSwitch; //该标志位无实际作用。WY
 };
 extern struct STRU_CNT_SEC CntSec;
 
@@ -1032,7 +1030,7 @@ struct STRU_STATE_FLAG
 	Uint16 harmCompPercParamRefresh :1;
 	Uint16 HarmonicWaveParamRefresh :1;
 	Uint16 autoAdcOffsetFlag :1;
-	Uint16 onceTimeAdcAutoAdjust :1;
+	Uint16 onceTimeAdcAutoAdjust :1; //AD自动校准。0：无需校准；1：等待校准。WY
 	Uint16 onceTimeStateMachine :1;
 	Uint16 onceRunStartFlag :1;
 	Uint16 realFaultFlag :1;
@@ -1103,14 +1101,13 @@ struct STRU_STATE_FLAG
 	Uint16 CurrCCountFlag :1;
 	Uint16 DelayCalculationFlag :1;
 	Uint16 MakeEnergyFlag :1;
-//	Uint16 ForceRecordWaveRefresh	:1;		//界面波形显示刷新
 	Uint16 ForceRMSRefresh :1;//多机并联均衡有效值刷新
 	Uint16 FactoryMode :4;//测试放电
 	Uint16 RechargeUdcFullFlag :1;//直流电容充电已冲饱
 	Uint16 EnTransformRatioMode :1;//高压侧变压器使能
 	Uint16 TransformRatioMode :3;//高压侧变压器组别模式
 	Uint16 cntForTHDi :1;
-	Uint16 PLLSafetyFlag :1;
+	Uint16 PLLSafetyFlag :1; //锁相环状态标志位。0：锁相异常；1：锁相正常。WY
 	Uint16 HFOverCurrentFlag :1;
 	Uint16 startOnecRec :1;//
 	Uint16 MainContactOnShadow :1;
@@ -1197,23 +1194,29 @@ typedef struct{
 }VirtulADStru;
 extern VirtulADStru VirtulAD;
 
-typedef struct{                  //int16型指针
-    int16 *GridHVoltA;           //GridHVoltA指针指向AdcaResultRegs.ADCRESULT2存储器的内存地址
-    int16 *GridHVoltB;
-    int16 *GridHVoltC;
-    int16 *GridLVoltA;
-    int16 *GridLVoltB;
-    int16 *GridLVoltC;
-    int16 *GridMainCurA;
-    int16 *GridMainCurB;
-    int16 *GridMainCurC;
-    int16 *GridBypassCurA;
-    int16 *GridBypassCurB;
-    int16 *GridBypassCurC;
-    int16 *ADCUDCA;
-    int16 *ADCUDCB;
-    int16 *ADCUDCC;
-}VirtulADStruVAL;
+/*
+ * AD真实采样值。WY
+ * 说明：结构体成员的数据类型为指针，指向AD结果寄存器。
+ */
+typedef struct
+{
+	int16 *GridHVoltA;           //GridHVoltA指针指向AdcaResultRegs.ADCRESULT2存储器的内存地址
+	int16 *GridHVoltB;
+	int16 *GridHVoltC;
+	int16 *GridLVoltA;
+	int16 *GridLVoltB;
+	int16 *GridLVoltC;
+	int16 *GridMainCurA;
+	int16 *GridMainCurB;
+	int16 *GridMainCurC;
+	int16 *GridBypassCurA;
+	int16 *GridBypassCurB;
+	int16 *GridBypassCurC;
+	int16 *ADCUDCA;
+	int16 *ADCUDCB;
+	int16 *ADCUDCC;
+} VirtulADStruVAL;
+
 extern VirtulADStruVAL VirtulADVAL;
 
 typedef struct{                  //程序当中使用的零偏值,和界面下发的零偏值差一个倍率
@@ -1240,7 +1243,12 @@ struct ESC_STRU_CNT_MS{
     int PllDelay;
     int HarmDisDelay; //电网电压突变持续的时间（单位：ms）。WY
     int FaultDelayFlag;
+
+    /*
+     * 重启设备前，需要等待指定的时长。WY
+     */
     int StartDelay;
+
     int SelfJc;
     int CutCurrDelay;
 };
@@ -1255,7 +1263,17 @@ struct ESC_STRU_CNT_SEC{
     int PRECHARGEDelayBY;  //防止上电因运输工程中磁保持误动作而炸机
     int PRECHARGEDelay;  //防止上电因运输工程中磁保持误动作而炸机
     int HWPowerSupDelay;
+
+    /*
+     * 计时器。
+     * 当主动停机时，经过指定时长后关闭15V电源。WY
+     */
     int HWPowerStopDelay;
+
+    /*
+     * 计时器。
+     * 当硬件故障发生时，经过指定时长后关闭15V电源。WY
+     */
     int HWPowerFaultDelay;
     int UNCurrDelay1;
     int UNCurrDelay2;
@@ -1273,8 +1291,8 @@ typedef struct
 	Uint16 FaultskipFlag :1;
 	Uint16 faultFlag :1; //故障标志位。0，不存在故障；1，存在故障。WY
 	Uint16 resetFlag :1; //复位标志位。0，无需执行复位操作；1，等待执行复位操作。WY
-	Uint16 stopFlag :1;
-	Uint16 startFlag :1;
+	Uint16 stopFlag :1; //停机标志位。0：无需执行停机操作；1：等待执行停机操作。WY
+	Uint16 startFlag :1; //启动设备标志位。0：无需启动设备；1：等待启动设备。WY
 	Uint16 autoStFlag :4;
 	Uint16 realFaultFlag :1;
 	Uint16 FunContDelayFlag :1;
@@ -1287,7 +1305,23 @@ typedef struct
 	Uint16 RELAYCONTROLFlag :1;
 	Uint16 TurnOffPeakFaultFlag :1;
 	Uint16 HWPowerSupFlag :1;
+
+	/*
+	 * 当主动停机时，15V电源关闭标志位。WY
+	 *
+	 * 0：已关闭15V电源；
+	 * 1：等待关闭15V电源。
+	 */
 	Uint16 HWPowerSTOPFlag :1;
+
+	/*
+	 * 当硬件故障发生时，15V电源关闭标志位。WY
+	 *
+	 * 说明：当硬件故障发生时，关闭15V电源以降低能耗。
+	 *
+	 * 0：无硬件故障发生，无需关闭15V电源；
+	 * 1：硬件故障发生，需关闭15V电源。
+	 */
 	Uint16 HWPowerFAULTFlag :1;
 	Uint16 FaultJudgeFlag :1;
 	Uint16 BYFEEDBACKFLAG :1;
@@ -1307,14 +1341,14 @@ typedef struct
 	int EscWaitRunDelayCnt;
 	int EscStandyDelayCnt1;
 	int EscStandyDelayCnt2;
-	int Volttarget; //负载电压有效值的目标值。WY
+	int Volttarget; //用户设定的负载电压（有效值）目标值。WY
 }ESCCTRLVALFLAG;
 extern ESCCTRLVALFLAG ESCFlagA,ESCFlagB,ESCFlagC;
 
 typedef struct
 {
 	float UNIT_OVER_TEMP; //单元外壳温度上限。WY
-	float BOARD_OVER_TEMP; //散热片出风口温度上限。WY
+	float BOARD_OVER_TEMP; //片出风口散热温度上限。WY
 	float INDUCE_OVER_TEMP;// 电抗器线圈温度限制
 	float MotherBoardTempterature;// 板载温度
 	float HeatSinkTempterature;// 散热片温度
@@ -1508,24 +1542,25 @@ typedef union
 extern Uni_State StateEventFlag1;			//工作状态
 
 //---modbus读点表
-typedef struct{
-	Uint16 VoltTheta;      						//锁相角度
-	int apfOutCurA_rmsF;      				//逆变侧A相电流
-	int apfOutCurB_rmsF;      				//逆变侧B相电流
-	int apfOutCurC_rmsF;      				//逆变侧C相电流
-	int loadCurA_rmsF;      					//负载侧A相电流
-	int loadCurB_rmsF;      					//负载侧B相电流
-	int loadCurC_rmsF;      					//负载侧C相电流
-	int gridCurA_rmsF;      					//电网侧A相电流
-	int gridCurB_rmsF;      					//电网侧B相电流
-	int gridCurC_rmsF;      					//电网侧C相电流
-	int THDu_GridAF;      					//电网电压A畸变率
-	int THDu_GridBF;      					//电网电压B畸变率
-	int THDu_GridCF;      					//电网电压C畸变率
-	int THDi_LoadAF;      					//负载侧电流A畸变率
-	int THDi_LoadBF;      					//负载侧电流B畸变率
-	int THDi_LoadCF;      					//负载侧电流C畸变率
-	int THDi_GridAF;      					//电网侧电流A畸变率
+typedef struct
+{
+	Uint16 VoltTheta; //锁相角度
+	int apfOutCurA_rmsF; //逆变侧A相电流
+	int apfOutCurB_rmsF; //逆变侧B相电流
+	int apfOutCurC_rmsF; //逆变侧C相电流
+	int loadCurA_rmsF; //负载侧A相电流
+	int loadCurB_rmsF; //负载侧B相电流
+	int loadCurC_rmsF; //负载侧C相电流
+	int gridCurA_rmsF; //电网侧A相电流
+	int gridCurB_rmsF; //电网侧B相电流
+	int gridCurC_rmsF; //电网侧C相电流
+	int THDu_GridAF; //电网电压A畸变率
+	int THDu_GridBF; //电网电压B畸变率
+	int THDu_GridCF; //电网电压C畸变率
+	int THDi_LoadAF; //负载侧电流A畸变率
+	int THDi_LoadBF; //负载侧电流B畸变率
+	int THDi_LoadCF; //负载侧电流C畸变率
+	int THDi_GridAF; //电网侧电流A畸变率
 	int THDi_GridBF;      					//电网侧电流B畸变率
 	int THDi_GridCF;      					//电网侧电流C畸变率
 	int rvsd1[8];      						//备用1
@@ -1539,7 +1574,7 @@ typedef struct{
 	int LoadCurRms; 						//ABC总的负载的电流有效值
 	int VoltInA_rms; 						//A相电网电压有效值
 	int VoltInB_rms; 							//B相电网电压有效值
-    int VoltInC_rms;                   //C相电网电压有效值
+	int VoltInC_rms;                   //C相电网电压有效值
 	int VoltOutA_rms;			        //A相电网电流有效值
 	int VoltOutB_rms;							//B相电网电流有效值
 	int VoltOutC_rms;							//C相电网电流有效值
@@ -1615,11 +1650,11 @@ typedef struct{
 	Uint16 FaultCharacter4;						//故障字4
 	Uint16 FaultCharacter5;						//故障字5
 //    Uint16 FaultCharacter6;                     //故障字6
-	int16  choose1;
-	int16  choose2;
-	int16  choose3;
-	int16  choose4;
-	int16  choose5;
+	int16 choose1;
+	int16 choose2;
+	int16 choose3;
+	int16 choose4;
+	int16 choose5;
 	Uint16 SlaveSoftWare5;                      //从机版本:开关频率
 	Uint16 SlaveSoftWare1;
 	Uint16 SlaveSoftWare2;
@@ -1856,6 +1891,11 @@ typedef struct{
 }Stru_Virtu_ZeroOffset;
 extern Stru_Virtu_ZeroOffset VirtuZeroOffset;
 
+/*
+ * 由设备自身计算出的AD零偏基准值。WY
+ * 说明：
+   当AD输入浮空时，将AD采样真实值定义为【AD零偏基准值】。
+ */
 typedef struct{
     int16 gridVoltHAOffset;              //界面显示零偏校准值
     int16 gridVoltHBOffset;
@@ -1872,8 +1912,8 @@ typedef struct{
     int16 aDCUDCA;
     int16 aDCUDCB;
     int16 aDCUDCC;
-
 }Stru_Virtu_ZeroOffSETVAL;
+
 extern Stru_Virtu_ZeroOffSETVAL VirtuZeroOffSETVAL;
 
 typedef struct{
@@ -2019,57 +2059,61 @@ typedef union{
 	Stru_Infer B;
 }Uni_Infer;
 
-struct Stru_FactorySet{
+/*
+ * 厂家设置参数。WY
+ */
+struct Stru_FactorySet
+{
 //原厂家设置
-	int PhaseControl;               //ESC相位控制                       //Q2D_ratio;					//1 QD解耦系数
-	int LoadCurlimit;               //ESC负载电流限制              //int D2Q_ratio;					//2 死区校正
-	int SyncHardwareLead;			//3 同步超前点数
-	int SampleLead;					//4 采样超前点数
-	int T1PR;						//5 开关周期
-	int reactPowGivenLimit;			//6 给定无功限幅 //未使用
-	int Curr_MinCtrlFAN;			//7最小负载控制风机启动
-	int Curr_MaxCtrlFAN;		    //8最大负载控制风机全速
-	int Temp_MinCtrlFAN;			//9最小温度控制风机启动
-	int Temp_MaxCtrlFAN;			//10最大温度控制风机全速
-	int FanStartMinDUTY;			//11风机启动最小占空比
-	int RateLoadCurrLimit;		    //12额定电流限制
-	int CapacitySelection;		    //13容量选择
-	int dcCapVoltRatio;				//14ESC直流电容电压采样
-	int loadVoltRatio;				//15ESC负载电压采样
-	int gridVoltRatio;				//16 电网电压采样
-	int outputCurRatio;				//17 输出电流采样
-	int loadCurRatio;				//18
-	int AutoStartMode;				//19
-	int SPWM;						//20 spwm标志位
-	int RecordMode;					//21 测试录波标志位
-	int isHarmCompensateMode;		//22 BW滤波标志位
-	int bypassCurrRatio;		    //23 ESC旁路电流系数
-	int DC_ERR_LIMIT;				//24 中点控制饱和
-	int PIlim_Udc;					//25 直流电压饱和
-	int PIlim_I;					//26 PWM内环电流饱和
-	int phaseErrLimit;				//27 锁相误差限幅
-	int kp_Pll;						//28  锁相比例
-	int ki_Pll;						//29 锁相积分
-	int kp_Dc_Div;					//30 中点控制比例
-	int ki_Dc_Div;					//31 中点控制积分
-	int kp_Dc;						//32 直流电压比例
-	int ki_Dc;						//33 直流电压积分
-	int kp_Cur;						//34 电流环比例
-	int ki_Cur;						//35 电流环积分
-	int GV_RMS_UNDER;				//36
-	int GV_RMS_OVER;				//37
-	int GF_OVER;					//38电网过频
-	int GF_UNDER;					//39电网欠频
-	int ESCDCVOLITLIMIT;			//40ESC直流电容电压限制值
-	int VoltFallResponseLimit;		//41ESC电压跌落快速响应限值
-	int OUTCUR_OVER_INS;			//42瞬时电流过流
-	int OUTCUR_OVER_RMS;			//43电流有效值过流
-	int OUT_OVER_LOAD;				//44输出电流过载
-	int OutCurMaxLimit;				//45输出电流限幅
-	int UNIT_OVER_TEMP;				//46散热器过温
-	int reactPrCompPerc;            //47无功比例系数
-	int harmCompPerc;               //48ESC测试固定占空比
-	int negCurCompPerc;             //49ESC IGBT测试死区时间
+	int PhaseControl;//ESC相位控制                       //Q2D_ratio;					//1 QD解耦系数
+	int LoadCurlimit;//ESC负载电流限制              //int D2Q_ratio;					//2 死区校正
+	int SyncHardwareLead;//3 同步超前点数
+	int SampleLead;//4 采样超前点数
+	int T1PR;//5 开关周期
+	int reactPowGivenLimit;//6 给定无功限幅 //未使用
+	int Curr_MinCtrlFAN;//7最小负载控制风机启动
+	int Curr_MaxCtrlFAN;//8最大负载控制风机全速
+	int Temp_MinCtrlFAN;//9最小温度控制风机启动
+	int Temp_MaxCtrlFAN;//10最大温度控制风机全速
+	int FanStartMinDUTY;//11风机启动最小占空比
+	int RateLoadCurrLimit;//12额定电流限制
+	int CapacitySelection; //13 容量设置。WY
+	int dcCapVoltRatio;//14ESC直流电容电压采样
+	int loadVoltRatio;//15ESC负载电压采样
+	int gridVoltRatio;//16 电网电压采样
+	int outputCurRatio;//17 输出电流采样
+	int loadCurRatio;//18
+	int AutoStartMode;//19
+	int SPWM;//20 spwm标志位
+	int RecordMode;//21 测试录波标志位
+	int isHarmCompensateMode;//22 BW滤波标志位
+	int bypassCurrRatio;//23 ESC旁路电流系数
+	int DC_ERR_LIMIT;//24 中点控制饱和
+	int PIlim_Udc;//25 直流电压饱和
+	int PIlim_I;//26 PWM内环电流饱和
+	int phaseErrLimit;//27 锁相误差限幅
+	int kp_Pll;//28  锁相比例
+	int ki_Pll;//29 锁相积分
+	int kp_Dc_Div;//30 中点控制比例
+	int ki_Dc_Div;//31 中点控制积分
+	int kp_Dc;//32 直流电压比例
+	int ki_Dc;//33 直流电压积分
+	int kp_Cur;//34 电流环比例
+	int ki_Cur;//35 电流环积分
+	int GV_RMS_UNDER;//36
+	int GV_RMS_OVER;//37
+	int GF_OVER;//38电网过频
+	int GF_UNDER;//39电网欠频
+	int ESCDCVOLITLIMIT;//40ESC直流电容电压限制值
+	int VoltFallResponseLimit;//41ESC电压跌落快速响应限值
+	int OUTCUR_OVER_INS;//42瞬时电流过流
+	int OUTCUR_OVER_RMS;//43电流有效值过流
+	int OUT_OVER_LOAD;//44输出电流过载
+	int OutCurMaxLimit;//45输出电流限幅
+	int UNIT_OVER_TEMP;//46散热器过温
+	int reactPrCompPerc;//47无功比例系数
+	int harmCompPerc;//48ESC测试固定占空比
+	int negCurCompPerc;//49ESC IGBT测试死区时间
 	int ESCTESTDATA1;
 	int ESCTESTDATA2;
 	int ESCTESTDATA3;
@@ -2077,9 +2121,9 @@ struct Stru_FactorySet{
 	int TempEnvirProvalue;
 	int THD_K;
 	int THD_B;
-	int VoltProport;			//电压补偿P
-	int VoltIntegral;			//电压补偿I
-	int VoltDerivative;			//ESC PI限幅值
+	int VoltProport;//电压补偿P
+	int VoltIntegral;//电压补偿I
+	int VoltDerivative;//ESC PI限幅值
 	int VoltDQSource;
 	int NegaQPowerCalib;
 	int NegaDPowerCalib;
@@ -2090,35 +2134,35 @@ struct Stru_FactorySet{
 	int windColdCtr;
 	int PllCalibrPhase;
 	int debugDispFlag;
-	int R_SSwitchTime;          //ESC 运行转待机时间
-	int S_RSwitchTime;          //ESC 待机转运行时间
+	int R_SSwitchTime;//ESC 运行转待机时间
+	int S_RSwitchTime;//ESC 待机转运行时间
 	int WholeOutCurRmsLimit;
-	int StandCosFiLimit;	//
-	int StandUbanCurPer;	//
-	Uint16 BOARD_OVER_TEMP;		//单元过温
-	//场景设置
-	Uint16 BG_MODEL;			//场景设置
+	int StandCosFiLimit;//
+	int StandUbanCurPer;//
+	Uint16 BOARD_OVER_TEMP;//单元过温
+//场景设置
+	Uint16 BG_MODEL;//场景设置
 //	Uint16 LED_MODEL;
-	INITCSI INIT_SCIA_BAUD;		//蓝牙A波特率
+	INITCSI INIT_SCIA_BAUD;//蓝牙A波特率
 	Uint16 CommunicationVersion;//communicationVersion
-	INITCSI INIT_SCIB_BAUD;		//蓝牙B波特率
-	INITCSI INIT_SCIC_BAUD;		//蓝牙C波特率
-	Uni_Infer Infer;	//自动相序校正
-	Uni_HarmonicInfer HarmonicInfer;	//自动谐波校正
-	Uint16 VoltageDistortionValue;				//电压畸变率设定值
-	Uint16 PowerGridCurrDistortionValue;		//电网侧电流畸变率设定值
-	Uint16 LoadCurrDistortionValue;				//负载侧电流畸变率设定值
-	Uint16 PowerGridCurrSetPoint;				//电网侧电流设定值
-	Uint16 LoadCurrSetPoint;					//负载侧电流设定值
+	INITCSI INIT_SCIB_BAUD;//蓝牙B波特率
+	INITCSI INIT_SCIC_BAUD;//蓝牙C波特率
+	Uni_Infer Infer;//自动相序校正
+	Uni_HarmonicInfer HarmonicInfer;//自动谐波校正
+	Uint16 VoltageDistortionValue;//电压畸变率设定值
+	Uint16 PowerGridCurrDistortionValue;//电网侧电流畸变率设定值
+	Uint16 LoadCurrDistortionValue;//负载侧电流畸变率设定值
+	Uint16 PowerGridCurrSetPoint;//电网侧电流设定值
+	Uint16 LoadCurrSetPoint;//负载侧电流设定值
 	Uint16 CompensatingHarmonicQuantity;
 //新增设置
 	Uint16 StandbyRecoveryTime;
-	Uint16 AutoCurr;							//回差电流
+	Uint16 AutoCurr;//回差电流
 	Uint16 StandbyMode;
 	Uint16 VolSurTime;
 	Uint16 ModeSwitchingCurrent;
-    Uint16 FaultRecord;
-    Uint16 rvsd;
+	Uint16 FaultRecord;
+	Uint16 rvsd;
 	Uint16 CRC;
 };
 extern struct Stru_FactorySet FactorySet;
@@ -2169,21 +2213,22 @@ extern struct VARIZEROVAL VariZeroOffsetVAL;
 extern struct VARIZEROVAL VariZeroOffsetRatioVAL;
 
 
-typedef struct{
-	Uint16 apfWiringmethod		:1; 		//Bit0：接线方式,0:三相四线制 1:三相三线制
-	Uint16 startingMethod		:1;			//Bit1：启动方式,0:自动模式 1:手动模式
-	Uint16 positionCT			:1;			//Bit2：CT位置,0:电网侧 1:负载侧
-	Uint16 harmCompEn			:1;			//Bit3：谐波补偿模式,0:关闭 1:打开
-	Uint16 negCurCompFlag		:1;			//Bit4：不平衡补偿模式,0:关闭 1:打开
-	Uint16 AVCMode				:1;			//Bit5：AVC模式,0:关闭 1:打开
-	Uint16 constantQFlag		:2;			//Bit6~7：无功补偿模式,	0:恒无功功率  1:恒无功电流
-											//		 				2:恒功率因数  3:关闭无功补偿
-	Uint16 VoltageMode			:3;			//Bit8~10：ESC电压补偿模式,	0:升压  1:降压 2:升降压补偿模式 3:不平衡补偿模式 4:无功补偿模式
-	Uint16 prioritizedModeFlag	:2;			//Bit11~12：优先设定,0,1:无功优先2:谐波优先3:不平衡优先
-											//					4:快速补偿5:自动补偿6:电压优先
-	Uint16 StandbyModeFlag		:1;			//Bit13：待机模式开启标志
-	Uint16 TransformerSection	:2;			//Bit14~15：变压器连接组别
-}Stru_WordMode;
+typedef struct
+{
+	Uint16 apfWiringmethod :1;//Bit0：接线方式,0:三相四线制 1:三相三线制
+	Uint16 startingMethod :1;//Bit1：启动方式,0:自动模式 1:手动模式
+	Uint16 positionCT :1;//Bit2：CT位置,0:电网侧 1:负载侧
+	Uint16 harmCompEn :1;//Bit3：谐波补偿模式,0:关闭 1:打开
+	Uint16 negCurCompFlag :1;//Bit4：不平衡补偿模式,0:关闭 1:打开
+	Uint16 AVCMode :1;//Bit5：AVC模式,0:关闭 1:打开
+	Uint16 constantQFlag :2;//Bit6~7：无功补偿模式,	0:恒无功功率  1:恒无功电流
+//		 				2:恒功率因数  3:关闭无功补偿
+	Uint16 VoltageMode :3;//Bit8~10：ESC电压补偿模式,	0:升压  1:降压 2:升降压补偿模式 3:不平衡补偿模式 4:无功补偿模式
+	Uint16 prioritizedModeFlag :2;//Bit11~12：优先设定,0,1:无功优先2:谐波优先3:不平衡优先
+//					4:快速补偿5:自动补偿6:电压优先
+	Uint16 StandbyModeFlag :1; //Bit13：待机模式开启标志位。该标志位未使用。WY
+	Uint16 TransformerSection :2;//Bit14~15：变压器连接组别
+} Stru_WordMode;
 typedef union{
 	Uint16 all;
 	Stru_WordMode B;
@@ -2191,21 +2236,25 @@ typedef union{
 
 //extern Uni_WordMode WordMode;
 
-struct Stru_UserSetting{		//eeprom start:0x00.length
+/*
+ * 用户设置参数。WY
+ */
+struct Stru_UserSetting
+{//eeprom start:0x00.length
 	Uni_WordMode WordMode;
-	int TargetCurrentUnbalance;		//不平衡度目标值
-	int transfRatio;			//CT变比
-	int GV_RMS_UNDER;			 //电网有效值欠压
-	int GV_RMS_OVER;			 //电网有效值过压
-    int Backdiffvalue;           //回差值
-	int ConstantReactivePower;  //恒无功功率指令
+	int TargetCurrentUnbalance;//不平衡度目标值变比系数。WY
+	int transfRatio;//CT变比
+	int GV_RMS_UNDER;//电网有效值欠压
+	int GV_RMS_OVER;//电网有效值过压
+	int Backdiffvalue;//回差值
+	int ConstantReactivePower;//恒无功功率指令
 	int TransformRatioParall;
-	int VolttargetA;             //A相电压目标值
-	int VolttargetB;             //B相电压目标值
-	int VolttargetC;             //C相电压目标值
-	int VoltThreSholdA;          //A相电压门限值
-	int VoltThreSholdB;          //B相电压门限值
-	int VoltThreSholdC;          //C相电压门限值
+	int VolttargetA; //A相负载电压（有效值）目标值。WY
+	int VolttargetB; //B相负载电压（有效值）目标值。WY
+	int VolttargetC; //C相负载电压（有效值）目标值。WY
+	int VoltThreSholdA; //A相负载电压（有效值）门限值。WY
+	int VoltThreSholdB; //B相负载电压（有效值）门限值。WY
+	int VoltThreSholdC; //C相负载电压（有效值）门限值。WY
 	int AutoWaitCurr;
 	int Mode_PP;
 	Uint16 CRC;

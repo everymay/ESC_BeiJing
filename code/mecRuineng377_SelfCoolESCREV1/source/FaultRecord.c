@@ -44,12 +44,7 @@ void SetWaveRecordMode(Uint16 mode)   //记录故障波形的模式
 //01:1倍采样速率 (根据从机自动按照最高速率16k,19.2k,25.6k,32k)
 //03:1/4倍(4k,4.8k,6.4k,8k)       04:1/8倍(1k,2.4k,3.2k,4k)
 int TestChan = 0,TESTPhase=0;
-//extern float32 testout[];
-//extern float32 testin[];
-//extern float rtb_Vq[];
-//extern Uint16 MeanHalfPos;
-//extern float CurrAD,ZCPJudgea,ZCPJudgeb;
-//extern float CurrentV,DBG_TBCTR,DBG_Esc_Phase,VolCha;
+
 
 /*
  * 功能：故障录波。WY

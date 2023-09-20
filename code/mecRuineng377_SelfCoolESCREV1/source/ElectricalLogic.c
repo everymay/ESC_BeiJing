@@ -49,7 +49,7 @@ void OutputGpioInit_NEWBOARD(void)
 	SET_BYPASS_CONTACT_ACTION_B(ESC_ACTION_ENABLE); //±ÕºÏBÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷±ÕºÏ¡£WY
 	SET_BYPASS_CONTACT_ACTION_C(ESC_ACTION_ENABLE); //±ÕºÏCÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷±ÕºÏ¡£WY
 
-	SET_SCRA_ENABLE(ESC_ACTION_DISABLE); //¹Ø¶ÏAÏàÅÔÂ·¾§Õ¢¹Ü¡£WY¡£´Ë´¦Ó¦Îªµ¼Í¨¡£
+	SET_SCRA_ENABLE(ESC_ACTION_DISABLE); //¹Ø¶ÏAÏàÅÔÂ·¾§Õ¢¹Ü¡£WY¡£
 	SET_SCRB_ENABLE(ESC_ACTION_DISABLE); //¹Ø¶ÏBÏàÅÔÂ·¾§Õ¢¹Ü¡£WY
 	SET_SCRC_ENABLE(ESC_ACTION_DISABLE); //¹Ø¶ÏCÏàÅÔÂ·¾§Õ¢¹Ü¡£WY
 
@@ -787,17 +787,17 @@ void ESCWAITTURNRUN(ESCCTRLVALFLAG *ESCFlag)
  * ¹¦ÄÜ£ºÖ´ÐÐ¡¾Ö÷¶¯Í£»ú¡¿×´Ì¬¡£WY
  * ÊäÈë²ÎÊýESCFlag£º´ýÖ´ÐÐµÄXÏà²ÎÊý¡£XµÄÈ¡Öµ¼¯ºÏÎª{A, B, C}¡£
  */
+int test = 0;
 void ESCSTOPSTATE(ESCCTRLVALFLAG *ESCFlag)
 {
 	/*´¦ÀíAÏà¡£WY*/
 	if (ESCFlag->PHASE == 1)
 	{
-		SET_SCRA_ENABLE(ESC_ACTION_ENABLE); //¿ªÍ¨AÏàÅÔÂ·¾§Õ¢¹Ü¡£WY
-		SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE); //±ÕºÏAÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷¡£WY
+		SET_SCRA_ENABLE(ESC_ACTION_ENABLE);
+		SET_BYPASS_CONTACT_ACTION_A(ESC_ACTION_ENABLE);
 
 		SET_IGBT_ENA(IGBT_DISABLE); //Ó²¼þÊ§ÄÜAÏàPWM¡£WY
 		DisablePWMA(); //Èí¼þ·âËøAÏàPWM¡£WY
-
 	}
 
 	/*´¦ÀíBÏà¡£WY*/
@@ -857,24 +857,46 @@ void FAULTSTATE(ESCCTRLVALFLAG *ESCFlag)
 
 void FLAULTJUDGE(ESCCTRLVALFLAG *ESCFlag)         // ¹ÊÕÏ×ÖÅÐ¶ÏÍê³Éºó£¬Èë¿Ú
 {
-    if(ESCFlag->faultFlag == 1){
-        #if !TEST_RUNTIME
-        if(ESCFlag->PHASE == 1)        StateEventFlag_A = STATE_EVENT_FAULT_A;
-        if(ESCFlag->PHASE == 2)        StateEventFlag_B = STATE_EVENT_FAULT_B;
-        if(ESCFlag->PHASE == 3)        StateEventFlag_C = STATE_EVENT_FAULT_C;
-        if(StateEventFlag_A == STATE_EVENT_FAULT_A){
-            ESCFlagA.stopFlag = 1;
-            ESCFlagA.startFlag = 0;
+    if (ESCFlag->faultFlag == 1) //´æÔÚ¹ÊÕÏ¡£WY
+    {
+#if !TEST_RUNTIME
+
+        /*´¦ÀíAÏà*/
+        if (ESCFlag->PHASE == 1) //AÏà¡£WY
+        {
+            StateEventFlag_A = STATE_EVENT_FAULT_A; //ÇÐ»»AÏà×´Ì¬»úÖÁ£º¹ÊÕÏÍ£»ú×´Ì¬¡£WY
         }
-        if(StateEventFlag_B == STATE_EVENT_FAULT_B){
+
+        /*´¦ÀíBÏà*/
+        if (ESCFlag->PHASE == 2)
+        {
+            StateEventFlag_B = STATE_EVENT_FAULT_B;
+        }
+
+        /*´¦ÀíCÏà*/
+        if (ESCFlag->PHASE == 3)
+        {
+            StateEventFlag_C = STATE_EVENT_FAULT_C;
+        }
+
+        /*´¦ÀíAÏà*/
+        if (StateEventFlag_A == STATE_EVENT_FAULT_A) //AÏà´¦ÓÚ¹ÊÕÏÍ£»ú×´Ì¬¡£WY
+        {
+            ESCFlagA.stopFlag = 1; //µÈ´ýÖ´ÐÐÍ£»ú²Ù×÷¡£WY
+            ESCFlagA.startFlag = 0; //µÈ´ýÆô¶¯Éè±¸¡£WY
+        }
+
+        if (StateEventFlag_B == STATE_EVENT_FAULT_B)
+        {
             ESCFlagB.stopFlag = 1;
             ESCFlagB.startFlag = 0;
         }
-        if(StateEventFlag_C == STATE_EVENT_FAULT_C){
+        if (StateEventFlag_C == STATE_EVENT_FAULT_C)
+        {
             ESCFlagC.stopFlag = 1;
             ESCFlagC.startFlag = 0;
         }
-        #endif
+#endif
     }
 }
 
@@ -991,20 +1013,20 @@ void SetStartCtrl(void)
 
 				if (ESCBYRelayCNTA != 1)//AÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
 				{
-					ESCFlagA.HWPowerSTOPFlag = 1;
-					ESCFlagA.ESCCntSec.HWPowerStopDelay = 0;
+					ESCFlagA.HWPowerSTOPFlag = 1; //Ö÷¶¯Í£»ú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+					ESCFlagA.ESCCntSec.HWPowerStopDelay = 0; //ÇåÁã¼ÆÊ±Æ÷¡£WY
 				}
 
 				if (ESCBYRelayCNTB != 1)//BÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
 				{
-					ESCFlagB.HWPowerSTOPFlag = 1;
-					ESCFlagB.ESCCntSec.HWPowerStopDelay = 0;
+					ESCFlagB.HWPowerSTOPFlag = 1; //Ö÷¶¯Í£»ú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+					ESCFlagB.ESCCntSec.HWPowerStopDelay = 0; //ÇåÁã¼ÆÊ±Æ÷¡£WY
 				}
 
 				if (ESCBYRelayCNTC != 1)//CÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
 				{
-					ESCFlagC.HWPowerSTOPFlag = 1;
-					ESCFlagC.ESCCntSec.HWPowerStopDelay = 0;
+					ESCFlagC.HWPowerSTOPFlag = 1; //Ö÷¶¯Í£»ú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+					ESCFlagC.ESCCntSec.HWPowerStopDelay = 0; //ÇåÁã¼ÆÊ±Æ÷¡£WY
 				}
 
 				ESCFlagA.onceRunStartFlag = 1;
@@ -1039,7 +1061,7 @@ void SetStartCtrl(void)
 
 				if (ESCFlagA.startFlag == 1) //AÏàÐèÒªÖ´ÐÐÆô¶¯²Ù×÷¡£WY
 				{
-					SoeRecData(SOE_GP_EVENT); //Éú³ÉÈÕÖ¾¡£¡£WY
+					SoeRecData(SOE_GP_EVENT); //Éú³ÉÈÕÖ¾¡£WY
 					ESCFlagA.stopFlag = 0; //AÏàÎÞÐèÖ´ÐÐÍ£»ú²Ù×÷¡£WY
 
 					if ((GET_GV_VOL_CTRL_A == 1)  //AÏàÐ¡¼ÌµçÆ÷±ÕºÏ¡£WY
@@ -1102,7 +1124,7 @@ void SetStartCtrl(void)
 					ESCFlagA.startFlag = 0;
 
 					ESCFlagA.PeakStopFlag = 1;
-					SET_SCRA_ENABLE(ESC_ACTION_ENABLE);
+					SET_SCRA_ENABLE(ESC_ACTION_ENABLE); //²âÊÔ¡£WY¡£
 					StateEventFlag_A = STATE_EVENT_STOP_A;
 				}
 			}
@@ -1478,118 +1500,118 @@ int CURRFUNCTRFlag = 1,TEMPFUNCTRFlag = 1;
 int CURRCTRLFUNFlag = 0,TEMPCTRLFUNFlag = 0;
 float CURRMaxValue = 0;
 
-float tem2;
+float tem2; //Ë÷Òý¡£ÓÃÓÚÔÚ¡¾ÎÂ¶È-µçÁ÷¡¿±íÖÐ²éÕÒÊý¾Ý¡£WY
 
 void FunAutoControl(void)
 {
-    WindADVal0 = (int)ADC_RU_TEMP0;
-    WindADVal1 = (int)ADC_RU_TEMP1;
-//    WindADVal2 = (int)ADC_RU_TEMP2;   //Î´Ê¹ÓÃ
-    FanTempValue0 = ntc_tab[(Uint16)WindADVal0];
-    FanTempValue1 = ntc_tab[(Uint16)WindADVal1];
-//    FanTempValue2 = ntc_tab[(Uint16)WindADVal2];
-    TempData[0] = 0.7*TempData[0] + 0.3*FanTempValue0;
-    TempData[1] = 0.7*TempData[1] + 0.3*FanTempValue1;
-//    TempData[2] = 0.7*TempData[2] + 0.3*FanTempValue2;
-    TempMaxValue = TempCompFuntion(TempData,2);   //²ÉÑùÎÂ¶ÈÈ¡×î´óÖµ
-    CURRMaxValue = CURRCompFuntion(CURRData,6);   //ÔÚÈýÏàµçÍøµçÁ÷ºÍ¸ºÔØµçÁ÷ÖÐÈ¡×î´óÖµ
-    WindCold.HeatSinkTempterature = 0.9*WindCold.HeatSinkTempterature + 0.1*TempMaxValue;
-    if(WindCold.HeatSinkTempterature > 150)      WindCold.HeatSinkTempterature = 150;
-    if(WindCold.HeatSinkTempterature < (-30))    WindCold.HeatSinkTempterature = -30;
+	WindADVal0 = (int) ADC_RU_TEMP0;
+	WindADVal1 = (int) ADC_RU_TEMP1;
+	FanTempValue0 = ntc_tab[(Uint16) WindADVal0];
+	FanTempValue1 = ntc_tab[(Uint16) WindADVal1];
+	TempData[0] = 0.7 * TempData[0] + 0.3 * FanTempValue0;
+	TempData[1] = 0.7 * TempData[1] + 0.3 * FanTempValue1;
+	TempMaxValue = TempCompFuntion(TempData, 2);//²ÉÑùÎÂ¶ÈÈ¡×î´óÖµ
+	CURRMaxValue = CURRCompFuntion(CURRData, 6);//ÔÚÈýÏàµçÍøµçÁ÷ºÍ¸ºÔØµçÁ÷ÖÐÈ¡×î´óÖµ
+	WindCold.HeatSinkTempterature = 0.9 * WindCold.HeatSinkTempterature + 0.1 * TempMaxValue;
+	if (WindCold.HeatSinkTempterature > 150)
+		WindCold.HeatSinkTempterature = 150;
+	if (WindCold.HeatSinkTempterature < (-30))
+		WindCold.HeatSinkTempterature = -30;
 
-              if(GET_CTRL24_POWER != 1){
-                  EPwm1Regs.AQCSFRC.bit.CSFA = 0;
-              }
-              if(TempEnvirProvalue == 1){    //ÎÂÉý²âÊÔÊ±Ê¹ÓÃ,°Ù·Ö°ÙÕ¼¿Õ±È,¿ØÖÆÈ«ËÙ×ª
-                  CTLFANDUTY = FANCtrlMaxDUTY;
-                  PICTLFANVAL = 0.99*PICTLFANVAL + 0.01*CTLFANDUTY;
-              }else{
-                  if(  (StateEventFlag_A == STATE_EVENT_RUN_A)||\
-                       (StateEventFlag_B == STATE_EVENT_RUN_B)||\
-                       (StateEventFlag_C == STATE_EVENT_RUN_C)  ){
+	if (GET_CTRL24_POWER != 1)
+	{
+		EPwm1Regs.AQCSFRC.bit.CSFA = 0;
+	}
+	if (TempEnvirProvalue == 1)
+	{//ÎÂÉý²âÊÔÊ±Ê¹ÓÃ,°Ù·Ö°ÙÕ¼¿Õ±È,¿ØÖÆÈ«ËÙ×ª
+		CTLFANDUTY = FANCtrlMaxDUTY;
+		PICTLFANVAL = 0.99 * PICTLFANVAL + 0.01 * CTLFANDUTY;
+	}
+	else
+	{
+		if ((StateEventFlag_A == STATE_EVENT_RUN_A) || (StateEventFlag_B == STATE_EVENT_RUN_B) || (StateEventFlag_C == STATE_EVENT_RUN_C))
+		{
 //        1.ÔØ30%-70%Æô¶¯,´óÓÚ30%,·ç»ú40%×ªËÙ40-80µ÷½Ú;²ÎÊý½çÃæ¿Éµ÷    ×îµÍ×ªËÙ/ÔØ¶ÔÓ¦·ç»úÆôºÍ×î´ó×ªËÙ/ÎÂ¶È¶ÔÓ¦·ç»úÆô¶¯ºÍ×î´ó×ªËÙ
 //        2.60¶ÈÈ«ËÙ80%,40¶ÈÆô¶¯·ç»ú40%;²ÎÊý½çÃæ¿Éµ÷
 //        ÕâÁ½ÌõµÃ³öÕ¼¿Õ±È°´×î´óÖµÀ´¸ø.
-                  //CTLFANDATA[0]=(µ±Ç°µçÁ÷ÖµB0-×îµÍ¸ºÔØµçÁ÷Æô¶¯·ç»úB1)*(×î¸ßÕ¼¿Õ±È0.8-×îµÍÕ¼¿Õ±ÈB3)/(×î¸ß¸ºÔØ×ªÈëÈ«ËÙ·ç»úB4-×îµÍ¸ºÔØÆô¶¯·ç»úB1)+×îµÍÕ¼¿Õ±ÈB3;
-//                  if((0.8>B3)&&(B4>B1)&&(B3>0.2)&&(B1>0)){
-                  if((FANCtrlMaxDUTY>FanStartMinDUTY)&&(Curr_MaxCtrlFAN>Curr_MinCtrlFAN)&&(FanStartMinDUTY>FANCtrlMinDUTY)&&(Curr_MinCtrlFAN>0)){
-//                      if((B0 >= B1)&&(B0 <= B4)){
-//                          CTLFANDATA[0] = (B0-B1)*(0.8-B3)/(B4-B1)+B3;
-//                      }else if(B0 < B1){
-//                          CTLFANDATA[0] = 0;
-//                      }else if(B0 > B4){
-//                          CTLFANDATA[0] = 0.8;
-//                      }
-                      if((CURRMaxValue >= Curr_MinCtrlFAN)&&(CURRMaxValue <= Curr_MaxCtrlFAN)){
-                          CURRCTLFANDATA = (CURRMaxValue-Curr_MinCtrlFAN)*(FANCtrlMaxDUTY-FanStartMinDUTY)/(Curr_MaxCtrlFAN-Curr_MinCtrlFAN)+FanStartMinDUTY;
-                          CTLFANDATA[0] = 0.99*CTLFANDATA[0] + 0.01*CURRCTLFANDATA;
-                      }
-                      if(CURRMaxValue < Curr_MinCtrlFAN){
-                          CTLFANDATA[0] = 0;
-                      }
-                      if(CURRMaxValue > Curr_MaxCtrlFAN){
-                          CURRCTLFANDATA1 = FANCtrlMaxDUTY;
-                          CTLFANDATA[0] = 0.99*CTLFANDATA[0] + 0.01*CURRCTLFANDATA1;
-                      }
-                  }else{
-                      CTLFANDATA[0] = 0;
-                  }
-                  //CTLFANDATA[1]=(µ±Ç°ÎÂ¶ÈÖµ-×îµÍÎÂ¶ÈÆô¶¯·ç»ú)*(×î¸ßÕ¼¿Õ±È-×îµÍÕ¼¿Õ±È)/(×î¸ßÎÂ¶È×ªÈëÈ«ËÙ·ç»ú-×îµÍÎÂ¶È)+×îµÍÕ¼¿Õ±È;
-                  if((FANCtrlMaxDUTY>FanStartMinDUTY)&&(Temp_MaxCtrlFAN>Temp_MinCtrlFAN)&&(FanStartMinDUTY>FANCtrlMinDUTY)&&(Temp_MinCtrlFAN>0)){
-                      if((WindCold.HeatSinkTempterature >= Temp_MinCtrlFAN)&&(WindCold.HeatSinkTempterature <= Temp_MaxCtrlFAN)){
-                          TEMPCTLFANDATA = (WindCold.HeatSinkTempterature-Temp_MinCtrlFAN)*(FANCtrlMaxDUTY-FanStartMinDUTY)/(Temp_MaxCtrlFAN-Temp_MinCtrlFAN)+FanStartMinDUTY;
-                          CTLFANDATA[1] = 0.99*CTLFANDATA[1] + 0.01*TEMPCTLFANDATA;
-                      }
-                      if(WindCold.HeatSinkTempterature < Temp_MinCtrlFAN){
-                          CTLFANDATA[1] = 0;
-                      }
-                      if(WindCold.HeatSinkTempterature > Temp_MaxCtrlFAN){
-                          TEMPCTLFANDATA1 = FANCtrlMaxDUTY;
-                          CTLFANDATA[1] = 0.99*CTLFANDATA[1] + 0.01*TEMPCTLFANDATA1;
-                      }
-                  }else{
-                      CTLFANDATA[1] = 0;
-                  }
-                      PICTLFANVAL = DUTYMUXFuntion(CTLFANDATA,2);   //È¡¶þÕß×î´óÕ¼¿Õ±È×îÖÕÊä³ö
-              }else{
-                  CTLFANDATA[0] = 0;
-                  CTLFANDATA[1] = 0;
-                  PICTLFANVAL = 0;
-              }
-          }
-          EPwm1Regs.CMPA.bit.CMPA = PICTLFANVAL*FUNT1PR;
+			if ((FANCtrlMaxDUTY > FanStartMinDUTY) && (Curr_MaxCtrlFAN > Curr_MinCtrlFAN) && (FanStartMinDUTY > FANCtrlMinDUTY) && (Curr_MinCtrlFAN > 0))
+			{
+				if ((CURRMaxValue >= Curr_MinCtrlFAN) && (CURRMaxValue <= Curr_MaxCtrlFAN))
+				{
+					CURRCTLFANDATA = (CURRMaxValue - Curr_MinCtrlFAN) * (FANCtrlMaxDUTY - FanStartMinDUTY) / (Curr_MaxCtrlFAN - Curr_MinCtrlFAN)
+							+ FanStartMinDUTY;
+					CTLFANDATA[0] = 0.99 * CTLFANDATA[0] + 0.01 * CURRCTLFANDATA;
+				}
+				if (CURRMaxValue < Curr_MinCtrlFAN)
+				{
+					CTLFANDATA[0] = 0;
+				}
+				if (CURRMaxValue > Curr_MaxCtrlFAN)
+				{
+					CURRCTLFANDATA1 = FANCtrlMaxDUTY;
+					CTLFANDATA[0] = 0.99 * CTLFANDATA[0] + 0.01 * CURRCTLFANDATA1;
+				}
+			}
+			else
+			{
+				CTLFANDATA[0] = 0;
+			}
+//CTLFANDATA[1]=(µ±Ç°ÎÂ¶ÈÖµ-×îµÍÎÂ¶ÈÆô¶¯·ç»ú)*(×î¸ßÕ¼¿Õ±È-×îµÍÕ¼¿Õ±È)/(×î¸ßÎÂ¶È×ªÈëÈ«ËÙ·ç»ú-×îµÍÎÂ¶È)+×îµÍÕ¼¿Õ±È;
+			if ((FANCtrlMaxDUTY > FanStartMinDUTY) && (Temp_MaxCtrlFAN > Temp_MinCtrlFAN) && (FanStartMinDUTY > FANCtrlMinDUTY) && (Temp_MinCtrlFAN > 0))
+			{
+				if ((WindCold.HeatSinkTempterature >= Temp_MinCtrlFAN) && (WindCold.HeatSinkTempterature <= Temp_MaxCtrlFAN))
+				{
+					TEMPCTLFANDATA = (WindCold.HeatSinkTempterature - Temp_MinCtrlFAN) * (FANCtrlMaxDUTY - FanStartMinDUTY)
+							/ (Temp_MaxCtrlFAN - Temp_MinCtrlFAN) + FanStartMinDUTY;
+					CTLFANDATA[1] = 0.99 * CTLFANDATA[1] + 0.01 * TEMPCTLFANDATA;
+				}
+				if (WindCold.HeatSinkTempterature < Temp_MinCtrlFAN)
+				{
+					CTLFANDATA[1] = 0;
+				}
+				if (WindCold.HeatSinkTempterature > Temp_MaxCtrlFAN)
+				{
+					TEMPCTLFANDATA1 = FANCtrlMaxDUTY;
+					CTLFANDATA[1] = 0.99 * CTLFANDATA[1] + 0.01 * TEMPCTLFANDATA1;
+				}
+			}
+			else
+			{
+				CTLFANDATA[1] = 0;
+			}
+			PICTLFANVAL = DUTYMUXFuntion(CTLFANDATA, 2);//È¡¶þÕß×î´óÕ¼¿Õ±È×îÖÕÊä³ö
+		}
+		else
+		{
+			CTLFANDATA[0] = 0;
+			CTLFANDATA[1] = 0;
+			PICTLFANVAL = 0;
+		}
+	}
+	EPwm1Regs.CMPA.bit.CMPA = PICTLFANVAL * FUNT1PR;
 
-//          tem2 = WindCold.BOARD_OVER_TEMP - TempData[0];    //tem2 = É¢ÈÈÆ÷¹ýÎÂÖµ80 - É¢ÈÈÆ÷ÎÂ¶È;
-//          if(tem2>20){
-//              tem2 = 20.001;  //ÎÂ¶È³¬¹ý20¶È,×î´óÈÝÁ¿Êä³ö
-//          }
-//          if(tem2<0){
-//              tem2 = 0.0;     //ÎÂ¶ÈÐ¡ÓÚ0¶È,×îÐ¡ÈÝÁ¿Êä³ö
-//          }
-//
-//          tem2 = WindCold.UNIT_OVER_TEMP - TempData[1];           //tem2 = µ¥Ôª»ú¿ÇÄÚ²¿ÎÂ¶È¹ýÎÂÖµ 70 - µ¥ÔªÄÚ²¿ÎÂ¶È;
-//          if(tem2<5){
-//              tem2 = 0.0;    //ÎÂ¶ÈÐ¡ÓÚ0¶È,×îÐ¡ÈÝÁ¿Êä³ö
-//          }
-//          CurrTargetTemper = CurTarget[CapacitySelection][(Uint16)(tem2)];//ÈýÏà¹²ÓÃÒ»¸öÎÂ¶ÈÖµ¼´¿É
+//tem2 = É¢ÈÈÆ÷¹ýÎÂÖµ80 - É¢ÈÈÆ÷ÎÂ¶È;
+	if ((WindCold.BOARD_OVER_TEMP - TempData[0]) > 20) //³ö·ç¿ÚÉ¢ÈÈÆ¬ÎÂ¶ÈÉÏÏÞ - ³ö·ç¿ÚÉ¢ÈÈÆ¬ÎÂ¶È > 20 ¡£WY
+	{
+		tem2 = 20.001; //Ë÷Òý¡£WY
+		CurrTargetTemper = CurTarget[CapacitySelection][(Uint16) (tem2)]; //¸ºÔØµçÁ÷£¨ÓÐÐ§Öµ£©Ä¿±êÖµÑ¡Ôñ×î´óÖµ¡£WY
+	}
+	else if ((WindCold.BOARD_OVER_TEMP - TempData[0]) < 0) //³ö·ç¿ÚÉ¢ÈÈÆ¬ÎÂ¶ÈÉÏÏÞ < ³ö·ç¿ÚÉ¢ÈÈÆ¬ÎÂ¶È¡£WY
+	{
+		tem2 = 0.0; //Ë÷Òý¡£WY
+		CurrTargetTemper = CurTarget[CapacitySelection][(Uint16) (tem2)]; //¸ºÔØµçÁ÷£¨ÓÐÐ§Öµ£©Ä¿±êÖµÑ¡Ôñ×îÐ¡Öµ¡£WY
+	}
+	else
+	{
+		tem2 = WindCold.BOARD_OVER_TEMP - TempData[0]; //Ë÷Òý¡£WY
+		CurrTargetTemper = CurTarget[CapacitySelection][(Uint16) (tem2)]; //¸ù¾Ý³ö·ç¿ÚÉ¢ÈÈÆ¬ÎÂ¶È£¬Ñ¡Ôñ¶ÔÓ¦¸ºÔØµçÁ÷£¨ÓÐÐ§Öµ£©Ä¿±êÖµ¡£WY
+	}
 
-          //tem2 = É¢ÈÈÆ÷¹ýÎÂÖµ80 - É¢ÈÈÆ÷ÎÂ¶È;
-          if((WindCold.BOARD_OVER_TEMP - TempData[0])>20){
-              tem2 = 20.001;  //ÎÂ¶È³¬¹ý20¶È,×î´óÈÝÁ¿Êä³ö
-              CurrTargetTemper = CurTarget[CapacitySelection][(Uint16)(tem2)];//ÈýÏà¹²ÓÃÒ»¸öÎÂ¶ÈÖµ¼´¿É
-          }else if((WindCold.BOARD_OVER_TEMP - TempData[0]) < 0){
-              tem2 = 0.0;     //ÎÂ¶ÈÐ¡ÓÚ0¶È,×îÐ¡ÈÝÁ¿Êä³ö
-              CurrTargetTemper = CurTarget[CapacitySelection][(Uint16)(tem2)];//ÈýÏà¹²ÓÃÒ»¸öÎÂ¶ÈÖµ¼´¿É
-          }else{
-              tem2 = WindCold.BOARD_OVER_TEMP - TempData[0];
-              CurrTargetTemper = CurTarget[CapacitySelection][(Uint16)(tem2)];//ÈýÏà¹²ÓÃÒ»¸öÎÂ¶ÈÖµ¼´¿É
-          }
-
-          //tem2 = µ¥Ôª»ú¿ÇÄÚ²¿ÎÂ¶È¹ýÎÂÖµ 70 - µ¥ÔªÄÚ²¿ÎÂ¶È;
-          if((WindCold.UNIT_OVER_TEMP - TempData[1]) < 5){
-              tem2 = 0.0;    //ÎÂ¶ÈÐ¡ÓÚ0¶È,×îÐ¡ÈÝÁ¿Êä³ö
-              CurrTargetTemper = CurTarget[CapacitySelection][(Uint16)(tem2)];//ÈýÏà¹²ÓÃÒ»¸öÎÂ¶ÈÖµ¼´¿É
-          }
+	if ((WindCold.UNIT_OVER_TEMP - TempData[1]) < 5)  //µ¥ÔªÍâ¿ÇÎÂ¶ÈÉÏÏÞ - µ¥ÔªÍâ¿ÇÎÂ¶È < 5¡£WY
+	{
+		tem2 = 0.0; //Ë÷Òý¡£WY
+		CurrTargetTemper = CurTarget[CapacitySelection][(Uint16) (tem2)]; //µçÁ÷ÈÝÁ¿Ñ¡Ôñ×îÐ¡Öµ¡£WY
+	}
 }
 
 void Fan_Cnt(void)
@@ -1698,363 +1720,516 @@ void MainContactConfirm(Uint16 VAL)
 // ·Åµç³ÌÐò£¬Ç¿ÖÆ½øÈë·Åµç³ÌÐò£¬²¢ÇÒÆäËû×´Ì¬»ú²»ÖØµþ¡£
 void DischargingMode(void)
 {
-//	DINT;
-//	EnablePWM();
-//	SET_IGBT_EN1(IGBT_ENABLE);
-//	// ¿ªÍ¨½ÇÉè¶¨Îª°Ù·ÖÖ®Ê®
-//    EPwm4Regs.CMPA.bit.CMPA = 500;
-//    EPwm5Regs.CMPA.bit.CMPA = 500;
-//    EPwm6Regs.CMPA.bit.CMPA = 500;
-//	EINT;
-//	StateFlag.LEDRunFlag=ITS_WORKING_HIGH;
-//    // ±¨Ó²¼þ¹ÊÕÏ »òÕß Ö±Á÷µçÑ¹½µµÍµ½Î»¡£ÔòÇÐÈë¹ÊÕÏ×´Ì¬¡£
-//	if((GET_IGBT_FAULT_ACK1() == IGBT_FEEDBACK_FAULT_FLAG)||(dcVoltF <= 20))
-//	{
-//		StateEventFlag = STATE_EVENT_FAULT;
-//	}
 }
 
 void Delayus(int16 i){ //i*5*0.001 ms
-//	int j;
 	for(;i>=0;i--){
 		asm(" RPT #31 || NOP");
 		asm(" RPT #31 || NOP");
-//		asm(" RPT #31 || NOP");
-//		asm(" RPT #31 || NOP");
-//		for(j=10;j>=0;j--);
 	}
 }
 
 #define LMT84_TEMPERATURE_COEFF_K			1.313f
 #define LMT84_TEMPERATURE_COEFF_B			1853.0f
 
+/*
+ * ¹¦ÄÜ£ºÁãÉ¢ÈÎÎñ´¦Àí¡£WY
+ *
+ * ËµÃ÷£º¸Ãº¯Êýµ÷ÓÃÖÜÆÚÎª10ms¡£
+ */
 void OutsideIsrProg(void)
 {
-    UInt events;
-    static Uint32 OutPro=0;
-    while(1)
-    {
-        // Wait for ANY of the ISR events to be posted *
-        events = Event_pend(Event_Outside, Event_Id_NONE,Event_Id_00 ,BIOS_WAIT_FOREVER);
-        static int cntForRunEach=0;
+	UInt events;
+	static Uint32 OutPro = 0;
 
-        OutPro++;
-        if(++cntForRunEach >= 4)  // Õâ¸öÎ»ÖÃÊÇN£¬¾Í±íÊ¾mainº¯ÊýÀïÂÖÑ¯N-1´Î
-            cntForRunEach = 0;
+	while (1)
+	{
+		events = Event_pend(Event_Outside, Event_Id_NONE, Event_Id_00, BIOS_WAIT_FOREVER); //µÈ´ýRTOSÐÅºÅÁ¿¡£WY
 
-        if((SPLL[0].PllPiOutput>314.6)||(SPLL[0].PllPiOutput<313.8))													//¼ì²éËøÏà
-        {
-            if((StateFlag.SequenceAutoFlag)&&(CntSec.OverTimeCount>CNT_MS(300)))
-            {
-                Information_Structure.Correction.B.OverTimeFlag = 1;
-                Information_Structure.Correction.B.VoltPhaseSequenFailFlag = 1;
-            }
-            StateFlag.PLLSafetyFlag = 0;
-            CntMs.PLLSafetyCount = 0;
-        }
-        if(CntMs.PLLSafetyCount > CNT_MS(500))
-        {
-            CntSec.OverTimeCount = 0;
-            StateFlag.PLLSafetyFlag = 1;	//ËøÏàÕý³£
-        }
-        if(StateFlag.SoeFlag&& !StateFlag.EEPROMResourceLock)			SOE_Write();
+		static int cntForRunEach = 0; //·ÖÆµÏµÊý¡£ÓÃÓÚ½µµÍº¯ÊýµÄµ÷ÓÃÆµÂÊ¡£WY
 
-            switch(cntForRunEach){
-            case 0:		// 1  ÎÂ¶È²ÉÑù×Ó³ÌÐò
+		OutPro++;
+
+		/*½«º¯Êýµ÷ÓÃÆµÂÊ½µµÍ4±¶¡£WY*/
+		if (++cntForRunEach >= 4)
+		{
+			cntForRunEach = 0;
+		}
+
+		if ((SPLL[0].PllPiOutput > 314.6) || (SPLL[0].PllPiOutput < 313.8))//¼ì²éËøÏà
+		{
+			if ((StateFlag.SequenceAutoFlag) && (CntSec.OverTimeCount > CNT_MS(300)))
+			{
+				Information_Structure.Correction.B.OverTimeFlag = 1;
+				Information_Structure.Correction.B.VoltPhaseSequenFailFlag = 1;
+			}
+			StateFlag.PLLSafetyFlag = 0;
+			CntMs.PLLSafetyCount = 0;
+		}
+
+		if (CntMs.PLLSafetyCount > CNT_MS(500))
+		{
+			CntSec.OverTimeCount = 0;
+			StateFlag.PLLSafetyFlag = 1; //ËøÏàÕý³£¡£WY
+		}
+
+		if (StateFlag.SoeFlag && !StateFlag.EEPROMResourceLock)
+		{
+			SOE_Write();
+		}
+
+		/*AÏàSiC¹ÜËð»µ¹ÊÕÏ¡£WY*/
+		if (((VoltInA_rms - VoltOutA_rms) > 20) //AÏàµçÍøµçÑ¹ÓÐÐ§Öµ - AÏà¸ºÔØµçÑ¹ÓÐÐ§Öµ > 20¡£WY
+				&& (StateEventFlag_A == STATE_EVENT_RUN_A) //AÏà´¦ÓÚÔËÐÐ×´Ì¬¡£WY
+				&& (VoltInA_rms > 100)) //AÏàµçÍøµçÑ¹ÓÐÐ§Öµ > 100
+		{
+			ESCFlagA.FAULTCONFIRFlag = 1; //AÏà´æÔÚ¹ÊÕÏÐÅºÅ¡£WY
+
+			if (softwareFaultWord3.B.ESCSicFaultFlagA == 0) //²»´æÔÚAÏàSiC¹ÜËð»µ¹ÊÕÏ¡£WY
+			{
+				ESCFlagA.ESCCntMs.StartDelay = 0;
+
+				/*²âÊÔ¡£WY*/
+//				if(index_A < LENTH)
+//				{
+//					voltage_grid_A[index_A] = (unsigned int) VoltInA_rms;
+//					voltage_load_A[index_A] = (unsigned int) VoltOutA_rms;
+//
+//					AD_grid_A[index_A] = (unsigned int) ( * VirtulADVAL.GridLVoltA);
+//				    AD_load_A[index_A] = (unsigned int) ( * VirtulADVAL.GridHVoltA);
+//
+//					index_A ++;
+//				}
+//				else
+//				{
+//					index_A = 0;
+//				}
+
+				softwareFaultWord3.B.ESCSicFaultFlagA = FaultDetect(SOE_GP_FAULT + 39, CNT_SICFAULT_A, 12, ESCFlagA.PHASE); //²úÉúAÏàSiC¹ÜËð»µ¹ÊÕÏ¡£WY
+
+				if (softwareFaultWord3.B.ESCSicFaultFlagA == 1) //´æÔÚAÏàSiC¹ÜËð»µ¹ÊÕÏ¡£WY
+				{
+					ESCSicFaultCNTA = 1; //AÏàSiC¹Ü×´Ì¬Òì³£¡£WY
+				}
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_SICFAULT_A, 0); //ÇåÁã£ºAÏàSiC¹ÜËð»µ¹ÊÕÏÐÅºÅ´ÎÊý¡£WY
+		}
+
+		/*BÏàSiC¹ÜËð»µ¡£WY*/
+		if (((VoltInB_rms - VoltOutB_rms) > 20) && (StateEventFlag_B == STATE_EVENT_RUN_B) && (VoltInB_rms > 100))
+		{
+			ESCFlagB.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord3.B.ESCSicFaultFlagB == 0)
+			{
+				ESCFlagB.ESCCntMs.StartDelay = 0;
+
+				/*²âÊÔ¡£WY*/
+//				if(index_B < LENTH)
+//				{
+//					voltage_grid_B[index_B] = (unsigned int) VoltInB_rms;
+//					voltage_load_B[index_B] = (unsigned int) VoltOutB_rms;
+//
+//					AD_grid_B[index_B] = (unsigned int) ( * VirtulADVAL.GridLVoltB);
+//				    AD_load_B[index_B] = (unsigned int) ( * VirtulADVAL.GridHVoltB);
+//
+//					index_B ++;
+//				}
+//				else
+//				{
+//					index_B = 0;
+//				}
+
+				softwareFaultWord3.B.ESCSicFaultFlagB = FaultDetect(SOE_GP_FAULT + 39, CNT_SICFAULT_B, 12, ESCFlagB.PHASE);
+				if (softwareFaultWord3.B.ESCSicFaultFlagB == 1)
+				{
+					ESCSicFaultCNTB = 1;
+				}
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_SICFAULT_B, 0);
+		}
+
+		/*CÏàSiC¹ÜËð»µ¡£WY*/
+		if (((VoltInC_rms - VoltOutC_rms) > 20) && (StateEventFlag_C == STATE_EVENT_RUN_C) && (VoltInC_rms > 100))
+		{
+			ESCFlagC.FAULTCONFIRFlag = 1;
+			if (softwareFaultWord3.B.ESCSicFaultFlagC == 0)
+			{
+				ESCFlagC.ESCCntMs.StartDelay = 0;
+
+				/*²âÊÔ¡£WY*/
+//				if(index_C < LENTH)
+//				{
+//					voltage_grid_C[index_C] = (unsigned int) VoltInC_rms;
+//					voltage_load_C[index_C] = (unsigned int) VoltOutC_rms;
+//
+//					AD_grid_C[index_C] = (unsigned int) ( * VirtulADVAL.GridLVoltC);
+//				    AD_load_C[index_C] = (unsigned int) ( * VirtulADVAL.GridHVoltC);
+//
+//					index_C ++;
+//				}
+//				else
+//				{
+//					index_C = 0;
+//				}
+
+				softwareFaultWord3.B.ESCSicFaultFlagC = FaultDetect(SOE_GP_FAULT + 39, CNT_SICFAULT_C, 12, ESCFlagC.PHASE);
+				if (softwareFaultWord3.B.ESCSicFaultFlagC == 1)
+				{
+					ESCSicFaultCNTC = 1;
+				}
+			}
+		}
+		else
+		{
+			SetFaultDelayCounter(CNT_SICFAULT_C, 0);
+		}
 
 
-                FunAutoControl();// ¶Ôµ¥ÔªÄÚ²¿·ç»ú×öµ¥¶ÀµÄ¿ØÖÆ
-
-                if(GET_BYPASS_FEEDBACK == 0){
-                    if(CntSec.BypassSwitch > CNT_SEC(10)){
-                        if(ESCFlagA.BYFEEDBACKFLAG == 1){
-                            StateEventFlag_A = STATE_EVENT_STOP_A;
-                            ESCFlagA.BYFEEDBACKFLAG = 0;
-                        }
-                        if(ESCFlagB.BYFEEDBACKFLAG == 1){
-                            StateEventFlag_B = STATE_EVENT_STOP_B;
-                            ESCFlagB.BYFEEDBACKFLAG = 0;
-                        }
-                        if(ESCFlagC.BYFEEDBACKFLAG == 1){
-                            StateEventFlag_C = STATE_EVENT_STOP_C;
-                            ESCFlagC.BYFEEDBACKFLAG = 0;
-                        }
-                        SoeRecData(SOE_GP_EVENT + 7);         //ESCÅÔÂ·Î¢¶ÏÔÚÔËÐÐ¹ý³ÌÖÐ,±»ÊÖ¶¯Îó²Ù×÷,»áÔÚSOEÖÐÏÔÊ¾³öÀ´,Éè±¸×ªµ½Õý³£Í£»ú×´Ì¬.//ÐèÒª¸Ä¹æÔ¼--ÅÔÂ·Î¢¶ÏÎó²Ù×÷¾¯¸æ
-                        ESCFlagA.startFlag = 0;
-                        ESCFlagB.startFlag = 0;
-                        ESCFlagC.startFlag = 0;
-                        ESCFlagA.stopFlag = 1;
-                        ESCFlagB.stopFlag = 1;
-                        ESCFlagC.stopFlag = 1;
-                        ESCFlagA.faultFlag = 0;
-                        ESCFlagB.faultFlag = 0;
-                        ESCFlagC.faultFlag = 0;
-                        ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
-                        ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
-                        ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
-                        ESCFlagA.onceRunStartFlag = 1;
-                        ESCFlagB.onceRunStartFlag = 1;
-                        ESCFlagC.onceRunStartFlag = 1;
-                        if(ESCBYRelayCNTA != 1){
-                            ESCFlagA.HWPowerSTOPFlag = 1;
-                        }
-                        if(ESCBYRelayCNTB != 1){
-                            ESCFlagB.HWPowerSTOPFlag = 1;
-                        }
-                        if(ESCBYRelayCNTC != 1){
-                            ESCFlagC.HWPowerSTOPFlag = 1;
-                        }
-                        ESCFlagA.ESCCntMs.StartDelay = 0;
-                        ESCFlagB.ESCCntMs.StartDelay = 0;
-                        ESCFlagC.ESCCntMs.StartDelay = 0;
-                        SET_RUNNING_LED(1);
-                        SET_FAULT_LED(1);
-                    }else{
-                        ESCFlagA.ESCCntSec.HWPowerStopDelay = 0;
-                        ESCFlagB.ESCCntSec.HWPowerStopDelay = 0;
-                        ESCFlagC.ESCCntSec.HWPowerStopDelay = 0;
-                    }
-                }else{
-                    CntSec.BypassSwitch = 0;
-                }
-
-                if((ESCFlagA.HWPowerFAULTFlag == 1)&&(ESCFlagB.HWPowerFAULTFlag == 1)&&(ESCFlagC.HWPowerFAULTFlag == 1)){ 
-                    if(   (ESCFlagA.ESCCntSec.HWPowerFaultDelay >= CNT_SEC(POWERCTRLCNT_15V))&&\
-                          (ESCFlagB.ESCCntSec.HWPowerFaultDelay >= CNT_SEC(POWERCTRLCNT_15V))&&\
-                          (ESCFlagC.ESCCntSec.HWPowerFaultDelay >= CNT_SEC(POWERCTRLCNT_15V))   ){
-                        if((ESCBYRelayCNTA != 1)&&\
-                                (ESCBYRelayCNTB != 1)&&\
-                                (ESCBYRelayCNTC != 1)){
-                            SET_POWER_CTRL(0);
-                        }
-                        ESCFlagA.HWPowerFAULTFlag = 0;
-                        ESCFlagB.HWPowerFAULTFlag = 0;
-                        ESCFlagC.HWPowerFAULTFlag = 0;
-                    }
-                }
-                if((ESCFlagA.HWPowerSTOPFlag == 1)&&(ESCFlagB.HWPowerSTOPFlag == 1)&&(ESCFlagC.HWPowerSTOPFlag == 1)){
-                    if(   (ESCFlagA.ESCCntSec.HWPowerStopDelay >= CNT_SEC(POWERCTRLCNT_15V))&&\
-                          (ESCFlagB.ESCCntSec.HWPowerStopDelay >= CNT_SEC(POWERCTRLCNT_15V))&&\
-                          (ESCFlagC.ESCCntSec.HWPowerStopDelay >= CNT_SEC(POWERCTRLCNT_15V))   ){
-                        if((ESCBYRelayCNTA != 1)&&\
-                                (ESCBYRelayCNTB != 1)&&\
-                                (ESCBYRelayCNTC != 1)){
-                            SET_POWER_CTRL(0);
-                        }
-                        ESCFlagA.HWPowerSTOPFlag = 0;
-                        ESCFlagB.HWPowerSTOPFlag = 0;
-                        ESCFlagC.HWPowerSTOPFlag = 0;
-                    }
-                }
-
-                if((ESCBYRelayCNTA == 1)||(ESCSicFaultCNTA == 1)){  //¸ßµÍÑ¹´Å±£³Ö¼ÌµçÆ÷/sic¹Ü×ÓËð»µ¹ÊÕÏ¼ÆÊý´ÎÊý´ïµ½5´Î¼´5´ÎÖ®ÉÏ,Éè±¸²»ÔÚ×Ô¶¯Æô¶¯
-                    ESCFlagA.ESCCntMs.StartDelay = 0;
-                    ESCFlagA.resetFlag = 0;
-                }
-                if((ESCBYRelayCNTB == 1)||(ESCSicFaultCNTB == 1)){
-                    ESCFlagB.ESCCntMs.StartDelay = 0;
-                    ESCFlagB.resetFlag = 0;
-                }
-                if((ESCBYRelayCNTC == 1)||(ESCSicFaultCNTC == 1)){
-                    ESCFlagC.ESCCntMs.StartDelay = 0;
-                    ESCFlagC.resetFlag = 0;
-                }
 
 
-                OverTempLimitCur();
-                break;
+		/*¸Ã·ÖÖ§Ö´ÐÐÖÜÆÚÎª40ms¡£WY*/
+		switch (cntForRunEach)
+		{
+			case 0:// 1  ÎÂ¶È²ÉÑù×Ó³ÌÐò
+			{
+				FunAutoControl();// ¶Ôµ¥ÔªÄÚ²¿·ç»ú×öµ¥¶ÀµÄ¿ØÖÆ
 
-            case 1:
-                THDiCal();
-                PIAdjust();
-                RemoteWriteControl(RemoteAddress);
-                //FlashRecordWrite();
-                break;
+				 /*¸ÃÅÐ¶Ï·ÖÖ§ÎÞÒâÒå¡£WY*/
+				if (GET_BYPASS_FEEDBACK == 0)
+				{
+					if (CntSec.BypassSwitch > CNT_SEC(10))
+					{
+						if (ESCFlagA.BYFEEDBACKFLAG == 1)
+						{
+							StateEventFlag_A = STATE_EVENT_STOP_A;
+							ESCFlagA.BYFEEDBACKFLAG = 0;
+						}
+						if (ESCFlagB.BYFEEDBACKFLAG == 1)
+						{
+							StateEventFlag_B = STATE_EVENT_STOP_B;
+							ESCFlagB.BYFEEDBACKFLAG = 0;
+						}
+						if (ESCFlagC.BYFEEDBACKFLAG == 1)
+						{
+							StateEventFlag_C = STATE_EVENT_STOP_C;
+							ESCFlagC.BYFEEDBACKFLAG = 0;
+						}
+						SoeRecData(SOE_GP_EVENT + 7);
+						ESCFlagA.startFlag = 0;
+						ESCFlagB.startFlag = 0;
+						ESCFlagC.startFlag = 0;
+						ESCFlagA.stopFlag = 1;
+						ESCFlagB.stopFlag = 1;
+						ESCFlagC.stopFlag = 1;
+						ESCFlagA.faultFlag = 0;
+						ESCFlagB.faultFlag = 0;
+						ESCFlagC.faultFlag = 0;
+						ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
+						ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
+						ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
+						ESCFlagA.onceRunStartFlag = 1;
+						ESCFlagB.onceRunStartFlag = 1;
+						ESCFlagC.onceRunStartFlag = 1;
+						if (ESCBYRelayCNTA != 1)
+						{
+							ESCFlagA.HWPowerSTOPFlag = 1;
+						}
+						if (ESCBYRelayCNTB != 1)
+						{
+							ESCFlagB.HWPowerSTOPFlag = 1;
+						}
+						if (ESCBYRelayCNTC != 1)
+						{
+							ESCFlagC.HWPowerSTOPFlag = 1;
+						}
+						ESCFlagA.ESCCntMs.StartDelay = 0;
+						ESCFlagB.ESCCntMs.StartDelay = 0;
+						ESCFlagC.ESCCntMs.StartDelay = 0;
+						SET_RUNNING_LED(1);
+						SET_FAULT_LED(1);
+					}
+					else
+					{
+						ESCFlagA.ESCCntSec.HWPowerStopDelay = 0;
+						ESCFlagB.ESCCntSec.HWPowerStopDelay = 0;
+						ESCFlagC.ESCCntSec.HWPowerStopDelay = 0;
+					}
+				}
+				else
+				{
+					CntSec.BypassSwitch = 0;
+				}
 
-            case 2:
-        //²ÎÊýÉèÖÃ
-            if(StateFlag.CapDataParamWrite && !StateFlag.EEPROMResourceLock)		//µçÈÝÉèÖÃ
-            {
-                StateFlag.CapDataParamWrite = false;
-                CapParamSetting();
-                CapParamRefresh();
-            }
 
-            if(StateFlag.ManufacturerParameters && !StateFlag.EEPROMResourceLock)		//ÐÂ³§¼Ò²ÎÊý
-            {
-                StateFlag.ManufacturerParameters = false;
-                ManufacturerParametersSetting();
-                ManufacturerParametersRefresh();
-                InitCtrlParam(1);
-                ESCfilterMemCopy(CapacitySelection);
-            }
+				if ((ESCFlagA.HWPowerFAULTFlag == 1) //AÏà£ºÓ²¼þ¹ÊÕÏ·¢Éú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+						&& (ESCFlagB.HWPowerFAULTFlag == 1) //BÏà£ºÓ²¼þ¹ÊÕÏ·¢Éú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+						&& (ESCFlagC.HWPowerFAULTFlag == 1)) //CÏà£ºÓ²¼þ¹ÊÕÏ·¢Éú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+				{
+					if ((ESCFlagA.ESCCntSec.HWPowerFaultDelay >= CNT_SEC(POWERCTRLCNT_15V)) //µ±Ó²¼þ¹ÊÕÏ·¢ÉúÊ±£¬¾­¹ýÖ¸¶¨Ê±³¤ºó¹Ø±Õ15VµçÔ´¡£¾­¹ýµÄÊ±³¤ > 600s¡£WY
+							&& (ESCFlagB.ESCCntSec.HWPowerFaultDelay >= CNT_SEC(POWERCTRLCNT_15V)) //µ±Ó²¼þ¹ÊÕÏ·¢ÉúÊ±£¬¾­¹ýÖ¸¶¨Ê±³¤ºó¹Ø±Õ15VµçÔ´¡£¾­¹ýµÄÊ±³¤ > 600s¡£WY
+							&& (ESCFlagC.ESCCntSec.HWPowerFaultDelay >= CNT_SEC(POWERCTRLCNT_15V))) //µ±Ó²¼þ¹ÊÕÏ·¢ÉúÊ±£¬¾­¹ýÖ¸¶¨Ê±³¤ºó¹Ø±Õ15VµçÔ´¡£¾­¹ýµÄÊ±³¤ > 600s¡£WY
+					{
+						if ((ESCBYRelayCNTA != 1) //AÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
+								&& (ESCBYRelayCNTB != 1) //BÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
+								&& (ESCBYRelayCNTC != 1)) //CÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
+						{
+							SET_POWER_CTRL(0); //¹Ø±Õ15VµçÔ´¡£WY
+						}
 
-            if(StateFlag.VitruZeroParameters && !StateFlag.EEPROMResourceLock)		//ÁãÆ«
-            {
-                StateFlag.VitruZeroParameters = false;
-                VirtuPreferencesSetting();
-                VirtuPreferencesRefresh();
-            }
+						ESCFlagA.HWPowerFAULTFlag = 0; //AÏà£ºÎÞÓ²¼þ¹ÊÕÏ·¢Éú£¬ÎÞÐè¹Ø±Õ15VµçÔ´¡£WY
+						ESCFlagB.HWPowerFAULTFlag = 0; //BÏà£ºÎÞÓ²¼þ¹ÊÕÏ·¢Éú£¬ÎÞÐè¹Ø±Õ15VµçÔ´¡£WY
+						ESCFlagC.HWPowerFAULTFlag = 0; //CÏà£ºÎÞÓ²¼þ¹ÊÕÏ·¢Éú£¬ÎÞÐè¹Ø±Õ15VµçÔ´¡£WY
+					}
+				}
 
-            if(StateFlag.UserPreferences && !StateFlag.EEPROMResourceLock)				//ÐÂÓÃ»§²ÎÊý
-            {
-                StateFlag.UserPreferences = false;
-                UserPreferencesSetting();
-                UserPreferencesRefresh();
-            }
 
-            if(StateFlag.IDPreferences && !StateFlag.EEPROMResourceLock)				//µØÖ·Æ¥Åä
-            {
-                StateFlag.IDPreferences = false;
-                IDPreferencesSetting();
-                IDParametersRefresh();
-            }
+				if ((ESCFlagA.HWPowerSTOPFlag == 1) //AÏà£ºÖ÷¶¯Í£»ú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+						&& (ESCFlagB.HWPowerSTOPFlag == 1) //BÏà£ºÖ÷¶¯Í£»ú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+						&& (ESCFlagC.HWPowerSTOPFlag == 1)) //CÏà£ºÖ÷¶¯Í£»ú£¬Ðè¹Ø±Õ15VµçÔ´¡£WY
+				{
+					if ((ESCFlagA.ESCCntSec.HWPowerStopDelay >= CNT_SEC(POWERCTRLCNT_15V)) //AÏà£ºµ±Ö÷¶¯Í£»úÊ±£¬¾­¹ýÖ¸¶¨Ê±³¤ºó¹Ø±Õ15VµçÔ´¡£¾­¹ýµÄÊ±³¤ > 600s¡£WY
+							&& (ESCFlagB.ESCCntSec.HWPowerStopDelay >= CNT_SEC(POWERCTRLCNT_15V)) //BÏà£ºµ±Ö÷¶¯Í£»úÊ±£¬¾­¹ýÖ¸¶¨Ê±³¤ºó¹Ø±Õ15VµçÔ´¡£¾­¹ýµÄÊ±³¤ > 600s¡£WY
+							&& (ESCFlagC.ESCCntSec.HWPowerStopDelay >= CNT_SEC(POWERCTRLCNT_15V))) //CÏà£ºµ±Ö÷¶¯Í£»úÊ±£¬¾­¹ýÖ¸¶¨Ê±³¤ºó¹Ø±Õ15VµçÔ´¡£¾­¹ýµÄÊ±³¤ > 600s¡£WY
+					{
+						if ((ESCBYRelayCNTA != 1) //AÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
+								&& (ESCBYRelayCNTB != 1) //BÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
+								&& (ESCBYRelayCNTC != 1)) //CÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Õý³£¡£WY
+						{
+							SET_POWER_CTRL(0); //¹Ø±Õ15VµçÔ´¡£WY
+						}
 
-            if(StateFlag.harmCompPercParamRefresh&& !StateFlag.EEPROMResourceLock)		//Ð³²¨»ù±¾ÉèÖÃ
-            {
-                StateFlag.harmCompPercParamRefresh = false;
-                UserHarmnoicSetting();
-                HarmnoicCorrection();
-            }
+						ESCFlagA.HWPowerSTOPFlag = 0; //AÏà£ºÒÑ¹Ø±Õ15VµçÔ´¡£WY
+						ESCFlagB.HWPowerSTOPFlag = 0; //BÏà£ºÒÑ¹Ø±Õ15VµçÔ´¡£WY
+						ESCFlagC.HWPowerSTOPFlag = 0; //CÏà£ºÒÑ¹Ø±Õ15VµçÔ´¡£WY
+					}
+				}
 
-            if(StateFlag.HarmonicWaveParamRefresh&& !StateFlag.EEPROMResourceLock)		//Ð³²¨³§¼ÒÉèÖÃ
-            {
-                StateFlag.HarmonicWaveParamRefresh = false;
-                HarmnoicParamSetting();
-                HarmnoicCorrection();
-                #if TEST_VIRTUALSOURCE!=0
+				/*´¦ÀíAÏà*/
+				if ((ESCBYRelayCNTA == 1) //AÏàÅÔÂ·´Å±£³Ö¼ÌµçÆ÷Òì³£¡£WY
+						|| (ESCSicFaultCNTA == 1)) //AÏàSiC¹ÜÒì³£¡£WY
+				{
+					ESCFlagA.ESCCntMs.StartDelay = 0; //ÇåÁã¼ÆÊ±Æ÷¡£WY
+					ESCFlagA.resetFlag = 0; //ÎÞÐèÖ´ÐÐ¸´Î»²Ù×÷¡£WY
+				}
+
+				/*´¦ÀíBÏà*/
+				if ((ESCBYRelayCNTB == 1) || (ESCSicFaultCNTB == 1))
+				{
+					ESCFlagB.ESCCntMs.StartDelay = 0;
+					ESCFlagB.resetFlag = 0;
+				}
+
+				/*´¦ÀíCÏà*/
+				if ((ESCBYRelayCNTC == 1) || (ESCSicFaultCNTC == 1))
+				{
+					ESCFlagC.ESCCntMs.StartDelay = 0;
+					ESCFlagC.resetFlag = 0;
+				}
+
+				OverTempLimitCur();
+			}
+				break;
+
+			case 1:
+			{
+				THDiCal();
+				PIAdjust();
+				RemoteWriteControl(RemoteAddress);
+			}
+//FlashRecordWrite();
+				break;
+
+			case 2:
+			{
+//²ÎÊýÉèÖÃ
+				if (StateFlag.CapDataParamWrite && !StateFlag.EEPROMResourceLock)//µçÈÝÉèÖÃ
+				{
+					StateFlag.CapDataParamWrite = false;
+					CapParamSetting();
+					CapParamRefresh();
+				}
+
+				if (StateFlag.ManufacturerParameters && !StateFlag.EEPROMResourceLock)//ÐÂ³§¼Ò²ÎÊý
+				{
+					StateFlag.ManufacturerParameters = false;
+					ManufacturerParametersSetting();
+					ManufacturerParametersRefresh();
+					InitCtrlParam(1);
+					ESCfilterMemCopy(CapacitySelection);
+				}
+
+				if (StateFlag.VitruZeroParameters && !StateFlag.EEPROMResourceLock)//ÁãÆ«
+				{
+					StateFlag.VitruZeroParameters = false;
+					VirtuPreferencesSetting();
+					VirtuPreferencesRefresh();
+				}
+
+				if (StateFlag.UserPreferences && !StateFlag.EEPROMResourceLock)//ÐÂÓÃ»§²ÎÊý
+				{
+					StateFlag.UserPreferences = false;
+					UserPreferencesSetting();
+					UserPreferencesRefresh();
+				}
+
+				if (StateFlag.IDPreferences && !StateFlag.EEPROMResourceLock)//µØÖ·Æ¥Åä
+				{
+					StateFlag.IDPreferences = false;
+					IDPreferencesSetting();
+					IDParametersRefresh();
+				}
+
+				if (StateFlag.harmCompPercParamRefresh && !StateFlag.EEPROMResourceLock)//Ð³²¨»ù±¾ÉèÖÃ
+				{
+					StateFlag.harmCompPercParamRefresh = false;
+					UserHarmnoicSetting();
+					HarmnoicCorrection();
+				}
+
+				if (StateFlag.HarmonicWaveParamRefresh && !StateFlag.EEPROMResourceLock)//Ð³²¨³§¼ÒÉèÖÃ
+				{
+					StateFlag.HarmonicWaveParamRefresh = false;
+					HarmnoicParamSetting();
+					HarmnoicCorrection();
+#if TEST_VIRTUALSOURCE!=0
                     TestWaveGenerator();
                 #else
-                if((StateFlag.harmCompEn == 1)&&(StateFlag.isHarmCompensateMode == 0))
-                TestWaveGenerator();
-                #endif
-            }
-            if(StateFlag.RecordWritting&& !StateFlag.EEPROMResourceLock){
-                StateFlag.RecordWritting = false;
-                FlashRecordTim = 0;
-                FlashPreferencesSetting();
-            }
-            if(CntMs.displayTimingCount>CNT_MS(500))	//¼à¿Ø
-            {
-                CntMs.displayTimingCount = 0;
-                Monitor_Message();
-                RemoteParamerRefresh();
-			    RemoteParamerRefresh2();
+					if ((StateFlag.harmCompEn == 1) && (StateFlag.isHarmCompensateMode == 0))
+						TestWaveGenerator();
+#endif
+				}
+				if (StateFlag.RecordWritting && !StateFlag.EEPROMResourceLock)
+				{
+					StateFlag.RecordWritting = false;
+					FlashRecordTim = 0;
+					FlashPreferencesSetting();
+				}
+				if (CntMs.displayTimingCount > CNT_MS(500))//¼à¿Ø
+				{
+					CntMs.displayTimingCount = 0;
+					Monitor_Message();
+					RemoteParamerRefresh();
+					RemoteParamerRefresh2();
 //                Multiple_Parallel_Message();
-            }
+				}
 
-            if(PWM_address == 0){						//ÏàÐòÐ£Õý³õÊ¼»¯
-                if(StateFlag.SequenceAutoFlag)
-                {
-                    if(CntMs.InitializationDelay>CNT_MS(200)){
-                        StateFlag.startingMethod = 0;
-                    }else{
-                        if((StateEventFlag_A==STATE_EVENT_RUN_A)&&(FactorySet.HarmonicInfer.B.ManualMode==0)&&(FactorySet.HarmonicInfer.B.AutomaticMode==0)){
-                            StateFlag.SequenceAutoFlag = 0;                 //×Ô¶¯Ð³²¨Ð£ÕýºÍ×Ô¶¯ÏàÐòÐ£Õý²»¿ÉÒÔÍ¬Ê±½øÐÐ
-                        }else{
-                            StateFlag.PhaseSequeJudSucceedFlag = 0;
-                            FactorySet.Infer.B.VoltagePhaseSequence = 0;
-                            FactorySet.Infer.B.PhaseSequenceCT = 0;
-                            FactorySet.Infer.B.DirectionCT = 0;
-                            Information_Structure.Correction.all = 0;
-                            Information_Structure.Correction.B.DefectCT = FactorySet.Infer.B.DefectCT;
-                            CorrectingAD();																//µçÑ¹ÏàÐò
-                            CorrectingCT();																//µçÁ÷ÏàÐò
-                            DirectionCT();																//µçÁ÷·½Ïò
-                            StateFlag.startingMethod = 1;
+				if (PWM_address == 0)
+				{//ÏàÐòÐ£Õý³õÊ¼»¯
+					if (StateFlag.SequenceAutoFlag)
+					{
+						if (CntMs.InitializationDelay > CNT_MS(200))
+						{
+							StateFlag.startingMethod = 0;
+						}
+						else
+						{
+							if ((StateEventFlag_A == STATE_EVENT_RUN_A) && (FactorySet.HarmonicInfer.B.ManualMode == 0)
+									&& (FactorySet.HarmonicInfer.B.AutomaticMode == 0))
+							{
+								StateFlag.SequenceAutoFlag = 0;//×Ô¶¯Ð³²¨Ð£ÕýºÍ×Ô¶¯ÏàÐòÐ£Õý²»¿ÉÒÔÍ¬Ê±½øÐÐ
+							}
+							else
+							{
+								StateFlag.PhaseSequeJudSucceedFlag = 0;
+								FactorySet.Infer.B.VoltagePhaseSequence = 0;
+								FactorySet.Infer.B.PhaseSequenceCT = 0;
+								FactorySet.Infer.B.DirectionCT = 0;
+								Information_Structure.Correction.all = 0;
+								Information_Structure.Correction.B.DefectCT = FactorySet.Infer.B.DefectCT;
+								CorrectingAD();//µçÑ¹ÏàÐò
+								CorrectingCT();//µçÁ÷ÏàÐò
+								DirectionCT();//µçÁ÷·½Ïò
+								StateFlag.startingMethod = 1;
 
-                            if(StateFlag.positionCT)													//¸ºÔØ²à
-                            {
-                                if((StateFlag.CurrACountFlag==0)&&(StateFlag.CurrBCountFlag==0)&&(StateFlag.CurrCCountFlag==0))
-                                {
-                                    if((SeqJud[0]<3)||(SeqJud[1]<3)||(SeqJud[2]<3)){	//¸ºÔØ»ù²¨Ì«Ð¡ ·ÅÆú×Ô¶¯Ð£Õý
-                                        StateFlag.SequenceAutoFlag = 0;
-                                        Information_Structure.Correction.B.LoadingCondition = 1;
-                                        Information_Structure.Correction.B.PhaseSequenResult = 1;
-                                    }
-                                }else{
-                                    FFTDataReduction2(1,FFTCalcChan>>1);												//¼ÆËã¸ºÔØ»ù²¨
-                                }
-                                StateFlag.onceRunStartFlag = 1;
-                            }else{																		//µçÍø²à
-                                if((StateFlag.CurrACountFlag==0)&&(StateFlag.CurrBCountFlag==0)&&(StateFlag.CurrCCountFlag==0))
-                                {
-                                    if((SeqJud[0]>20)||(SeqJud[1]>20)||(SeqJud[2]>20)){	//¸ºÔØ¸ÉÈÅÌ«´ó ·ÅÆú×Ô¶¯Ð£Õý
-                                        StateFlag.SequenceAutoFlag = 0;
-                                        Information_Structure.Correction.B.LoadingCondition = 1;
-                                        Information_Structure.Correction.B.PhaseSequenResult = 1;
-                                    }
-                                }else{
-								    FFTDataReduction2(4,FFTCalcChan>>1);												//·¢ËÄ´ÎÐ³²¨Ç°¼ÆËã¸ºÔØËÄ´ÎÐ³²¨
-                                }
-                                StateFlag.onceRunStartFlag = 0;
-                            }
-                        }
-                    }
-                }else{
-                    CntSec.OverTimeCount = 0;
-                    CntMs.InitializationDelay = 0;
-                    StateFlag.CurrACountFlag=1;
-                    StateFlag.CurrBCountFlag=1;
-                    StateFlag.CurrCCountFlag=1;
-                }
-            }
-            break;
+								if (StateFlag.positionCT)//¸ºÔØ²à
+								{
+									if ((StateFlag.CurrACountFlag == 0) && (StateFlag.CurrBCountFlag == 0) && (StateFlag.CurrCCountFlag == 0))
+									{
+										if ((SeqJud[0] < 3) || (SeqJud[1] < 3) || (SeqJud[2] < 3))
+										{//¸ºÔØ»ù²¨Ì«Ð¡ ·ÅÆú×Ô¶¯Ð£Õý
+											StateFlag.SequenceAutoFlag = 0;
+											Information_Structure.Correction.B.LoadingCondition = 1;
+											Information_Structure.Correction.B.PhaseSequenResult = 1;
+										}
+									}
+									else
+									{
+										FFTDataReduction2(1, FFTCalcChan >> 1);//¼ÆËã¸ºÔØ»ù²¨
+									}
+									StateFlag.onceRunStartFlag = 1;
+								}
+								else
+								{//µçÍø²à
+									if ((StateFlag.CurrACountFlag == 0) && (StateFlag.CurrBCountFlag == 0) && (StateFlag.CurrCCountFlag == 0))
+									{
+										if ((SeqJud[0] > 20) || (SeqJud[1] > 20) || (SeqJud[2] > 20))
+										{//¸ºÔØ¸ÉÈÅÌ«´ó ·ÅÆú×Ô¶¯Ð£Õý
+											StateFlag.SequenceAutoFlag = 0;
+											Information_Structure.Correction.B.LoadingCondition = 1;
+											Information_Structure.Correction.B.PhaseSequenResult = 1;
+										}
+									}
+									else
+									{
+										FFTDataReduction2(4, FFTCalcChan >> 1);//·¢ËÄ´ÎÐ³²¨Ç°¼ÆËã¸ºÔØËÄ´ÎÐ³²¨
+									}
+									StateFlag.onceRunStartFlag = 0;
+								}
+							}
+						}
+					}
+					else
+					{
+						CntSec.OverTimeCount = 0;
+						CntMs.InitializationDelay = 0;
+						StateFlag.CurrACountFlag = 1;
+						StateFlag.CurrBCountFlag = 1;
+						StateFlag.CurrCCountFlag = 1;
+					}
+				}
+			}
+				break;
 
-            case 3:
-                if(CntMs.StartDelay >=CNT_MS(500)){		//500ms
-                    FaultDetectInMainLoop();													//¹ÊÕÏ¼ì²â
-                }
+			case 3:
+			{
+				if (CntMs.StartDelay >= CNT_MS(500))
+				{//500ms
+					FaultDetectInMainLoop();//¹ÊÕÏ¼ì²â
+				}
 
-                AutoStartInFault();
-                BlindingBluetoothConnectionLED();
-                SlaveStateInstruction();														//Ö÷»ú·¢ËÍ4B5BÖ¸Áî
-                if(StateFlag.RxcFlag == 1)			// Get_Order();								//´Ó»ú½ÓÊÕ4B5BÖ¸Áî
-                if((StateFlag.WatchdogFlag)&&(CntMs.WatchdogDelay>CNT_MS(1000)))
-                {
-                    StateFlag.WatchdogFlag = 0;                      //Í¨ÐÅÓ¦´ðºóÖ´ÐÐ¸´Î»
-                    EALLOW;
-                    WdRegs.SCSR.all = 0;
-                    WdRegs.WDCR.all = 0x0020;
-                    EDIS;
-                }
+				AutoStartInFault();
+				BlindingBluetoothConnectionLED();
+				SlaveStateInstruction();//Ö÷»ú·¢ËÍ4B5BÖ¸Áî
+				if (StateFlag.RxcFlag == 1)// Get_Order();								//´Ó»ú½ÓÊÕ4B5BÖ¸Áî
+					if ((StateFlag.WatchdogFlag) && (CntMs.WatchdogDelay > CNT_MS(1000)))
+					{
+						StateFlag.WatchdogFlag = 0;//Í¨ÐÅÓ¦´ðºóÖ´ÐÐ¸´Î»
+						EALLOW;
+						WdRegs.SCSR.all = 0;
+						WdRegs.WDCR.all = 0x0020;
+						EDIS;
+					}
 
-                if(UserSetting.WordMode.B.StandbyModeFlag)                                  //´ý»ú¹¦ÄÜ¿ªÆô
-                {
-//                    switch(CurrentProperty){
-//                        case 0:
-//                            if(MatchCondition)  AutoJudgeRms_F = MU_LCD_RATIO*Min(CurrRefARms,CurrRefBRms,CurrRefCRms);
-//                            else                AutoJudgeRms_F = MU_LCD_RATIO*Max(CurrRefARms,CurrRefBRms,CurrRefCRms);
-//                        break;
-//                        case 1:
-//                            if(MatchCondition)  AutoJudgeRms_F = Min(loadCurA_rms,loadCurB_rms,loadCurC_rms);
-//                            else                AutoJudgeRms_F = Max(loadCurA_rms,loadCurB_rms,loadCurC_rms);
-//                        break;
-//                case 2:
-//                    AutoJudgeRms_F = MU_LCD_RATIO*Max(CurrRefARms,CurrRefBRms,CurrRefCRms);
-//                break;
-//                        default:    AutoJudgeRms_F = CurrRefRms_F;      break;
-//                    }
-                }
-                break;
-            default:break;
-        }
-    }
+				if (UserSetting.WordMode.B.StandbyModeFlag)//´ý»ú¹¦ÄÜ¿ªÆô
+				{
+				}
+			}
+				break;
+			default:
+				break;
+		}
+	}
 }
 
+/*¸Ãº¯ÊýÎ´¶¨Òå¡£WY*/
 void BlindingBluetoothConnectionLED(void)
 {
-//    int flag = CntSec.RespondCount%2;
-//	if(StateFlag.RespondFlag != 0)
-//	{
-//        SET_RUNNING_LED(flag);
-//        SET_EXT_RUNNING_LED(flag);
-//		if(CntSec.RespondCount>StateFlag.RespondFlag*2)	StateFlag.RespondFlag = 0;
-//	}else{
-//		SET_RUNNING_LED(StateFlag.LEDRunFlag);
-//        SET_EXT_RUNNING_LED(StateFlag.LEDRunFlag);
-//		CntSec.RespondCount = 0;
-//	}
 }
 
 void SlaveStateInstruction(void)
@@ -2063,7 +2238,6 @@ void SlaveStateInstruction(void)
 	{
 		CntMs.SendOrderDelay = 0;
 		SendOrderCount++;
-		// Send_Order(0,StateFlag.StateInstruction);
 	}
 	if(SendOrderCount>2)
 	{
@@ -2082,32 +2256,68 @@ void SlaveStateInstruction(void)
 */
 void OverTempLimitCur(void)
 {
-	if(StateEventFlag_A == STATE_EVENT_RUN_A){
-	        switch(DropLetMarkFlag){
-            case 0:
-                outCurSinkTempLimit = 1;
-                if(WindCold.HeatSinkTempterature > WindCold.BackReduceCapacityHeatSink)      DropLetMarkFlag = 1;
-            break;
-            case 1:
-                outCurSinkTempLimit = 0.8;
-                if(WindCold.HeatSinkTempterature > WindCold.ReduceCapacityHeatSink)          DropLetMarkFlag = 2;
-                if(WindCold.HeatSinkTempterature < (WindCold.BackReduceCapacityHeatSink-4))  DropLetMarkFlag = 0;
-            break;
-            case 2:
-                outCurSinkTempLimit = 0.6;
-                if(WindCold.HeatSinkTempterature < (WindCold.ReduceCapacityHeatSink-3))      DropLetMarkFlag = 1;
-            break;
+	if (StateEventFlag_A == STATE_EVENT_RUN_A) //AÏà´¦ÓÚÔËÐÐ×´Ì¬¡£WY
+	{
+		switch (DropLetMarkFlag)
+		{
+			case 0:
+			{
+				outCurSinkTempLimit = 1;
+				if (WindCold.HeatSinkTempterature > WindCold.BackReduceCapacityHeatSink)
+				{
+					DropLetMarkFlag = 1;
+				}
+			}
+				break;
+
+			case 1:
+			{
+				outCurSinkTempLimit = 0.8;
+				if (WindCold.HeatSinkTempterature > WindCold.ReduceCapacityHeatSink)
+				{
+					DropLetMarkFlag = 2;
+				}
+				if (WindCold.HeatSinkTempterature < (WindCold.BackReduceCapacityHeatSink - 4))
+				{
+					DropLetMarkFlag = 0;
+				}
+			}
+				break;
+
+			case 2:
+			{
+				outCurSinkTempLimit = 0.6;
+				if (WindCold.HeatSinkTempterature < (WindCold.ReduceCapacityHeatSink - 3))
+				{
+					DropLetMarkFlag = 1;
+				}
+			}
+				break;
 		}
-    #if NMECB201030REV62
+#if NMECB201030REV62
             if(WindCold.EnvirTemperature > WindCold.ReduceCapacityMotherBoard)                  outCurBoardTempLimit = 0.6;
             else                                                                                outCurBoardTempLimit = 1;
     #else
-            if(WindCold.MotherBoardTempterature > WindCold.ReduceCapacityMotherBoard)           outCurBoardTempLimit = 0.6;
-            else                                                                                outCurBoardTempLimit = 1;
-    #endif
-        if(outCurSinkTempLimit<outCurBoardTempLimit)                                        outCurTempLimit = outCurSinkTempLimit;
-        else                                                                                outCurTempLimit = outCurBoardTempLimit;
-	}else{
+		if (WindCold.MotherBoardTempterature > WindCold.ReduceCapacityMotherBoard)
+		{
+			outCurBoardTempLimit = 0.6;
+		}
+		else
+		{
+			outCurBoardTempLimit = 1;
+		}
+#endif
+		if (outCurSinkTempLimit < outCurBoardTempLimit)
+		{
+			outCurTempLimit = outCurSinkTempLimit;
+		}
+		else
+		{
+			outCurTempLimit = outCurBoardTempLimit;
+		}
+	}
+	else
+	{
 		outCurTempLimit = 1;
 	}
 }
@@ -2120,58 +2330,64 @@ void OverTempLimitCur(void)
  * Ò»µ©Ð£×¼Ê§°ÜÊÇ²»ÔÊÐíÆô¶¯µÄ
  */
 #define AD_REGEDIT_OFFSET_NUM 9600
-void AdRegeditOffset(void) // ¼ÆËãÁãÆ«Öµ
+
+/*
+ * ¼ÆËãADÁãÆ«Öµ¡£WY
+ */
+void AdRegeditOffset(void)
 {
-	int  i=0;
-	VirtulADStruVAL *pAD = &VirtulADVAL;
-	Stru_Virtu_ZeroOffSETVAL *pID = &VirtuZeroOffSETVAL;
+	int i = 0;
+	VirtulADStruVAL *pAD = &VirtulADVAL; //ADÕæÊµ²ÉÑùÖµ¡£WY
+	Stru_Virtu_ZeroOffSETVAL *pID = &VirtuZeroOffSETVAL; //ADÁãÆ«»ù×¼Öµ¡£WY
+
 	if(adcAutoCount < AD_REGEDIT_OFFSET_NUM)  // È¡Õû
 	{
-		tmpOffsetValue[0]  += *pAD->GridHVoltA;  //A15 ESC¸ßÑ¹²àAN      //²É9600¸öµãÏà¼Ó(Ö»ÓÐÕýÏÒ²¨²ÅÄÜ¹»½øÐÐÁãÆ«Ð£×¼)
-		tmpOffsetValue[1]  += *pAD->GridHVoltB;  //B4  ESC¸ßÑ¹²àBN
-		tmpOffsetValue[2]  += *pAD->GridHVoltC;  //C2  ESC¸ßÑ¹²àCN
-		tmpOffsetValue[3]  += *pAD->GridLVoltA;  //D1  ESCµÍÑ¹²àAN
-		tmpOffsetValue[4]  += *pAD->GridLVoltB;  //B5  ESCµÍÑ¹²àBN
-		tmpOffsetValue[5]  += *pAD->GridLVoltC;  //A4  ESCµÍÑ¹²àCN
-		tmpOffsetValue[6]  += *pAD->GridMainCurA;//A2  ESCÖ÷µç¿¹µçÁ÷A
-		tmpOffsetValue[7]  += *pAD->GridMainCurB;//C3  ESCÖ÷µç¿¹µçÁ÷B
-		tmpOffsetValue[8]  += *pAD->GridMainCurC;//D5  ESCÖ÷µç¿¹µçÁ÷C
-		tmpOffsetValue[9]  += *pAD->GridBypassCurA; //A0  ESCÅÔÂ·µçÁ÷A
+		tmpOffsetValue[0] += *pAD->GridHVoltA;  //A15 ESC¸ßÑ¹²àAN      //²É9600¸öµãÏà¼Ó(Ö»ÓÐÕýÏÒ²¨²ÅÄÜ¹»½øÐÐÁãÆ«Ð£×¼)
+		tmpOffsetValue[1] += *pAD->GridHVoltB;  //B4  ESC¸ßÑ¹²àBN
+		tmpOffsetValue[2] += *pAD->GridHVoltC;  //C2  ESC¸ßÑ¹²àCN
+		tmpOffsetValue[3] += *pAD->GridLVoltA;  //D1  ESCµÍÑ¹²àAN
+		tmpOffsetValue[4] += *pAD->GridLVoltB;  //B5  ESCµÍÑ¹²àBN
+		tmpOffsetValue[5] += *pAD->GridLVoltC;  //A4  ESCµÍÑ¹²àCN
+		tmpOffsetValue[6] += *pAD->GridMainCurA;  //A2  ESCÖ÷µç¿¹µçÁ÷A
+		tmpOffsetValue[7] += *pAD->GridMainCurB;  //C3  ESCÖ÷µç¿¹µçÁ÷B
+		tmpOffsetValue[8] += *pAD->GridMainCurC;  //D5  ESCÖ÷µç¿¹µçÁ÷C
+		tmpOffsetValue[9] += *pAD->GridBypassCurA; //A0  ESCÅÔÂ·µçÁ÷A
 		tmpOffsetValue[10] += *pAD->GridBypassCurB; //B2  ESCÅÔÂ·µçÁ÷B
 		tmpOffsetValue[11] += *pAD->GridBypassCurC; //D4  ESCÅÔÂ·µçÁ÷C
-        tmpOffsetValue[12] += *pAD->ADCUDCA;     //D3  ESCÖ±Á÷µçÈÝµçÑ¹A
-        tmpOffsetValue[13] += *pAD->ADCUDCB;     //A5  ESCÖ±Á÷µçÈÝµçÑ¹B
-        tmpOffsetValue[14] += *pAD->ADCUDCC;     //C4  ESCÖ±Á÷µçÈÝµçÑ¹C
+		tmpOffsetValue[12] += *pAD->ADCUDCA;     //D3  ESCÖ±Á÷µçÈÝµçÑ¹A
+		tmpOffsetValue[13] += *pAD->ADCUDCB;     //A5  ESCÖ±Á÷µçÈÝµçÑ¹B
+		tmpOffsetValue[14] += *pAD->ADCUDCC;     //C4  ESCÖ±Á÷µçÈÝµçÑ¹C
 
-		adcAutoCount++;
+		adcAutoCount ++;
 	}
 	else
 	{
-		for(i=0;i<15;i++)
+		for(i = 0; i < 15; i ++)
 		{
-			tmpOffsetValue[i] *= (1.0f/AD_REGEDIT_OFFSET_NUM);    //½«²Éµ½µÄ9600¸öµãÈ¡Æ½¾ùÖµ
+			tmpOffsetValue[i] *= (1.0f / AD_REGEDIT_OFFSET_NUM);    //½«²Éµ½µÄ9600¸öµãÈ¡Æ½¾ùÖµ
 		}
-		pID->gridVoltHAOffset = (int16)(tmpOffsetValue[0]+0.5f);  //½«¼ÆËãµÄÆ½¾ùÖµ¸øµ½ÁãÆ«Öµ(Ðë¼ÓÉÏÐ£ÕýÖµ0.5f)   //½çÃæµÄÁãÆ«Ð£×¼Îª¼ÆËãÁãÆ«Öµ,È»ºó½«¼ÆËãÖµÉÏ´«µ½½çÃæ,Èç¹û²»ÐÞ¸ÄÏÂ·¢¸ÃÖµ¼´ÎªVariZeroOffsetVAL.gridHVoltA.
-		pID->gridVoltHBOffset = (int16)(tmpOffsetValue[1]+0.5f);
-		pID->gridVoltHCOffset = (int16)(tmpOffsetValue[2]+0.5f);
-		pID->gridVoltLAOffset = (int16)(tmpOffsetValue[3]+0.5f);
-		pID->gridVoltLBOffset = (int16)(tmpOffsetValue[4]+0.5f);
-		pID->gridVoltLCOffset = (int16)(tmpOffsetValue[5]+0.5f);
-		pID->gridMainIAOffset = (int16)(tmpOffsetValue[6]+0.5f);
-		pID->gridMainIBOffset = (int16)(tmpOffsetValue[7]+0.5f);
-		pID->gridMainICOffset = (int16)(tmpOffsetValue[8]+0.5f);
-		pID->gridBypassIAOffset = (int16)(tmpOffsetValue[9]+0.5f);
-		pID->gridBypassIBOffset = (int16)(tmpOffsetValue[10]+0.5f);
-		pID->gridBypassICOffset = (int16)(tmpOffsetValue[11]+0.5f);
-        pID->aDCUDCA = 0;
-        pID->aDCUDCB = 0;
-        pID->aDCUDCC = 0;
 
+		pID->gridVoltHAOffset = (int16) (tmpOffsetValue[0] + 0.5f); //½«¼ÆËãµÄÆ½¾ùÖµ¸øµ½ÁãÆ«Öµ(Ðë¼ÓÉÏÐ£ÕýÖµ0.5f)   //½çÃæµÄÁãÆ«Ð£×¼Îª¼ÆËãÁãÆ«Öµ,È»ºó½«¼ÆËãÖµÉÏ´«µ½½çÃæ,Èç¹û²»ÐÞ¸ÄÏÂ·¢¸ÃÖµ¼´ÎªVariZeroOffsetVAL.gridHVoltA.
+		pID->gridVoltHBOffset = (int16) (tmpOffsetValue[1] + 0.5f);
+		pID->gridVoltHCOffset = (int16) (tmpOffsetValue[2] + 0.5f);
+		pID->gridVoltLAOffset = (int16) (tmpOffsetValue[3] + 0.5f);
+		pID->gridVoltLBOffset = (int16) (tmpOffsetValue[4] + 0.5f);
+		pID->gridVoltLCOffset = (int16) (tmpOffsetValue[5] + 0.5f);
+		pID->gridMainIAOffset = (int16) (tmpOffsetValue[6] + 0.5f);
+		pID->gridMainIBOffset = (int16) (tmpOffsetValue[7] + 0.5f);
+		pID->gridMainICOffset = (int16) (tmpOffsetValue[8] + 0.5f);
+		pID->gridBypassIAOffset = (int16) (tmpOffsetValue[9] + 0.5f);
+		pID->gridBypassIBOffset = (int16) (tmpOffsetValue[10] + 0.5f);
+		pID->gridBypassICOffset = (int16) (tmpOffsetValue[11] + 0.5f);
+		pID->aDCUDCA = 0;
+		pID->aDCUDCB = 0;
+		pID->aDCUDCC = 0;
 
-		for(i=0;i<15;i++)
+		for(i = 0; i < 15; i ++)
 		{
 			tmpOffsetValue[i] = 0;         //ÇåÁã
 		}
+
 		adcAutoCount = 0;
 		StateFlag.onceTimeAdcAutoAdjust = false;
 	}
@@ -2183,25 +2399,21 @@ void AdRegeditOffset(void) // ¼ÆËãÁãÆ«Öµ
 // 20150108 DSP REV6µÄµçÂ·°å£¬²ÉÑùµçÂ·1.5VÖÐµãÆ«²î£¬Êä³öµçÁ÷Ð£×¼ÖµÎª2140.ÐÞ¸ÄÃÅÏÞ2200
 void ZeroOffsetJudgment(void)			//»¹ÓÐÒ»Ð©Í¨µÀÃ»ÓÐÌí¼Ó
 {
-    Stru_Virtu_ZeroOffSETVAL *pAD = &VirtuZeroOffSETVAL;
+	Stru_Virtu_ZeroOffSETVAL *pAD = &VirtuZeroOffSETVAL;
 
-	if(   (pAD->gridVoltHAOffset 		> zeroOffsetUpLimit)	\
-		||(pAD->gridVoltHBOffset 		> zeroOffsetUpLimit)	\
-		||(pAD->gridVoltHCOffset 		> zeroOffsetUpLimit)	\
-		||(pAD->gridVoltLAOffset 	    > zeroOffsetUpLimit)	\
-		||(pAD->gridVoltLBOffset 	    > zeroOffsetUpLimit)	\
-		||(pAD->gridVoltLCOffset 	    > zeroOffsetUpLimit)	\
-		||(pAD->gridMainIAOffset 		> zeroOffsetUpLimit)	\
-		||(pAD->gridMainIBOffset 		> zeroOffsetUpLimit)	\
-		||(pAD->gridMainICOffset 		> zeroOffsetUpLimit) 	\
-		||(pAD->gridBypassIAOffset		< zeroOffsetDownLimit)	\
-		||(pAD->gridBypassIBOffset 		< zeroOffsetDownLimit)	\
-		||(pAD->gridBypassICOffset 		< zeroOffsetDownLimit)	 ){
-		if(softwareFaultWord3.B.ESCCalibrarionFailureFlag == 0){
-//			softwareFaultWord2.B.calibrarionFailureFlag = FaultDetect(SOE_GP_FAULT+21,CNT_CALIB_ZERO_SHIFT,0);
+	if((pAD->gridVoltHAOffset > zeroOffsetUpLimit) || (pAD->gridVoltHBOffset > zeroOffsetUpLimit) || (pAD->gridVoltHCOffset > zeroOffsetUpLimit)
+			|| (pAD->gridVoltLAOffset > zeroOffsetUpLimit) || (pAD->gridVoltLBOffset > zeroOffsetUpLimit) || (pAD->gridVoltLCOffset > zeroOffsetUpLimit)
+			|| (pAD->gridMainIAOffset > zeroOffsetUpLimit) || (pAD->gridMainIBOffset > zeroOffsetUpLimit) || (pAD->gridMainICOffset > zeroOffsetUpLimit)
+			|| (pAD->gridBypassIAOffset < zeroOffsetDownLimit) || (pAD->gridBypassIBOffset < zeroOffsetDownLimit)
+			|| (pAD->gridBypassICOffset < zeroOffsetDownLimit))
+	{
+		if(softwareFaultWord3.B.ESCCalibrarionFailureFlag == 0)
+		{
 		}
-	}else{
-		SetFaultDelayCounter(CNT_CALIB_ZERO_SHIFT,0);
+	}
+	else
+	{
+		SetFaultDelayCounter(CNT_CALIB_ZERO_SHIFT, 0);
 	}
 }
 
@@ -2264,27 +2476,35 @@ void THDiCal(void)
  */
 void AutoStartInFault(void)
 {
-	if(StateFlag.startingMethod == 0){  	//×Ô¶¯
-		switch(ESCFlagA.autoStFlag){
-		case ORIGINAL_STATE_A:			//³õÊ¼×´Ì¬
-         if(ESCFlagA.VoltageModeFlag == 0){
-             if((ESCFlagA.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2))&&(ESCFlagA.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2))){  //ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
-                 if(ESCFlagA.RELAYCONTROLFlag == 1){
-                     if((ESCFlagA.ByPassContactFlag == 1)&&(ESCFlagA.ContactorFeedBackFlag == 0)){
-                         SET_GV_VOL_CTRL_A(1);
-                         ESCFlagA.RELAYCONTROLFlag = 0;
-                     }
-                }
-             }
-            if((ESCFlagA.ESCCntMs.StartDelay>CNT_MS(60000))){//60Ãë
-                /*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
-                if((GET_BYPASS_FEEDBACK == 1)&&(GET_GV_VOL_CTRL_A == 1)&&(ESCBYRelayCNTA != 1)&&(ESCSicFaultCNTA != 1))
-                {
-                    ESCFlagA.BYFEEDBACKFLAG = 1;
-                    SET_POWER_CTRL(1);
-                    Delayus(TIME_WRITE_15VOLT_REDAY);
-                    CntSec.StopDelay = 0;
-                    ESCFlagA.autoStFlag = AUTO_DETECTION_STATE_A;
+	if (StateFlag.startingMethod == 0)
+	{//×Ô¶¯
+		switch (ESCFlagA.autoStFlag)
+		{
+			case ORIGINAL_STATE_A://³õÊ¼×´Ì¬
+				if (ESCFlagA.VoltageModeFlag == 0)
+				{
+					if ((ESCFlagA.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2)) && (ESCFlagA.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2)))
+					{//ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
+						if (ESCFlagA.RELAYCONTROLFlag == 1)
+						{
+							if ((ESCFlagA.ByPassContactFlag == 1) && (ESCFlagA.ContactorFeedBackFlag == 0))
+							{
+								SET_GV_VOL_CTRL_A(1);
+								ESCFlagA.RELAYCONTROLFlag = 0;
+							}
+						}
+					}
+
+					if ((ESCFlagA.ESCCntMs.StartDelay > CNT_MS(60000)))
+					{//60Ãë
+						/*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
+						if ((GET_BYPASS_FEEDBACK == 1) && (GET_GV_VOL_CTRL_A == 1) && (ESCBYRelayCNTA != 1) && (ESCSicFaultCNTA != 1))
+						{
+							ESCFlagA.BYFEEDBACKFLAG = 1;
+							SET_POWER_CTRL(1);
+							Delayus(TIME_WRITE_15VOLT_REDAY);
+							CntSec.StopDelay = 0;
+							ESCFlagA.autoStFlag = AUTO_DETECTION_STATE_A;
 //                    SET_RUNNING_LED(0);
 //                    if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
 //                         (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
@@ -2292,26 +2512,32 @@ void AutoStartInFault(void)
 //                    {
 //                        SET_FAULT_LED(0);
 //                    }
-                }
-             }
-        }else if(ESCFlagA.VoltageModeFlag == 1){
-            if((ESCFlagA.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2))&&(ESCFlagA.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2))){  //ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
-                if(ESCFlagA.RELAYCONTROLFlag == 1){
-                    if((ESCFlagA.ByPassContactFlag == 1)&&(ESCFlagA.ContactorFeedBackFlag == 0)){
-                        SET_GV_VOL_CTRL_A(1);
-                        ESCFlagA.RELAYCONTROLFlag = 0;
-                    }
-                }
-            }
-                if((ESCFlagA.ESCCntMs.StartDelay>CNT_MS(60000))){//60Ãë
-                   /*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
-                    if((GET_BYPASS_FEEDBACK == 1)&&(GET_GV_VOL_CTRL_A == 1)&&(ESCBYRelayCNTA != 1)&&(ESCSicFaultCNTA != 1))
-                    {
-                        ESCFlagA.BYFEEDBACKFLAG = 1;
-                        SET_POWER_CTRL(1);
-                        Delayus(TIME_WRITE_15VOLT_REDAY);
-                        CntSec.StopDelay = 0;
-                        ESCFlagA.autoStFlag = AUTO_DETECTION_STATE_A;
+						}
+					}
+				}
+				else if (ESCFlagA.VoltageModeFlag == 1)
+				{
+					if ((ESCFlagA.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2)) && (ESCFlagA.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2)))
+					{//ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
+						if (ESCFlagA.RELAYCONTROLFlag == 1)
+						{
+							if ((ESCFlagA.ByPassContactFlag == 1) && (ESCFlagA.ContactorFeedBackFlag == 0))
+							{
+								SET_GV_VOL_CTRL_A(1);
+								ESCFlagA.RELAYCONTROLFlag = 0;
+							}
+						}
+					}
+					if ((ESCFlagA.ESCCntMs.StartDelay > CNT_MS(60000)))
+					{//60Ãë
+						/*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
+						if ((GET_BYPASS_FEEDBACK == 1) && (GET_GV_VOL_CTRL_A == 1) && (ESCBYRelayCNTA != 1) && (ESCSicFaultCNTA != 1))
+						{
+							ESCFlagA.BYFEEDBACKFLAG = 1;
+							SET_POWER_CTRL(1);
+							Delayus(TIME_WRITE_15VOLT_REDAY);
+							CntSec.StopDelay = 0;
+							ESCFlagA.autoStFlag = AUTO_DETECTION_STATE_A;
 //                        SET_RUNNING_LED(0);
 //                        if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
 //                             (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
@@ -2319,84 +2545,103 @@ void AutoStartInFault(void)
 //                        {
 //                            SET_FAULT_LED(0);
 //                        }
-                    }
-             }
-        }
-		break;
-		case AUTO_DETECTION_STATE_A:		//×Ô¼ì×´Ì¬
+						}
+					}
+				}
+				break;
+			case AUTO_DETECTION_STATE_A://×Ô¼ì×´Ì¬
 //			if(!softwareFaultWord3.B.ESCCalibrarionFailureFlag)	//¼ì²âÁãÆ«
 //			{
-				if(ESCFlagA.realFaultFlag == 1){
-					cntForRepFaultA++;                   // µ±Ç°ÖØÆôÁË¼¸´Î
+				if (ESCFlagA.realFaultFlag == 1)
+				{
+					cntForRepFaultA++;// µ±Ç°ÖØÆôÁË¼¸´Î
 					ESCFlagA.realFaultFlag = 0;
 				}
-				if((!ESCFlagA.onceRunStartFlag)||(StateEventFlag_A==STATE_EVENT_RUN_A)){
-				        ESCFlagA.onceRunStartFlag = 1;
-				        ESCFlagA.autoStFlag = TWEAK_STATE_A; 	//switchÌø×ªµ½case:2
+				if ((!ESCFlagA.onceRunStartFlag) || (StateEventFlag_A == STATE_EVENT_RUN_A))
+				{
+					ESCFlagA.onceRunStartFlag = 1;
+					ESCFlagA.autoStFlag = TWEAK_STATE_A;//switchÌø×ªµ½case:2
 				}
-//				StateFlag.resetFlag = 1;                    //¸´Î»
-               if((ESCBYRelayCNTA != 1)&&(ESCSicFaultCNTA != 1)){
-                   ESCFlagA.resetFlag = 1;
-               }
+				if ((ESCBYRelayCNTA != 1) && (ESCSicFaultCNTA != 1))
+				{
+					ESCFlagA.resetFlag = 1;
+				}
 //			}
-		break;
-		case TWEAK_STATE_A:			//Ä£Ê½×ª»»
-		    switch(StateEventFlag_A){
-			case STATE_EVENT_STANDBY_A:
-			     ESCFlagA.startFlag = 1;    //²»ÊÇ±¸ÓÃµ¥Ôª,¾Í¿É×Ô¶¯ÔËÐÐ
-			break;
-			case STATE_EVENT_RECHARGE_A:	ESCFlagA.ESCCntMs.SelfJc = 0;			 break;
-            case STATE_EVENT_WAIT_A:      ESCFlagA.ESCCntMs.SelfJc = 0;            break;
-			case STATE_EVENT_RUN_A:
+				break;
+			case TWEAK_STATE_A://Ä£Ê½×ª»»
+				switch (StateEventFlag_A)
+				{
+					case STATE_EVENT_STANDBY_A:
+						ESCFlagA.startFlag = 1;//²»ÊÇ±¸ÓÃµ¥Ôª,¾Í¿É×Ô¶¯ÔËÐÐ
+						break;
+					case STATE_EVENT_RECHARGE_A:
+						ESCFlagA.ESCCntMs.SelfJc = 0;
+						break;
+					case STATE_EVENT_WAIT_A:
+						ESCFlagA.ESCCntMs.SelfJc = 0;
+						break;
+					case STATE_EVENT_RUN_A:
 //		    	I_ins_index = 0.005;    							//I_ins_index ²»ÄÜ´óÓÚ0.01
-				if(ESCFlagA.ESCCntMs.SelfJc > CNT_MS(3000))						// µ÷ÈëÕý³£×´Ì¬
-			    {
-					ESCFlagA.autoStFlag = INSPECTION_STATE_A;
-			    }
-		    break;
-			case STATE_EVENT_FAULT_A:
-			    ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
-				ESCFlagA.realFaultFlag = 1;
-				if(ESCFlagA.ESCCntMs.StartDelay>CNT_MS(7000))	ESCFlagA.ESCCntMs.StartDelay = CNT_MS(7000);        //Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
-		    break;
-		    }
-		break;
+						if (ESCFlagA.ESCCntMs.SelfJc > CNT_MS(3000))// µ÷ÈëÕý³£×´Ì¬
+						{
+							ESCFlagA.autoStFlag = INSPECTION_STATE_A;
+						}
+						break;
+					case STATE_EVENT_FAULT_A:
+						ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
+						ESCFlagA.realFaultFlag = 1;
+						if (ESCFlagA.ESCCntMs.StartDelay > CNT_MS(7000))
+							ESCFlagA.ESCCntMs.StartDelay = CNT_MS(7000);//Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
+						break;
+				}
+				break;
 
-		case INSPECTION_STATE_A:			// ºÎÊ±µ÷Èë×´Ì¬0£¬£¨×ÔÆô¶¯&&¹ÊÕÏ£©
-			if((StateEventFlag_A == STATE_EVENT_FAULT_A)||(StateEventFlag_A == STATE_EVENT_STANDBY_A))
-			{
-				if(StateEventFlag_A == STATE_EVENT_FAULT_A){
-				    ESCFlagA.realFaultFlag = 1;
-					if(ESCFlagA.ESCCntMs.StartDelay>CNT_MS(15000))	ESCFlagA.ESCCntMs.StartDelay = CNT_MS(15000);                        //Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
-			     }else{
-			         ESCFlagA.realFaultFlag = 0;
-			     }
-				ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
-			}
-		break;
-		default:break;
+			case INSPECTION_STATE_A:// ºÎÊ±µ÷Èë×´Ì¬0£¬£¨×ÔÆô¶¯&&¹ÊÕÏ£©
+				if ((StateEventFlag_A == STATE_EVENT_FAULT_A) || (StateEventFlag_A == STATE_EVENT_STANDBY_A))
+				{
+					if (StateEventFlag_A == STATE_EVENT_FAULT_A)
+					{
+						ESCFlagA.realFaultFlag = 1;
+						if (ESCFlagA.ESCCntMs.StartDelay > CNT_MS(15000))
+							ESCFlagA.ESCCntMs.StartDelay = CNT_MS(15000);//Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
+					}
+					else
+					{
+						ESCFlagA.realFaultFlag = 0;
+					}
+					ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
+				}
+				break;
+			default:
+				break;
 		}
 
-        switch(ESCFlagB.autoStFlag){
-        case ORIGINAL_STATE_B:          //³õÊ¼×´Ì¬
-         if(ESCFlagB.VoltageModeFlag == 0){
-             if((ESCFlagB.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2))&&(ESCFlagB.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2))){  //ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
-                 if(ESCFlagB.RELAYCONTROLFlag == 1){
-                     if((ESCFlagB.ByPassContactFlag == 1)&&(ESCFlagB.ContactorFeedBackFlag == 0)){
-                         SET_GV_VOL_CTRL_B(1);
-                         ESCFlagB.RELAYCONTROLFlag = 0;
-                     }
-                }
-             }
-            if((ESCFlagB.ESCCntMs.StartDelay>CNT_MS(60000))){//60Ãë
-                /*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
-                if((GET_BYPASS_FEEDBACK == 1)&&(GET_GV_VOL_CTRL_B == 1)&&(ESCBYRelayCNTB != 1)&&(ESCSicFaultCNTB != 1))
-                {
-                    ESCFlagB.BYFEEDBACKFLAG = 1;
-                    SET_POWER_CTRL(1);
-                    Delayus(TIME_WRITE_15VOLT_REDAY);
-                    CntSec.StopDelay = 0;
-                    ESCFlagB.autoStFlag = AUTO_DETECTION_STATE_B;
+		switch (ESCFlagB.autoStFlag)
+		{
+			case ORIGINAL_STATE_B://³õÊ¼×´Ì¬
+				if (ESCFlagB.VoltageModeFlag == 0)
+				{
+					if ((ESCFlagB.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2)) && (ESCFlagB.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2)))
+					{//ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
+						if (ESCFlagB.RELAYCONTROLFlag == 1)
+						{
+							if ((ESCFlagB.ByPassContactFlag == 1) && (ESCFlagB.ContactorFeedBackFlag == 0))
+							{
+								SET_GV_VOL_CTRL_B(1);
+								ESCFlagB.RELAYCONTROLFlag = 0;
+							}
+						}
+					}
+					if ((ESCFlagB.ESCCntMs.StartDelay > CNT_MS(60000)))
+					{//60Ãë
+						/*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
+						if ((GET_BYPASS_FEEDBACK == 1) && (GET_GV_VOL_CTRL_B == 1) && (ESCBYRelayCNTB != 1) && (ESCSicFaultCNTB != 1))
+						{
+							ESCFlagB.BYFEEDBACKFLAG = 1;
+							SET_POWER_CTRL(1);
+							Delayus(TIME_WRITE_15VOLT_REDAY);
+							CntSec.StopDelay = 0;
+							ESCFlagB.autoStFlag = AUTO_DETECTION_STATE_B;
 //                        SET_RUNNING_LED(0);
 //                        if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
 //                             (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
@@ -2404,26 +2649,32 @@ void AutoStartInFault(void)
 //                        {
 //                            SET_FAULT_LED(0);
 //                        }
-                }
-             }
-        }else if(ESCFlagB.VoltageModeFlag == 1){
-            if((ESCFlagB.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2))&&(ESCFlagB.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2))){  //ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
-                if(ESCFlagB.RELAYCONTROLFlag == 1){
-                    if((ESCFlagB.ByPassContactFlag == 1)&&(ESCFlagB.ContactorFeedBackFlag == 0)){
-                        SET_GV_VOL_CTRL_B(1);
-                        ESCFlagB.RELAYCONTROLFlag = 0;
-                    }
-                }
-            }
-            if((ESCFlagB.ESCCntMs.StartDelay>CNT_MS(60000))){//60Ãë
-               /*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
-                if((GET_BYPASS_FEEDBACK == 1)&&(GET_GV_VOL_CTRL_B == 1)&&(ESCBYRelayCNTB != 1)&&(ESCSicFaultCNTB != 1))
-                {
-                    ESCFlagB.BYFEEDBACKFLAG = 1;
-                    SET_POWER_CTRL(1);
-                    Delayus(TIME_WRITE_15VOLT_REDAY);
-                    CntSec.StopDelay = 0;
-                    ESCFlagB.autoStFlag = AUTO_DETECTION_STATE_B;
+						}
+					}
+				}
+				else if (ESCFlagB.VoltageModeFlag == 1)
+				{
+					if ((ESCFlagB.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2)) && (ESCFlagB.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2)))
+					{//ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
+						if (ESCFlagB.RELAYCONTROLFlag == 1)
+						{
+							if ((ESCFlagB.ByPassContactFlag == 1) && (ESCFlagB.ContactorFeedBackFlag == 0))
+							{
+								SET_GV_VOL_CTRL_B(1);
+								ESCFlagB.RELAYCONTROLFlag = 0;
+							}
+						}
+					}
+					if ((ESCFlagB.ESCCntMs.StartDelay > CNT_MS(60000)))
+					{//60Ãë
+						/*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
+						if ((GET_BYPASS_FEEDBACK == 1) && (GET_GV_VOL_CTRL_B == 1) && (ESCBYRelayCNTB != 1) && (ESCSicFaultCNTB != 1))
+						{
+							ESCFlagB.BYFEEDBACKFLAG = 1;
+							SET_POWER_CTRL(1);
+							Delayus(TIME_WRITE_15VOLT_REDAY);
+							CntSec.StopDelay = 0;
+							ESCFlagB.autoStFlag = AUTO_DETECTION_STATE_B;
 //                    SET_RUNNING_LED(0);
 //                    if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
 //                         (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
@@ -2431,83 +2682,102 @@ void AutoStartInFault(void)
 //                    {
 //                        SET_FAULT_LED(0);
 //                    }
-                }
-            }
-         }
-        break;
-        case AUTO_DETECTION_STATE_B:        //×Ô¼ì×´Ì¬
+						}
+					}
+				}
+				break;
+			case AUTO_DETECTION_STATE_B://×Ô¼ì×´Ì¬
 //            if(!softwareFaultWord3.B.ESCCalibrarionFailureFlag)    //¼ì²âÁãÆ«
 //            {
-                if(ESCFlagB.realFaultFlag == 1){
-                    cntForRepFaultB++;                   // µ±Ç°ÖØÆôÁË¼¸´Î
-                    ESCFlagB.realFaultFlag = 0;
-                }
-                if((!ESCFlagB.onceRunStartFlag)||(StateEventFlag_B==STATE_EVENT_RUN_B)){
-                        ESCFlagB.onceRunStartFlag = 1;
-                        ESCFlagB.autoStFlag = TWEAK_STATE_B;    //switchÌø×ªµ½case:2
-                }
-//                StateFlag.resetFlag = 1;                    //¸´Î»
-                if((ESCBYRelayCNTB != 1)&&(ESCSicFaultCNTB != 1)){
-                    ESCFlagB.resetFlag = 1;
-                }
+				if (ESCFlagB.realFaultFlag == 1)
+				{
+					cntForRepFaultB++;// µ±Ç°ÖØÆôÁË¼¸´Î
+					ESCFlagB.realFaultFlag = 0;
+				}
+				if ((!ESCFlagB.onceRunStartFlag) || (StateEventFlag_B == STATE_EVENT_RUN_B))
+				{
+					ESCFlagB.onceRunStartFlag = 1;
+					ESCFlagB.autoStFlag = TWEAK_STATE_B;//switchÌø×ªµ½case:2
+				}
+				if ((ESCBYRelayCNTB != 1) && (ESCSicFaultCNTB != 1))
+				{
+					ESCFlagB.resetFlag = 1;
+				}
 //            }
-        break;
-        case TWEAK_STATE_B:         //Ä£Ê½×ª»»
-            switch(StateEventFlag_B){
-            case STATE_EVENT_STANDBY_B:
-                 ESCFlagB.startFlag = 1;    //²»ÊÇ±¸ÓÃµ¥Ôª,¾Í¿É×Ô¶¯ÔËÐÐ
-            break;
-            case STATE_EVENT_RECHARGE_B:    ESCFlagB.ESCCntMs.SelfJc = 0;            break;
-            case STATE_EVENT_WAIT_B:      ESCFlagB.ESCCntMs.SelfJc = 0;            break;
-            case STATE_EVENT_RUN_B:
+				break;
+			case TWEAK_STATE_B://Ä£Ê½×ª»»
+				switch (StateEventFlag_B)
+				{
+					case STATE_EVENT_STANDBY_B:
+						ESCFlagB.startFlag = 1;//²»ÊÇ±¸ÓÃµ¥Ôª,¾Í¿É×Ô¶¯ÔËÐÐ
+						break;
+					case STATE_EVENT_RECHARGE_B:
+						ESCFlagB.ESCCntMs.SelfJc = 0;
+						break;
+					case STATE_EVENT_WAIT_B:
+						ESCFlagB.ESCCntMs.SelfJc = 0;
+						break;
+					case STATE_EVENT_RUN_B:
 //              I_ins_index = 0.005;                                //I_ins_index ²»ÄÜ´óÓÚ0.01
-                if(ESCFlagB.ESCCntMs.SelfJc > CNT_MS(3000))                     // µ÷ÈëÕý³£×´Ì¬
-                {
-                    ESCFlagB.autoStFlag = INSPECTION_STATE_B;
-                }
-            break;
-            case STATE_EVENT_FAULT_B:
-                ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
-                ESCFlagB.realFaultFlag = 1;
-                if(ESCFlagB.ESCCntMs.StartDelay>CNT_MS(7000))   ESCFlagB.ESCCntMs.StartDelay = CNT_MS(7000);        //Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
-            break;
-            }
-        break;
+						if (ESCFlagB.ESCCntMs.SelfJc > CNT_MS(3000))// µ÷ÈëÕý³£×´Ì¬
+						{
+							ESCFlagB.autoStFlag = INSPECTION_STATE_B;
+						}
+						break;
+					case STATE_EVENT_FAULT_B:
+						ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
+						ESCFlagB.realFaultFlag = 1;
+						if (ESCFlagB.ESCCntMs.StartDelay > CNT_MS(7000))
+							ESCFlagB.ESCCntMs.StartDelay = CNT_MS(7000);//Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
+						break;
+				}
+				break;
 
-        case INSPECTION_STATE_B:            // ºÎÊ±µ÷Èë×´Ì¬0£¬£¨×ÔÆô¶¯&&¹ÊÕÏ£©
-            if((StateEventFlag_B == STATE_EVENT_FAULT_B)||(StateEventFlag_B == STATE_EVENT_STANDBY_B))
-            {
-                if(StateEventFlag_B == STATE_EVENT_FAULT_B){
-                    ESCFlagB.realFaultFlag = 1;
-                    if(ESCFlagB.ESCCntMs.StartDelay>CNT_MS(15000))  ESCFlagB.ESCCntMs.StartDelay = CNT_MS(15000);                        //Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
-                 }else{
-                     ESCFlagB.realFaultFlag = 0;
-                 }
-                ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
-            }
-        break;
-        default:break;
-        }
-         switch(ESCFlagC.autoStFlag){
-         case ORIGINAL_STATE_C:          //³õÊ¼×´Ì¬
-          if(ESCFlagC.VoltageModeFlag == 0){
-              if((ESCFlagC.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2))&&(ESCFlagC.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2))){  //ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
-                  if(ESCFlagC.RELAYCONTROLFlag == 1){
-                      if((ESCFlagC.ByPassContactFlag == 1)&&(ESCFlagC.ContactorFeedBackFlag == 0)){
-                          SET_GV_VOL_CTRL_C(1);
-                          ESCFlagC.RELAYCONTROLFlag = 0;
-                      }
-                 }
-              }
-             if((ESCFlagC.ESCCntMs.StartDelay>CNT_MS(60000))){//60Ãë
-                 /*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
-                 if((GET_BYPASS_FEEDBACK == 1)&&(GET_GV_VOL_CTRL_C == 1)&&(ESCBYRelayCNTC != 1)&&(ESCSicFaultCNTC != 1))
-                 {
-                     ESCFlagC.BYFEEDBACKFLAG = 1;
-                     SET_POWER_CTRL(1);
-                     Delayus(TIME_WRITE_15VOLT_REDAY);
-                     CntSec.StopDelay = 0;
-                     ESCFlagC.autoStFlag = AUTO_DETECTION_STATE_C;
+			case INSPECTION_STATE_B:// ºÎÊ±µ÷Èë×´Ì¬0£¬£¨×ÔÆô¶¯&&¹ÊÕÏ£©
+				if ((StateEventFlag_B == STATE_EVENT_FAULT_B) || (StateEventFlag_B == STATE_EVENT_STANDBY_B))
+				{
+					if (StateEventFlag_B == STATE_EVENT_FAULT_B)
+					{
+						ESCFlagB.realFaultFlag = 1;
+						if (ESCFlagB.ESCCntMs.StartDelay > CNT_MS(15000))
+							ESCFlagB.ESCCntMs.StartDelay = CNT_MS(15000);//Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
+					}
+					else
+					{
+						ESCFlagB.realFaultFlag = 0;
+					}
+					ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
+				}
+				break;
+			default:
+				break;
+		}
+		switch (ESCFlagC.autoStFlag)
+		{
+			case ORIGINAL_STATE_C://³õÊ¼×´Ì¬
+				if (ESCFlagC.VoltageModeFlag == 0)
+				{
+					if ((ESCFlagC.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2)) && (ESCFlagC.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2)))
+					{//ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
+						if (ESCFlagC.RELAYCONTROLFlag == 1)
+						{
+							if ((ESCFlagC.ByPassContactFlag == 1) && (ESCFlagC.ContactorFeedBackFlag == 0))
+							{
+								SET_GV_VOL_CTRL_C(1);
+								ESCFlagC.RELAYCONTROLFlag = 0;
+							}
+						}
+					}
+					if ((ESCFlagC.ESCCntMs.StartDelay > CNT_MS(60000)))
+					{//60Ãë
+						/*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
+						if ((GET_BYPASS_FEEDBACK == 1) && (GET_GV_VOL_CTRL_C == 1) && (ESCBYRelayCNTC != 1) && (ESCSicFaultCNTC != 1))
+						{
+							ESCFlagC.BYFEEDBACKFLAG = 1;
+							SET_POWER_CTRL(1);
+							Delayus(TIME_WRITE_15VOLT_REDAY);
+							CntSec.StopDelay = 0;
+							ESCFlagC.autoStFlag = AUTO_DETECTION_STATE_C;
 //                     SET_RUNNING_LED(0);
 //                     if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
 //                          (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
@@ -2515,26 +2785,32 @@ void AutoStartInFault(void)
 //                     {
 //                         SET_FAULT_LED(0);
 //                     }
-                 }
-              }
-         }else if(ESCFlagC.VoltageModeFlag == 1){
-             if((ESCFlagC.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2))&&(ESCFlagC.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2))){  //ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
-                 if(ESCFlagC.RELAYCONTROLFlag == 1){
-                     if((ESCFlagC.ByPassContactFlag == 1)&&(ESCFlagC.ContactorFeedBackFlag == 0)){
-                         SET_GV_VOL_CTRL_C(1);
-                         ESCFlagC.RELAYCONTROLFlag = 0;
-                     }
-                 }
-             }
-             if((ESCFlagC.ESCCntMs.StartDelay>CNT_MS(60000))){//60Ãë
-                /*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
-                 if((GET_BYPASS_FEEDBACK == 1)&&(GET_GV_VOL_CTRL_C == 1)&&(ESCBYRelayCNTC != 1)&&(ESCSicFaultCNTC != 1))
-                 {
-                     ESCFlagC.BYFEEDBACKFLAG = 1;
-                     SET_POWER_CTRL(1);
-                     Delayus(TIME_WRITE_15VOLT_REDAY);
-                     CntSec.StopDelay = 0;
-                     ESCFlagC.autoStFlag = AUTO_DETECTION_STATE_C;
+						}
+					}
+				}
+				else if (ESCFlagC.VoltageModeFlag == 1)
+				{
+					if ((ESCFlagC.ESCCntSec.PRECHARGEDelayBY >= CNT_SEC(2)) && (ESCFlagC.ESCCntSec.PRECHARGEDelay >= CNT_SEC(2)))
+					{//ÉÏµçÁ½ÃëÖ®ºóÐ¡¼ÌµçÆ÷ÔÚ¶¯×÷;
+						if (ESCFlagC.RELAYCONTROLFlag == 1)
+						{
+							if ((ESCFlagC.ByPassContactFlag == 1) && (ESCFlagC.ContactorFeedBackFlag == 0))
+							{
+								SET_GV_VOL_CTRL_C(1);
+								ESCFlagC.RELAYCONTROLFlag = 0;
+							}
+						}
+					}
+					if ((ESCFlagC.ESCCntMs.StartDelay > CNT_MS(60000)))
+					{//60Ãë
+						/*********Æ½Ê±µ÷ÊÔÐèÒª½«ÆäÆÁ±Îµô,ÕûÌåµ÷ÊÔÔÙ´ò¿ª***************/
+						if ((GET_BYPASS_FEEDBACK == 1) && (GET_GV_VOL_CTRL_C == 1) && (ESCBYRelayCNTC != 1) && (ESCSicFaultCNTC != 1))
+						{
+							ESCFlagC.BYFEEDBACKFLAG = 1;
+							SET_POWER_CTRL(1);
+							Delayus(TIME_WRITE_15VOLT_REDAY);
+							CntSec.StopDelay = 0;
+							ESCFlagC.autoStFlag = AUTO_DETECTION_STATE_C;
 //                     SET_RUNNING_LED(0);
 //                     if(  (StateEventFlag_A != STATE_EVENT_FAULT_A)&&\
 //                          (StateEventFlag_B != STATE_EVENT_FAULT_B)&&\
@@ -2542,67 +2818,82 @@ void AutoStartInFault(void)
 //                     {
 //                         SET_FAULT_LED(0);
 //                     }
-                 }
-              }
-         }
-         break;
-         case AUTO_DETECTION_STATE_C:        //×Ô¼ì×´Ì¬
+						}
+					}
+				}
+				break;
+			case AUTO_DETECTION_STATE_C://×Ô¼ì×´Ì¬
 //             if(!softwareFaultWord3.B.ESCCalibrarionFailureFlag)    //¼ì²âÁãÆ«
 //             {
-                 if(ESCFlagC.realFaultFlag == 1){
-                     cntForRepFaultC++;                   // µ±Ç°ÖØÆôÁË¼¸´Î
-                     ESCFlagC.realFaultFlag = 0;
-                 }
-                 if((!ESCFlagC.onceRunStartFlag)||(StateEventFlag_C==STATE_EVENT_RUN_C)){
-                         ESCFlagC.onceRunStartFlag = 1;
-                         ESCFlagC.autoStFlag = TWEAK_STATE_C;    //switchÌø×ªµ½case:2
-                 }
-//                 StateFlag.resetFlag = 1;                    //¸´Î»
-                 if((ESCBYRelayCNTC != 1)&&(ESCSicFaultCNTC != 1)){
-                     ESCFlagC.resetFlag = 1;
-                 }
+				if (ESCFlagC.realFaultFlag == 1)
+				{
+					cntForRepFaultC++;// µ±Ç°ÖØÆôÁË¼¸´Î
+					ESCFlagC.realFaultFlag = 0;
+				}
+				if ((!ESCFlagC.onceRunStartFlag) || (StateEventFlag_C == STATE_EVENT_RUN_C))
+				{
+					ESCFlagC.onceRunStartFlag = 1;
+					ESCFlagC.autoStFlag = TWEAK_STATE_C;//switchÌø×ªµ½case:2
+				}
+				if ((ESCBYRelayCNTC != 1) && (ESCSicFaultCNTC != 1))
+				{
+					ESCFlagC.resetFlag = 1;
+				}
 //             }
-         break;
-         case TWEAK_STATE_C:         //Ä£Ê½×ª»»
-             switch(StateEventFlag_C){
-             case STATE_EVENT_STANDBY_C:
-                  ESCFlagC.startFlag = 1;    //²»ÊÇ±¸ÓÃµ¥Ôª,¾Í¿É×Ô¶¯ÔËÐÐ
-             break;
-             case STATE_EVENT_RECHARGE_C:    ESCFlagC.ESCCntMs.SelfJc = 0;            break;
-             case STATE_EVENT_WAIT_C:      ESCFlagC.ESCCntMs.SelfJc = 0;            break;
-             case STATE_EVENT_RUN_C:
- //              I_ins_index = 0.005;                                //I_ins_index ²»ÄÜ´óÓÚ0.01
-                 if(ESCFlagC.ESCCntMs.SelfJc > CNT_MS(3000))                     // µ÷ÈëÕý³£×´Ì¬
-                 {
-                     ESCFlagC.autoStFlag = INSPECTION_STATE_C;
-                 }
-             break;
-             case STATE_EVENT_FAULT_C:
-                 ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
-                 ESCFlagC.realFaultFlag = 1;
-                 if(ESCFlagC.ESCCntMs.StartDelay>CNT_MS(7000))   ESCFlagC.ESCCntMs.StartDelay = CNT_MS(7000);        //Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
-             break;
-             }
-         break;
+				break;
+			case TWEAK_STATE_C://Ä£Ê½×ª»»
+				switch (StateEventFlag_C)
+				{
+					case STATE_EVENT_STANDBY_C:
+						ESCFlagC.startFlag = 1;//²»ÊÇ±¸ÓÃµ¥Ôª,¾Í¿É×Ô¶¯ÔËÐÐ
+						break;
+					case STATE_EVENT_RECHARGE_C:
+						ESCFlagC.ESCCntMs.SelfJc = 0;
+						break;
+					case STATE_EVENT_WAIT_C:
+						ESCFlagC.ESCCntMs.SelfJc = 0;
+						break;
+					case STATE_EVENT_RUN_C:
+//              I_ins_index = 0.005;                                //I_ins_index ²»ÄÜ´óÓÚ0.01
+						if (ESCFlagC.ESCCntMs.SelfJc > CNT_MS(3000))// µ÷ÈëÕý³£×´Ì¬
+						{
+							ESCFlagC.autoStFlag = INSPECTION_STATE_C;
+						}
+						break;
+					case STATE_EVENT_FAULT_C:
+						ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
+						ESCFlagC.realFaultFlag = 1;
+						if (ESCFlagC.ESCCntMs.StartDelay > CNT_MS(7000))
+							ESCFlagC.ESCCntMs.StartDelay = CNT_MS(7000);//Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
+						break;
+				}
+				break;
 
-         case INSPECTION_STATE_C:            // ºÎÊ±µ÷Èë×´Ì¬0£¬£¨×ÔÆô¶¯&&¹ÊÕÏ£©
-             if((StateEventFlag_C == STATE_EVENT_FAULT_C)||(StateEventFlag_C == STATE_EVENT_STANDBY_C))
-             {
-                 if(StateEventFlag_C == STATE_EVENT_FAULT_C){
-                     ESCFlagC.realFaultFlag = 1;
-                     if(ESCFlagC.ESCCntMs.StartDelay>CNT_MS(15000))  ESCFlagC.ESCCntMs.StartDelay = CNT_MS(15000);                        //Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
-                  }else{
-                      ESCFlagC.realFaultFlag = 0;
-                  }
-                 ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
-             }
-         break;
-         default:break;
-         }
-	}else{ 										//ÊÖ¶¯
-	    ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
-	    ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
-	    ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
+			case INSPECTION_STATE_C:// ºÎÊ±µ÷Èë×´Ì¬0£¬£¨×ÔÆô¶¯&&¹ÊÕÏ£©
+				if ((StateEventFlag_C == STATE_EVENT_FAULT_C) || (StateEventFlag_C == STATE_EVENT_STANDBY_C))
+				{
+					if (StateEventFlag_C == STATE_EVENT_FAULT_C)
+					{
+						ESCFlagC.realFaultFlag = 1;
+						if (ESCFlagC.ESCCntMs.StartDelay > CNT_MS(15000))
+							ESCFlagC.ESCCntMs.StartDelay = CNT_MS(15000);//Í¬²½¿ÉÒÔ±¨¹ÊÕÏ
+					}
+					else
+					{
+						ESCFlagC.realFaultFlag = 0;
+					}
+					ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	else
+	{//ÊÖ¶¯
+		ESCFlagA.autoStFlag = ORIGINAL_STATE_A;
+		ESCFlagB.autoStFlag = ORIGINAL_STATE_B;
+		ESCFlagC.autoStFlag = ORIGINAL_STATE_C;
 		cntForRepFaultA = 0;
 		cntForRepFaultB = 0;
 		cntForRepFaultC = 0;
@@ -2688,25 +2979,29 @@ void SetResetExecute(void)
 	StateEventFlag_C = STATE_EVENT_STANDBY_C;
 }
 
+/*
+ * »ñÈ¡Êµ¼ÊAD²ÉÑùÖµ¡£WY
+ */
 void CorrectingAD(void)
 {
-        VirtulADStruVAL *pAD = &VirtulADVAL;
-        pAD->GridHVoltA = (int16 *)&ADC_RU_HVA;   //GridHVoltAÖ¸ÕëÖ¸ÏòAdcaResultRegs.ADCRESULT2´æ´¢Æ÷µÄÄÚ´æµØÖ·
-        pAD->GridHVoltB = (int16 *)&ADC_RU_HVB;
-        pAD->GridHVoltC = (int16 *)&ADC_RU_HVC;
-        pAD->GridLVoltA = (int16 *)&ADC_RU_LVA;
-        pAD->GridLVoltB = (int16 *)&ADC_RU_LVB;
-        pAD->GridLVoltC = (int16 *)&ADC_RU_LVC;
-        pAD->ADCUDCA    = (int16 *)&ADC_DC_UA;
-        pAD->ADCUDCB    = (int16 *)&ADC_DC_UB;
-        pAD->ADCUDCC    = (int16 *)&ADC_DC_UC;
+	VirtulADStruVAL *pAD = &VirtulADVAL; //ADÕæÊµ²ÉÑùÖµ¡£WY
 
-		pPwmV1  = &PwmVa;
-		pPwmV2  = &PwmVb;
-		pPwmV3  = &PwmVc;
-		pPwmVN1 = &PwmVaN;
-		pPwmVN2 = &PwmVbN;
-		pPwmVN3 = &PwmVcN;
+	pAD->GridHVoltA = (int16*) &ADC_RU_HVA;   //GridHVoltAÖ¸ÕëÖ¸ÏòAdcaResultRegs.ADCRESULT2´æ´¢Æ÷µÄÄÚ´æµØÖ·
+	pAD->GridHVoltB = (int16*) &ADC_RU_HVB;
+	pAD->GridHVoltC = (int16*) &ADC_RU_HVC;
+	pAD->GridLVoltA = (int16*) &ADC_RU_LVA;
+	pAD->GridLVoltB = (int16*) &ADC_RU_LVB;
+	pAD->GridLVoltC = (int16*) &ADC_RU_LVC;
+	pAD->ADCUDCA = (int16*) &ADC_DC_UA;
+	pAD->ADCUDCB = (int16*) &ADC_DC_UB;
+	pAD->ADCUDCC = (int16*) &ADC_DC_UC;
+
+	pPwmV1 = &PwmVa;
+	pPwmV2 = &PwmVb;
+	pPwmV3 = &PwmVc;
+	pPwmVN1 = &PwmVaN;
+	pPwmVN2 = &PwmVbN;
+	pPwmVN3 = &PwmVcN;
 
 }
 
@@ -3077,273 +3372,433 @@ void AngleJudgeCapacitanceLoad(int N1,int N2,int N3,Uint16 number)	//¸ºÔØ²àÈÝÐÔ¸
 
 extern int maxCh,minCh;
 extern float UnCurrData[];
+
 void PowerReactStateRefresh(void)
 {
-    float MaxGridCurRms,MaxLoadCurRms;
-	if(StateFlag.reactPrCompFlag&&(StateFlag.VolSurTimeFlag==0)){
-		APFReactPowerOutA= (GridVoltDA*CapReactPowerCurQPA*POWER_CONV_RATIO_CAP)/(MU_MultRatio);//APFÓ¦¸Ã·¢³öµÄÎÞ¹¦ = µçÈÝºÍ¸ºÔØµÄÎÞ¹¦²î
-		APFReactPowerOutB= (GridVoltDB*CapReactPowerCurQPB*POWER_CONV_RATIO_CAP)/(MU_MultRatio);
-		APFReactPowerOutC= (GridVoltDC*CapReactPowerCurQPC*POWER_CONV_RATIO_CAP)/(MU_MultRatio);
-		APFReactPowerOut = (CapreactPowerCurQ * GridFundaVoltD * POWER_CONV_RATIO_CAP)/(MU_MultRatio);//APF·¢³öµÄÎÞ¹¦Á¿//Ö¸Áî
-		CapStartCapcity = (CapStartLimit*(SQRT3) * GridFundaVoltD * POWER_CONV_RATIO_CAP)/(MU_MultRatio);
-	}else if((!StateFlag.reactPrCompFlag)&&(StateFlag.VolSurTimeFlag==0)){
-		APFReactPowerOutA = -LoadRealCurQA*GridVoltDA*POWER_CONV_RATIO_CAP;
-		APFReactPowerOutB = -LoadRealCurQB*GridVoltDB*POWER_CONV_RATIO_CAP;
-		APFReactPowerOutC = -LoadRealCurQC*GridVoltDC*POWER_CONV_RATIO_CAP;
-		APFReactPowerOut  = -LoadFundaCurQ*GridFundaVoltD*POWER_CONV_RATIO_CAP;
-	}else{
+	float MaxGridCurRms, MaxLoadCurRms;
+	if(StateFlag.reactPrCompFlag && (StateFlag.VolSurTimeFlag == 0))
+	{
+		APFReactPowerOutA = (GridVoltDA * CapReactPowerCurQPA * POWER_CONV_RATIO_CAP) / (MU_MultRatio); //APFÓ¦¸Ã·¢³öµÄÎÞ¹¦ = µçÈÝºÍ¸ºÔØµÄÎÞ¹¦²î
+		APFReactPowerOutB = (GridVoltDB * CapReactPowerCurQPB * POWER_CONV_RATIO_CAP) / (MU_MultRatio);
+		APFReactPowerOutC = (GridVoltDC * CapReactPowerCurQPC * POWER_CONV_RATIO_CAP) / (MU_MultRatio);
+		APFReactPowerOut = (CapreactPowerCurQ * GridFundaVoltD * POWER_CONV_RATIO_CAP) / (MU_MultRatio); //APF·¢³öµÄÎÞ¹¦Á¿//Ö¸Áî
+		CapStartCapcity = (CapStartLimit * (SQRT3) * GridFundaVoltD * POWER_CONV_RATIO_CAP) / (MU_MultRatio);
+	}
+	else if((!StateFlag.reactPrCompFlag) && (StateFlag.VolSurTimeFlag == 0))
+	{
+		APFReactPowerOutA = -LoadRealCurQA * GridVoltDA * POWER_CONV_RATIO_CAP;
+		APFReactPowerOutB = -LoadRealCurQB * GridVoltDB * POWER_CONV_RATIO_CAP;
+		APFReactPowerOutC = -LoadRealCurQC * GridVoltDC * POWER_CONV_RATIO_CAP;
+		APFReactPowerOut = -LoadFundaCurQ * GridFundaVoltD * POWER_CONV_RATIO_CAP;
+	}
+	else
+	{
 		APFReactPowerOutA = APFReactPowerOutB = APFReactPowerOutC = 0;
 		APFReactPowerOut = CapStartCapcity = 0;
 	}
 //	µçÍø×ÜÎÞ¹¦
-	GridActPower  =-( GridFundaVoltD*GridFundaCurD+GridFundaVoltQ*GridFundaCurQ )*(POWER_CONV_RATIO*SQRT3);
-	GridReactPower=-( GridFundaVoltQ*GridFundaCurD-GridFundaVoltD*GridFundaCurQ )*(POWER_CONV_RATIO*SQRT3);
-	GridApparentPower = sqrt(GridActPower*GridActPower+GridReactPower*GridReactPower);
+	GridActPower = -( GridFundaVoltD * GridFundaCurD + GridFundaVoltQ * GridFundaCurQ) * (POWER_CONV_RATIO * SQRT3);
+	GridReactPower = -( GridFundaVoltQ * GridFundaCurD - GridFundaVoltD * GridFundaCurQ) * (POWER_CONV_RATIO * SQRT3);
+	GridApparentPower = sqrt(GridActPower * GridActPower + GridReactPower * GridReactPower);
 //	µçÍø²à
-	GridActPowerPhA  = GridVoltDA*GridRealCurDA*POWER_CONV_RATIO_CAP;
-	GridReactPowerPhA= GridVoltDA*GridRealCurQA*POWER_CONV_RATIO_CAP;
-	GridApparentPowerPhA = sqrt(GridActPowerPhA*GridActPowerPhA+GridReactPowerPhA*GridReactPowerPhA);
+	GridActPowerPhA = GridVoltDA * GridRealCurDA * POWER_CONV_RATIO_CAP;
+	GridReactPowerPhA = GridVoltDA * GridRealCurQA * POWER_CONV_RATIO_CAP;
+	GridApparentPowerPhA = sqrt(GridActPowerPhA * GridActPowerPhA + GridReactPowerPhA * GridReactPowerPhA);
 
-	GridActPowerPhB  = GridVoltDB*GridRealCurDB*POWER_CONV_RATIO_CAP;
-	GridReactPowerPhB= GridVoltDB*GridRealCurQB*POWER_CONV_RATIO_CAP;
-	GridApparentPowerPhB = sqrt(GridActPowerPhB*GridActPowerPhB+GridReactPowerPhB*GridReactPowerPhB);
+	GridActPowerPhB = GridVoltDB * GridRealCurDB * POWER_CONV_RATIO_CAP;
+	GridReactPowerPhB = GridVoltDB * GridRealCurQB * POWER_CONV_RATIO_CAP;
+	GridApparentPowerPhB = sqrt(GridActPowerPhB * GridActPowerPhB + GridReactPowerPhB * GridReactPowerPhB);
 
-	GridActPowerPhC  = GridVoltDC*GridRealCurDC*POWER_CONV_RATIO_CAP;
-	GridReactPowerPhC= GridVoltDC*GridRealCurQC*POWER_CONV_RATIO_CAP;
-	GridApparentPowerPhC = sqrt(GridActPowerPhC*GridActPowerPhC+GridReactPowerPhC*GridReactPowerPhC);
+	GridActPowerPhC = GridVoltDC * GridRealCurDC * POWER_CONV_RATIO_CAP;
+	GridReactPowerPhC = GridVoltDC * GridRealCurQC * POWER_CONV_RATIO_CAP;
+	GridApparentPowerPhC = sqrt(GridActPowerPhC * GridActPowerPhC + GridReactPowerPhC * GridReactPowerPhC);
 
-	GridCosFi = GridActPower/GridApparentPower;
-	GridCosFiPhA = GridActPowerPhA/GridApparentPowerPhA;
-	GridCosFiPhB = GridActPowerPhB/GridApparentPowerPhB;
-	GridCosFiPhC = GridActPowerPhC/GridApparentPowerPhC;
-	if(GridCosFi >=1)			GridCosFi = 1;
-	if(GridCosFi <= -1)			GridCosFi = -1;
-	if(GridReactPower<-10)		GridCosFi=-GridCosFi;
-	if(GridCosFiPhA >=1)		GridCosFiPhA = 1;
-	if(GridCosFiPhA <= -1)		GridCosFiPhA = -1;
-	if(GridReactPowerPhA<-5)	GridCosFiPhA=-GridCosFiPhA;
-	if(GridCosFiPhB >=1)		GridCosFiPhB = 1;
-	if(GridCosFiPhB <= -1)		GridCosFiPhB = -1;
-	if(GridReactPowerPhB<-5)	GridCosFiPhB=-GridCosFiPhB;
-	if(GridCosFiPhC >=1)		GridCosFiPhC = 1;
-	if(GridCosFiPhC <= -1)		GridCosFiPhC = -1;
-	if(GridReactPowerPhC<-5)	GridCosFiPhC=-GridCosFiPhC;
+	GridCosFi = GridActPower / GridApparentPower;
+	GridCosFiPhA = GridActPowerPhA / GridApparentPowerPhA;
+	GridCosFiPhB = GridActPowerPhB / GridApparentPowerPhB;
+	GridCosFiPhC = GridActPowerPhC / GridApparentPowerPhC;
+	if(GridCosFi >= 1)
+		GridCosFi = 1;
+	if(GridCosFi <= -1)
+		GridCosFi = -1;
+	if(GridReactPower < -10)
+		GridCosFi = -GridCosFi;
+	if(GridCosFiPhA >= 1)
+		GridCosFiPhA = 1;
+	if(GridCosFiPhA <= -1)
+		GridCosFiPhA = -1;
+	if(GridReactPowerPhA < -5)
+		GridCosFiPhA = -GridCosFiPhA;
+	if(GridCosFiPhB >= 1)
+		GridCosFiPhB = 1;
+	if(GridCosFiPhB <= -1)
+		GridCosFiPhB = -1;
+	if(GridReactPowerPhB < -5)
+		GridCosFiPhB = -GridCosFiPhB;
+	if(GridCosFiPhC >= 1)
+		GridCosFiPhC = 1;
+	if(GridCosFiPhC <= -1)
+		GridCosFiPhC = -1;
+	if(GridReactPowerPhC < -5)
+		GridCosFiPhC = -GridCosFiPhC;
 
 	//µçÈÝºÍ¸ºÔØ²à
-	LoadActPowerPhA  = (GridVoltDA*LoadRealCurDA+GridVoltQA*LoadRealCurQA)*POWER_CONV_RATIO;
-	LoadReactPowerPhA= (GridVoltDA*LoadRealCurDA-GridVoltQA*LoadRealCurQA)*POWER_CONV_RATIO;
-	LoadApparentPowerPhA = sqrtf(LoadActPowerPhA*LoadActPowerPhA+LoadReactPowerPhA*LoadReactPowerPhA);
+	LoadActPowerPhA = (GridVoltDA * LoadRealCurDA + GridVoltQA * LoadRealCurQA) * POWER_CONV_RATIO;
+	LoadReactPowerPhA = (GridVoltDA * LoadRealCurDA - GridVoltQA * LoadRealCurQA) * POWER_CONV_RATIO;
+	LoadApparentPowerPhA = sqrtf(LoadActPowerPhA * LoadActPowerPhA + LoadReactPowerPhA * LoadReactPowerPhA);
 
-    LoadActPowerPhB  = (GridVoltDB*LoadRealCurDB+GridVoltQB*LoadRealCurQB)*POWER_CONV_RATIO;
-    LoadReactPowerPhB= (GridVoltDB*LoadRealCurDB-GridVoltQB*LoadRealCurQB)*POWER_CONV_RATIO;
-	LoadApparentPowerPhB = sqrtf(LoadActPowerPhB*LoadActPowerPhB+LoadReactPowerPhB*LoadReactPowerPhB);
+	LoadActPowerPhB = (GridVoltDB * LoadRealCurDB + GridVoltQB * LoadRealCurQB) * POWER_CONV_RATIO;
+	LoadReactPowerPhB = (GridVoltDB * LoadRealCurDB - GridVoltQB * LoadRealCurQB) * POWER_CONV_RATIO;
+	LoadApparentPowerPhB = sqrtf(LoadActPowerPhB * LoadActPowerPhB + LoadReactPowerPhB * LoadReactPowerPhB);
 
-    LoadActPowerPhC  = (GridVoltDC*LoadRealCurDC+GridVoltQC*LoadRealCurQC)*POWER_CONV_RATIO;
-    LoadReactPowerPhC= (GridVoltDC*LoadRealCurDC-GridVoltQC*LoadRealCurQC)*POWER_CONV_RATIO;
-	LoadApparentPowerPhC = sqrtf(LoadActPowerPhC*LoadActPowerPhC+LoadReactPowerPhC*LoadReactPowerPhC);
+	LoadActPowerPhC = (GridVoltDC * LoadRealCurDC + GridVoltQC * LoadRealCurQC) * POWER_CONV_RATIO;
+	LoadReactPowerPhC = (GridVoltDC * LoadRealCurDC - GridVoltQC * LoadRealCurQC) * POWER_CONV_RATIO;
+	LoadApparentPowerPhC = sqrtf(LoadActPowerPhC * LoadActPowerPhC + LoadReactPowerPhC * LoadReactPowerPhC);
 
-	LoadCosFiPhA = LoadActPowerPhA/LoadApparentPowerPhA;
-	LoadCosFiPhB = LoadActPowerPhB/LoadApparentPowerPhB;
-	LoadCosFiPhC = LoadActPowerPhC/LoadApparentPowerPhC;
-	if(LoadCosFiPhA >=1)		LoadCosFiPhA = 1;
-	if(LoadCosFiPhA <= -1)		LoadCosFiPhA = -1;
-	if(LoadReactPowerPhA<-5)	LoadCosFiPhA=-LoadCosFiPhA;
-	if(LoadCosFiPhB >=1)		LoadCosFiPhB = 1;
-	if(LoadCosFiPhB <= -1)		LoadCosFiPhB = -1;
-	if(LoadReactPowerPhB<-5)	LoadCosFiPhB=-LoadCosFiPhB;
-	if(LoadCosFiPhC >=1)		LoadCosFiPhC = 1;
-	if(LoadCosFiPhC <= -1)		LoadCosFiPhC = -1;
-	if(LoadReactPowerPhC<-5)	LoadCosFiPhC=-LoadCosFiPhC;
+	LoadCosFiPhA = LoadActPowerPhA / LoadApparentPowerPhA;
+	LoadCosFiPhB = LoadActPowerPhB / LoadApparentPowerPhB;
+	LoadCosFiPhC = LoadActPowerPhC / LoadApparentPowerPhC;
+	if(LoadCosFiPhA >= 1)
+		LoadCosFiPhA = 1;
+	if(LoadCosFiPhA <= -1)
+		LoadCosFiPhA = -1;
+	if(LoadReactPowerPhA < -5)
+		LoadCosFiPhA = -LoadCosFiPhA;
+	if(LoadCosFiPhB >= 1)
+		LoadCosFiPhB = 1;
+	if(LoadCosFiPhB <= -1)
+		LoadCosFiPhB = -1;
+	if(LoadReactPowerPhB < -5)
+		LoadCosFiPhB = -LoadCosFiPhB;
+	if(LoadCosFiPhC >= 1)
+		LoadCosFiPhC = 1;
+	if(LoadCosFiPhC <= -1)
+		LoadCosFiPhC = -1;
+	if(LoadReactPowerPhC < -5)
+		LoadCosFiPhC = -LoadCosFiPhC;
 
 	//²»Æ½ºâ¶È¼ÆËã
 //	MinVolRms    = Min(gpVoltA_rms,gpVoltB_rms,gpVoltC_rms);
-	MinLoadCosFi = Min(LoadCosFiPhA,LoadCosFiPhB,LoadCosFiPhC);
-	MaxGridCurRms = Max(gridCurA_rms,gridCurB_rms,gridCurC_rms);
-	MaxLoadCurRms = Max(loadCurA_rms,loadCurB_rms,loadCurC_rms);
-	GridCurRmsUnban = (MaxGridCurRms-GridCurRms_F)/GridCurRms_F;
-	LoadCurRmsUnban = (MaxLoadCurRms-LoadCurRms_F)/LoadCurRms_F;
+	MinLoadCosFi = Min(LoadCosFiPhA, LoadCosFiPhB, LoadCosFiPhC);
+	MaxGridCurRms = Max(gridCurA_rms, gridCurB_rms, gridCurC_rms);
+	MaxLoadCurRms = Max(loadCurA_rms, loadCurB_rms, loadCurC_rms);
+	GridCurRmsUnban = (MaxGridCurRms - GridCurRms_F) / GridCurRms_F;
+	LoadCurRmsUnban = (MaxLoadCurRms - LoadCurRms_F) / LoadCurRms_F;
 	//×´Ì¬¸üÐÂ
 	StateEventFlag1.B.RunState_A = StateEventFlag_A;
 	StateEventFlag1.B.RunState_B = StateEventFlag_B;
 	StateEventFlag1.B.RunState_C = StateEventFlag_C;
 	StateEventFlag1.B.AutoRecordReadFlag = RecordFlash.FlashState.B.AutoRecordReadFlag;
-	if((StateEventFlag_A==STATE_EVENT_RUN_A)&&(StateEventFlag_B==STATE_EVENT_RUN_B)&&(StateEventFlag_C==STATE_EVENT_RUN_C))
-	    RemoteStateRunStop = 1;
+	if((StateEventFlag_A == STATE_EVENT_RUN_A) && (StateEventFlag_B == STATE_EVENT_RUN_B) && (StateEventFlag_C == STATE_EVENT_RUN_C))
+		RemoteStateRunStop = 1;
 	else
-	    RemoteStateRunStop = 0;
-	if( ((StateEventFlag_A==STATE_EVENT_WAIT_A)||(StateEventFlag_A==STATE_EVENT_STOP_A)\
-	        ||(StateEventFlag_A==STATE_EVENT_DISCHARGE_A)||(StateEventFlag_A==STATE_EVENT_RECHARGE_A))\
-	        &&((StateEventFlag_B==STATE_EVENT_WAIT_B)||(StateEventFlag_B==STATE_EVENT_STOP_B)\
-	                ||(StateEventFlag_B==STATE_EVENT_DISCHARGE_B)||(StateEventFlag_B==STATE_EVENT_RECHARGE_B))\
-	                &&((StateEventFlag_C==STATE_EVENT_WAIT_C)||(StateEventFlag_C==STATE_EVENT_STOP_C)\
-	                        ||(StateEventFlag_C==STATE_EVENT_DISCHARGE_C)||(StateEventFlag_C==STATE_EVENT_RECHARGE_C)) )
-	    RemoteStateWait = 1;
+		RemoteStateRunStop = 0;
+	if(((StateEventFlag_A == STATE_EVENT_WAIT_A) || (StateEventFlag_A == STATE_EVENT_STOP_A)\
+ || (StateEventFlag_A == STATE_EVENT_DISCHARGE_A)
+			|| (StateEventFlag_A == STATE_EVENT_RECHARGE_A))\
+
+			&& ((StateEventFlag_B == STATE_EVENT_WAIT_B) || (StateEventFlag_B == STATE_EVENT_STOP_B)\
+ || (StateEventFlag_B == STATE_EVENT_DISCHARGE_B)
+					|| (StateEventFlag_B == STATE_EVENT_RECHARGE_B))\
+
+			&& ((StateEventFlag_C == STATE_EVENT_WAIT_C) || (StateEventFlag_C == STATE_EVENT_STOP_C)\
+ || (StateEventFlag_C == STATE_EVENT_DISCHARGE_C)
+					|| (StateEventFlag_C == STATE_EVENT_RECHARGE_C)))
+		RemoteStateWait = 1;
 	else
-	    RemoteStateWait = 0;
-    if((StateEventFlag_A==STATE_EVENT_FAULT_A)&&(StateEventFlag_B==STATE_EVENT_FAULT_B)&&(StateEventFlag_C==STATE_EVENT_FAULT_C))
-        RemoteStateFault = 1;
-    else
-        RemoteStateFault = 0;
-    if(StateFlag.constantQFlag==0)
-        RemoteReactpowerOrder = reactPowerGiven*10;
-    if(StateFlag.constantQFlag==1)
-        RemoteReactpowerOrder = restantReactCurrent*10;
-    if(StateFlag.constantQFlag==2)
-        RemoteReactpowerOrder = constantCosFai*100;
-	IOstate1  = \
-            shift(PWM_ins_indexA,0)                |shift(PWM_ins_indexB,1)                    |shift(PWM_ins_indexA,2)                |shift(0,3)\
-           |shift(0,4)     |shift(StateFlag.onceTimeStateMachine,5)    |shift(StateFlag.MainContactEnanle,6)   |shift(0,7)\
-           |shift(GET_MAIN_CONTACT_ACTION_A,8)         |shift(GET_BYPASS_CONTACT_ACTION_A,9)              |shift(0,10)               |shift(0,11)  ;
-	IOstate2  =\
-			 shift(0,0)	|shift(0,1)				|shift(0,2)					|shift(0,3)\
-			|shift(0,4)	|shift(0,5)	|shift(0,6)	|shift(0,7)\
-			|shift(0,8)		|shift(0,9)	|shift(0,10)					|shift(0,11)\
-			|shift(0,12)					|shift(0,13)				|shift(0,14)					|shift(0,15);
-//	Choose5=(int)(DccapVoltA*10);//±¸ÓÃ5Ê¼ÖÕÏÔÊ¾ Ö÷°åÎÂ¶È
-	switch(debugDispFlag){ //´¥¿ØÆÁÏÔÊ¾×é
-	  case  0:
-		  Choose1=GpioDataRegs.GPCDAT.bit.GPIO79;		Choose2=GpioDataRegs.GPCDAT.bit.GPIO78;        //AÏà¸ßµÍÑ¹´Å±£³Ö ÅÔÂ·´Å±£³Ö
-		  Choose3=GpioDataRegs.GPEDAT.bit.GPIO156;		Choose4=GpioDataRegs.GPDDAT.bit.GPIO104;
-		  break;
-	  case  2:
-		  Choose1=GpioDataRegs.GPEDAT.bit.GPIO151;			Choose2=GpioDataRegs.GPEDAT.bit.GPIO150;   //BÏà¸ßµÍÑ¹´Å±£³Ö ÅÔÂ·´Å±£³Ö
-		  Choose3=GpioDataRegs.GPFDAT.bit.GPIO164;			Choose4=GpioDataRegs.GPDDAT.bit.GPIO104;
-		  break;
-	  case  3:
-		  Choose1=GpioDataRegs.GPCDAT.bit.GPIO77;			Choose2=GpioDataRegs.GPEDAT.bit.GPIO152;   //CÏà¸ßµÍÑ¹´Å±£³Ö ÅÔÂ·´Å±£³Ö
-		  Choose3=GpioDataRegs.GPCDAT.bit.GPIO93;			Choose4=GpioDataRegs.GPDDAT.bit.GPIO104;
-		  break;
-	  case  4:
-		  Choose1=(int)(TempData[0]*10);			                Choose2=(int)(TempData[1]*10);     //ESC ²ÉÑùÎÂ¶È--É¢ÈÈÆ÷ÎÂ¶ÈºÍµ¥ÔªÄÚ²¿ÎÂ¶È
-		  Choose3=(int)(WindCold.HeatSinkTempterature*10);			Choose4=0;
-		  break;
-	  case  5:
-		  Choose1=(int)(StateEventFlag_A);				Choose2=(int)(StateEventFlag_B);               //ESC ÈýÏà×´Ì¬ ÅÔÂ·Î¢¶Ï·´À¡
-		  Choose3=(int)(StateEventFlag_C);				Choose4=GpioDataRegs.GPCDAT.bit.GPIO92 ;
-		  break;
-	  case  6:
-		  Choose1=(int)(ESCFlagA.ESC_DutyData*100);     Choose2=(int)(VoltInA_rms*100);                //ESC-AÏàÊä³öÕ¼¿Õ±È
-		  Choose3=(int)(VoltOutA_rms*100);              Choose4=(int)(PIOutVoltValueA*10000);
-		  break;
-	  case  7:
-		  Choose1=(int)(ESCFlagB.ESC_DutyData*100);		Choose2=(int)(VoltInB_rms*100);                //ESC-BÏàÊä³öÕ¼¿Õ±È
-		  Choose3=(int)(VoltOutB_rms*100);				Choose4=(int)(PIOutVoltValueB*10000);
-		  break;
-	  case 8:
-	      Choose1=(int)(ESCFlagC.ESC_DutyData*100);     Choose2=(int)(VoltInC_rms*100);                //ESC-CÏàÊä³öÕ¼¿Õ±È
-	      Choose3=(int)(VoltOutC_rms*100);              Choose4=(int)(PIOutVoltValueC*10000);
-		  break;
-	  case 9:
-		  Choose1=(int)(ESCBYRelayCNTA*10);			    Choose2=(int)(ESCBYRelayCNTB*10);              //ESC ÅÔÂ·´Å±£³Ö¼ÌµçÆ÷»òÕß¸ßµÍÑ¹´Å±£³Ö¼ÌµçÆ÷Ëð»µ¹ÊÕÏ±êÖ¾Î»
-		  Choose3=(int)(ESCBYRelayCNTC*10);				Choose4=0;
-		  break;
-	  case 10:
-		  Choose1=(int)(DccapVoltA*10);			Choose2=(int)(DccapVoltB*10);                          //ESCÎüÊÕµçÈÝµçÈÝµçÑ¹
-		  Choose3=(int)(DccapVoltC*10);			Choose4=(int)(DccapVoltA*10);
-		  break;
-	  case 11:
-          Choose1=(int)(gridCurA_rms*10);         Choose2=(int)(gridCurB_rms*10);                      //ESC-µçÍøµçÁ÷
-          Choose3=(int)(gridCurC_rms*10);         Choose4=0;
-		  break;
-	  case 12:
-		  Choose1=(int)(gridCurrBYAF_rms*10);     Choose2=(int)(gridCurrBYBF_rms*10);                  //ESC-ÅÔÂ·µçÁ÷
-		  Choose3=(int)(gridCurrBYCF_rms*10);     Choose4=0;
-		  break;
-	  case 13:
-	      Choose1=(int)(ESCFlagA.ESCCntSec.HWPowerStopDelay);           Choose2=(int)(ESCFlagB.ESCCntSec.HWPowerStopDelay);
-	      Choose3=(int)(ESCFlagC.ESCCntSec.HWPowerStopDelay);           Choose4=0;
-	      break;
-	  case 14:
-	      Choose1=(int)(ESCFlagA.ESCCntSec.HWPowerFaultDelay);           Choose2=(int)(ESCFlagB.ESCCntSec.HWPowerFaultDelay);
-	      Choose3=(int)(ESCFlagC.ESCCntSec.HWPowerFaultDelay);           Choose4=0;
-	      break;
-	  case 20:
-		  Choose1=(int)((VoltInA_rms/VoltOutA_rms)*1000);			Choose2=(int)((gridCurrBYAF_rms/gridCurA_rms)*1000);
-		  Choose3=(int)((VoltInB_rms/VoltOutB_rms)*1000);			Choose4=(int)((gridCurrBYBF_rms/gridCurB_rms)*1000);
-		  break;
-      case 21:
-          Choose1=(int)(PIOutVoltValueA*1000);           Choose2=(int)(PIOutVoltValueB*1000);             //boostÉýÑ¹PI±Õ»·ºÍÇ°À¡Öµ
-          Choose3=(int)(PIOutVoltValueC*1000);           Choose4=(int)(dutytmp);
-          break;
+		RemoteStateWait = 0;
+	if((StateEventFlag_A == STATE_EVENT_FAULT_A) && (StateEventFlag_B == STATE_EVENT_FAULT_B) && (StateEventFlag_C == STATE_EVENT_FAULT_C))
+		RemoteStateFault = 1;
+	else
+		RemoteStateFault = 0;
+	if(StateFlag.constantQFlag == 0)
+		RemoteReactpowerOrder = reactPowerGiven * 10;
+	if(StateFlag.constantQFlag == 1)
+		RemoteReactpowerOrder = restantReactCurrent * 10;
+	if(StateFlag.constantQFlag == 2)
+		RemoteReactpowerOrder = constantCosFai * 100;
+	IOstate1 =
+	shift(PWM_ins_indexA, 0) |shift(PWM_ins_indexB,1) |shift(PWM_ins_indexA,2) |shift(0,3)
+	|shift(0,4) |shift(StateFlag.onceTimeStateMachine,5) |shift(StateFlag.MainContactEnanle,6) |shift(0,7)
+	|shift(GET_MAIN_CONTACT_ACTION_A,8) |shift(GET_BYPASS_CONTACT_ACTION_A,9) |shift(0,10) |shift(0,11);
+	IOstate2 =\
+ shift(0, 0) |shift(0,1) |shift(0,2) |shift(0,3)
+	|shift(0,4) |shift(0,5) |shift(0,6) |shift(0,7)
+	|shift(0,8) |shift(0,9) |shift(0,10) |shift(0,11)
+	|shift(0,12) |shift(0,13) |shift(0,14) |shift(0,15);
 
-      case 22:
-          Choose1=(int)(ESCFlagA.PWM_ins_index);          Choose2=(int)(ESCFlagB.PWM_ins_index);             //ºãÁ÷Ä£Ê½ÏÂCÏàµçÁ÷Ä¿±êÖµ
-          Choose3=(int)(ESCFlagC.PWM_ins_index);          Choose4=0;
-          break;
+	/*²âÊÔ*/
+#define LENTH 50
+	unsigned int index = 0;
 
-	  case 24:
-		  Choose1 = (int)(VolttargetCorrA*1000);			Choose2 = (int)(VolttargetCorrB*1000);     //ºãÁ÷Ä£Ê½ÏÂÓÉÊäÈëµçÁ÷PIËãµÄµçÑ¹Ä¿±êÖµÏµÊý
-		  Choose3 = (int)(VolttargetCorrC*1000);			Choose4 = (int)(CurrTargetTemper*100);
-		  break;
-	  case 25:
-//		  Choose1=(int)(SPLL[0].PllPiOutput*10);    Choose2=(int)(SPLL[0].Theta*1000);
-//		  Choose3=(int)(SPLL[0].PLLResSin*1000);    Choose4=(int)(SPLL[0].PLLResCos*1000);
-          Choose1=(int)(Esc_VoltPhaseA*100);    Choose2=(int)(Esc_VoltPhaseB*100);                     //ESC µçÍøµçÑ¹µ¥ÏòËøÏà½Ç¶È
-          Choose3=(int)(Esc_VoltPhaseC*100);    Choose4=0;
-		  break;
-	  case 26:
-          Choose1=(Uint16)(SPLL[0].PllPiOutput*100);                                                    //ESC µçÍøµçÑ¹µ¥ÏàËøÏàÖµ
-          Choose2=(Uint16)(SPLL[1].PllPiOutput*100);
-          Choose3=(Uint16)(SPLL[2].PllPiOutput*100);
-          Choose4=(int)(GridVoltRms*10);
-		  break;
-	  case 27:
-	      Choose1=(int)(ESCFlagA.resetFlag*10);         Choose2=(int)(ESCFlagB.resetFlag*10);
-	      Choose3=(int)(ESCFlagC.resetFlag*10);         Choose4=0;
-	      break;
-      case 28:
-          Choose1=(int)(ESCSicFaultCNTA*10);            Choose2=(int)(ESCSicFaultCNTB*10);              //ESC SIC¹Ü×ÓËð»µ±êÖ¾Î»
-          Choose3=(int)(ESCSicFaultCNTC*10);            Choose4=0;
-          break;
-	  case 29:
-	      Choose1=(int)(ESCFlagA.HWPowerFAULTFlag);                                                     //ESC ¹ÊÕÏ±êÖ¾Î»
-	      Choose2=(int)(ESCFlagB.HWPowerFAULTFlag);
-          Choose3=(int)(ESCFlagC.HWPowerFAULTFlag);
-          Choose4=0;
-		  break;
-	  case 30:
-		  Choose1=(int16)(ESC_FeedForward_DutyA*1000);      Choose2=(int16)(ESC_FeedForward_DutyB*1000);
-		  Choose3=(int16)(ESC_FeedForward_DutyC*1000);		Choose4=(int)(VoltOutA_rms*10);
-		  Choose5=(int)(VoltInA_rms*10);
-		  break;
-	  case 31:
-          Choose1=(int)(ESCFlagA.HWPowerSTOPFlag);          Choose2=(int)(ESCFlagB.HWPowerSTOPFlag);     //ESC Í£»ú±êÖ¾Î»
-          Choose3=(int)(ESCFlagC.HWPowerSTOPFlag);          Choose4=0;
-          Choose5=0;
-		  break;
-      case 32:
-          Choose1=(int)(ESCFlagA.ESCCntMs.StartDelay);          Choose2=(int)(ESCFlagB.ESCCntMs.StartDelay);
-          Choose3=(int)(ESCFlagC.ESCCntMs.StartDelay);          Choose4=0;
-          break;
-      case 34:
-          Choose1=(int)(ConstantCurr[0].state);         Choose2=(int)(ConstantCurr[0].CNT1);
-          Choose3=(int)(VolttargetCorrA*10000);         Choose4=(int)(ConstantCurr[0].CorrPI.i10*10000);
-          Choose5=(int)(gridCurA_rms*10);
-          break;
-      case 35:
-          Choose1=(int)(ConstantCurr[1].state);         Choose2=(int)(ConstantCurr[1].CNT1);
-          Choose3=(int)(VolttargetCorrB*10000);         Choose4=(int)(ConstantCurr[1].CorrPI.i10*10000);
-          Choose5=(int)(gridCurB_rms*10);
-          break;
-      case 36:
-          Choose1=(int)(ConstantCurr[2].state);         Choose2=(int)(ConstantCurr[2].CNT1);
-          Choose3=(int)(VolttargetCorrC*10000);         Choose4=(int)(ConstantCurr[2].CorrPI.i10*10000);
-          Choose5=(int)(gridCurC_rms*10);
-          break;
-      case 37:
-          Choose1=(int)(CurrentUnbalanceRegularVoltage[0]*10);         Choose2=(int)(CurrentUnbalanceRegularVoltage[1]*10);
-          Choose3=(int)(CurrentUnbalanceRegularVoltage[2]*10);         Choose4=(int)(maxCh<<4|minCh);
-          Choose5=(int)(UnCurrData[0]*10);
-          break;
-      case 38:
-          Choose1=(int)(CurrentUnbalanceRegularVoltage[0]*10);         Choose2=(int)(UnCurrData[0]*10);
-          Choose3=(int)(UnCurrData[1]*10);         Choose4=(UnCurrData[2]*10);
-          Choose5=(int)(int)(maxCh<<4|minCh);
-          break;
+	extern unsigned int voltage_grid_A[LENTH]; //²âÊÔ¡£WY
+	extern unsigned int voltage_load_A[LENTH]; //²âÊÔ¡£WY
 
-	  default :
-		  Choose1=0;Choose2=0;Choose3=0;Choose4=0;
-	  break;
+	extern unsigned int voltage_grid_B[LENTH]; //²âÊÔ¡£WY
+	extern unsigned int voltage_load_B[LENTH]; //²âÊÔ¡£WY
+
+	extern unsigned int voltage_grid_C[LENTH]; //²âÊÔ¡£WY
+	extern unsigned int voltage_load_C[LENTH]; //²âÊÔ¡£WY
+
+	extern unsigned int index_A; //²âÊÔ¡£WY
+	extern unsigned int index_B; //²âÊÔ¡£WY
+	extern unsigned int index_C; //²âÊÔ¡£WY
+
+	extern unsigned int AD_grid_A[LENTH]; //²âÊÔ¡£AÏàµçÍø²à²ÉÑùÖµ¡£WY
+	extern unsigned int AD_load_A[LENTH]; //²âÊÔ¡£
+
+	extern unsigned int AD_grid_B[LENTH]; //²âÊÔ¡£
+	extern unsigned int AD_load_B[LENTH]; //²âÊÔ¡£
+
+	extern unsigned int AD_grid_C[LENTH]; //²âÊÔ¡£
+	extern unsigned int AD_load_C[LENTH]; //²âÊÔ¡£
+
+	/*´¥¿ØÆÁÏÔÊ¾¡£WY*/
+	switch(debugDispFlag)
+	{
+		case 0:
+		{
+			Choose1 = (int) voltage_grid_A[index];
+			Choose2 = (int) voltage_load_A[index];
+
+			Choose3 = (int) voltage_grid_B[index];
+			Choose4 = (int) voltage_load_B[index];
+		}
+		break;
+
+		case 1:
+		{
+			Choose1 = (int) voltage_grid_C[index];
+			Choose2 = (int) voltage_load_C[index];
+
+			Choose3 = (int) index_A;
+			Choose4 = (int) index_B;
+		}
+		break;
+
+		case 2:
+		{
+			Choose1 = AD_grid_A[0];
+			Choose2 = AD_load_A[0];
+
+			Choose3 = AD_grid_A[1];
+			Choose4 = AD_load_A[1];
+		}
+		break;
+
+		case 3:
+		{
+			Choose1 = AD_grid_B[0];
+			Choose2 = AD_load_B[0];
+
+			Choose3 = AD_grid_B[1];
+			Choose4 = AD_load_B[1];
+		}
+		break;
+
+		case 4:
+		{
+			Choose1 = AD_grid_C[0];
+			Choose2 = AD_load_C[0];
+
+			Choose3 = AD_grid_C[1];
+			Choose4 = AD_load_C[1];
+		}
+		break;
+
+		case 5:
+		{
+			Choose1 = (int) (GV_RMS_OVER);
+			Choose2 = (int) (GV_RMS_UNDER);
+			Choose3 = (int) (StateFlag.VoltageMode);
+
+			extern int unbalanceGenFlag;
+			Choose4 = (int) unbalanceGenFlag;
+		}
+		break;
+
+		case 6:
+			Choose1 = (int) (ESCFlagA.ESC_DutyData * 100);
+			Choose2 = (int) (VoltInA_rms * 100);
+			Choose3 = (int) (VoltOutA_rms * 100);
+			Choose4 = (int) (PIOutVoltValueA * 10000);
+		break;
+		case 7:
+			Choose1 = (int) (ESCFlagB.ESC_DutyData * 100);
+			Choose2 = (int) (VoltInB_rms * 100); //ESC-BÏàÊä³öÕ¼¿Õ±È
+			Choose3 = (int) (VoltOutB_rms * 100);
+			Choose4 = (int) (PIOutVoltValueB * 10000);
+		break;
+		case 8:
+			Choose1 = (int) (ESCFlagC.ESC_DutyData * 100);
+			Choose2 = (int) (VoltInC_rms * 100); //ESC-CÏàÊä³öÕ¼¿Õ±È
+			Choose3 = (int) (VoltOutC_rms * 100);
+			Choose4 = (int) (PIOutVoltValueC * 10000);
+		break;
+		case 9:
+			Choose1 = (int) (ESCBYRelayCNTA * 10);
+			Choose2 = (int) (ESCBYRelayCNTB * 10); //ESC ÅÔÂ·´Å±£³Ö¼ÌµçÆ÷»òÕß¸ßµÍÑ¹´Å±£³Ö¼ÌµçÆ÷Ëð»µ¹ÊÕÏ±êÖ¾Î»
+			Choose3 = (int) (ESCBYRelayCNTC * 10);
+			Choose4 = 0;
+		break;
+		case 10:
+			Choose1 = (int) (DccapVoltA * 10);
+			Choose2 = (int) (DccapVoltB * 10); //ESCÎüÊÕµçÈÝµçÈÝµçÑ¹
+			Choose3 = (int) (DccapVoltC * 10);
+			Choose4 = (int) (DccapVoltA * 10);
+		break;
+		case 11:
+			Choose1 = (int) (gridCurA_rms * 10);
+			Choose2 = (int) (gridCurB_rms * 10); //ESC-µçÍøµçÁ÷
+			Choose3 = (int) (gridCurC_rms * 10);
+			Choose4 = 0;
+		break;
+		case 12:
+			Choose1 = (int) (gridCurrBYAF_rms * 10);
+			Choose2 = (int) (gridCurrBYBF_rms * 10); //ESC-ÅÔÂ·µçÁ÷
+			Choose3 = (int) (gridCurrBYCF_rms * 10);
+			Choose4 = 0;
+		break;
+		case 13:
+			Choose1 = (int) (ESCFlagA.ESCCntSec.HWPowerStopDelay);
+			Choose2 = (int) (ESCFlagB.ESCCntSec.HWPowerStopDelay);
+			Choose3 = (int) (ESCFlagC.ESCCntSec.HWPowerStopDelay);
+			Choose4 = 0;
+		break;
+		case 14:
+			Choose1 = (int) (ESCFlagA.ESCCntSec.HWPowerFaultDelay);
+			Choose2 = (int) (ESCFlagB.ESCCntSec.HWPowerFaultDelay);
+			Choose3 = (int) (ESCFlagC.ESCCntSec.HWPowerFaultDelay);
+			Choose4 = 0;
+		break;
+		case 20:
+			Choose1 = (int) ((VoltInA_rms / VoltOutA_rms) * 1000);
+			Choose2 = (int) ((gridCurrBYAF_rms / gridCurA_rms) * 1000);
+			Choose3 = (int) ((VoltInB_rms / VoltOutB_rms) * 1000);
+			Choose4 = (int) ((gridCurrBYBF_rms / gridCurB_rms) * 1000);
+		break;
+		case 21:
+			Choose1 = (int) (PIOutVoltValueA * 1000);
+			Choose2 = (int) (PIOutVoltValueB * 1000); //boostÉýÑ¹PI±Õ»·ºÍÇ°À¡Öµ
+			Choose3 = (int) (PIOutVoltValueC * 1000);
+			Choose4 = (int) (dutytmp);
+		break;
+
+		case 22:
+			Choose1 = (int) (ESCFlagA.PWM_ins_index);
+			Choose2 = (int) (ESCFlagB.PWM_ins_index); //ºãÁ÷Ä£Ê½ÏÂCÏàµçÁ÷Ä¿±êÖµ
+			Choose3 = (int) (ESCFlagC.PWM_ins_index);
+			Choose4 = 0;
+		break;
+
+		case 24:
+			Choose1 = (int) (VolttargetCorrA * 1000);
+			Choose2 = (int) (VolttargetCorrB * 1000); //ºãÁ÷Ä£Ê½ÏÂÓÉÊäÈëµçÁ÷PIËãµÄµçÑ¹Ä¿±êÖµÏµÊý
+			Choose3 = (int) (VolttargetCorrC * 1000);
+			Choose4 = (int) (CurrTargetTemper * 100);
+		break;
+		case 25:
+			Choose1 = (int) (Esc_VoltPhaseA * 100);
+			Choose2 = (int) (Esc_VoltPhaseB * 100); //ESC µçÍøµçÑ¹µ¥ÏòËøÏà½Ç¶È
+			Choose3 = (int) (Esc_VoltPhaseC * 100);
+			Choose4 = 0;
+		break;
+		case 26:
+			Choose1 = (Uint16) (SPLL[0].PllPiOutput * 100); //ESC µçÍøµçÑ¹µ¥ÏàËøÏàÖµ
+			Choose2 = (Uint16) (SPLL[1].PllPiOutput * 100);
+			Choose3 = (Uint16) (SPLL[2].PllPiOutput * 100);
+			Choose4 = (int) (GridVoltRms * 10);
+		break;
+		case 27:
+			Choose1 = (int) (ESCFlagA.resetFlag * 10);
+			Choose2 = (int) (ESCFlagB.resetFlag * 10);
+			Choose3 = (int) (ESCFlagC.resetFlag * 10);
+			Choose4 = 0;
+		break;
+		case 28:
+			Choose1 = (int) (ESCSicFaultCNTA * 10);
+			Choose2 = (int) (ESCSicFaultCNTB * 10); //ESC SIC¹Ü×ÓËð»µ±êÖ¾Î»
+			Choose3 = (int) (ESCSicFaultCNTC * 10);
+			Choose4 = 0;
+		break;
+		case 29:
+			Choose1 = (int) (ESCFlagA.HWPowerFAULTFlag); //ESC ¹ÊÕÏ±êÖ¾Î»
+			Choose2 = (int) (ESCFlagB.HWPowerFAULTFlag);
+			Choose3 = (int) (ESCFlagC.HWPowerFAULTFlag);
+			Choose4 = 0;
+		break;
+		case 30:
+			Choose1 = (int16) (ESC_FeedForward_DutyA * 1000);
+			Choose2 = (int16) (ESC_FeedForward_DutyB * 1000);
+			Choose3 = (int16) (ESC_FeedForward_DutyC * 1000);
+			Choose4 = (int) (VoltOutA_rms * 10);
+			Choose5 = (int) (VoltInA_rms * 10);
+		break;
+		case 31:
+			Choose1 = (int) (ESCFlagA.HWPowerSTOPFlag);
+			Choose2 = (int) (ESCFlagB.HWPowerSTOPFlag); //ESC Í£»ú±êÖ¾Î»
+			Choose3 = (int) (ESCFlagC.HWPowerSTOPFlag);
+			Choose4 = 0;
+			Choose5 = 0;
+		break;
+		case 32:
+			Choose1 = (int) (ESCFlagA.ESCCntMs.StartDelay);
+			Choose2 = (int) (ESCFlagB.ESCCntMs.StartDelay);
+			Choose3 = (int) (ESCFlagC.ESCCntMs.StartDelay);
+			Choose4 = 0;
+		break;
+		case 34:
+			Choose1 = (int) (ConstantCurr[0].state);
+			Choose2 = (int) (ConstantCurr[0].CNT1);
+			Choose3 = (int) (VolttargetCorrA * 10000);
+			Choose4 = (int) (ConstantCurr[0].CorrPI.i10 * 10000);
+			Choose5 = (int) (gridCurA_rms * 10);
+		break;
+		case 35:
+			Choose1 = (int) (ConstantCurr[1].state);
+			Choose2 = (int) (ConstantCurr[1].CNT1);
+			Choose3 = (int) (VolttargetCorrB * 10000);
+			Choose4 = (int) (ConstantCurr[1].CorrPI.i10 * 10000);
+			Choose5 = (int) (gridCurB_rms * 10);
+		break;
+		case 36:
+			Choose1 = (int) (ConstantCurr[2].state);
+			Choose2 = (int) (ConstantCurr[2].CNT1);
+			Choose3 = (int) (VolttargetCorrC * 10000);
+			Choose4 = (int) (ConstantCurr[2].CorrPI.i10 * 10000);
+			Choose5 = (int) (gridCurC_rms * 10);
+		break;
+		case 37:
+			Choose1 = (int) (CurrentUnbalanceRegularVoltage[0] * 10);
+			Choose2 = (int) (CurrentUnbalanceRegularVoltage[1] * 10);
+			Choose3 = (int) (CurrentUnbalanceRegularVoltage[2] * 10);
+			Choose4 = (int) (maxCh << 4 | minCh);
+			Choose5 = (int) (UnCurrData[0] * 10);
+		break;
+		case 38:
+			Choose1 = (int) (CurrentUnbalanceRegularVoltage[0] * 10);
+			Choose2 = (int) (UnCurrData[0] * 10);
+			Choose3 = (int) (UnCurrData[1] * 10);
+			Choose4 = (UnCurrData[2] * 10);
+			Choose5 = (int) (int) (maxCh << 4 | minCh);
+		break;
+
+		default:
+			Choose1 = 0;
+			Choose2 = 0;
+			Choose3 = 0;
+			Choose4 = 0;
+		break;
+	}
+
+	/*²âÊÔ*/
+	if(index < LENTH - 1)
+	{
+		index ++;
+	}
+	else
+	{
+		index = 0;
 	}
 }
 
@@ -3452,7 +3907,6 @@ void RemoteWriteControl(Uint16 usAddress) //0x06  0x05
                 break;
             case 0x0002:
                 if(RemoteStateCtrl.RemoteReset==0xFF00){
-//                    StateFlag.resetFlag = 1;		//¸´Î»ÃüÁî
                     ESCFlagA.resetFlag = 1;
                     ESCFlagB.resetFlag = 1;
                     ESCFlagC.resetFlag = 1;

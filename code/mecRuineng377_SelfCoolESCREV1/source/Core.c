@@ -37,12 +37,7 @@
 #pragma CODE_SECTION(RunPIRE, "ram2func");
 #pragma CODE_SECTION(Max3, "ram2func");
 #pragma CODE_SECTION(SigPhDQComput, "ram2func");
-//#pragma CODE_SECTION(SigPhDQinput, "ram2func");
-//#pragma CODE_SECTION(CLARKE2DQ, "ram2func");
-//#pragma CODE_SECTION(PARK2DQ, "ram2func");
-//#pragma CODE_SECTION(ZCPJudge, "ram2func");
-//#pragma CODE_SECTION(ZCPJudgeA, "ram2func");
-//#pragma CODE_SECTION(ZCPJudgeA_ovsample      ,"ram2func")
+
 
 extern Event_Handle Event_SetStartSM;
 extern Event_Handle Event_CapSwitchSM;
@@ -63,17 +58,12 @@ float CtrlVoltUV = 0;
 #pragma DATA_SECTION(RmsSumOut,"EBSS3");
 //#pragma DATA_SECTION(RmsSumQ,"EBSS3");
 float32 FlvSlot[FLV_NUM];
-float32 RmsSumIn[ALL_RMSNUM],RmsSumOut[ALL_RMSNUM],RmsSumQ[RMS_CALU_SEGMENT_NUM][ALL_RMSNUM];
+
+float32 RmsSumIn[ALL_RMSNUM], RmsSumOut[ALL_RMSNUM], RmsSumQ[RMS_CALU_SEGMENT_NUM][ALL_RMSNUM];
+
 float32 UnUsedStoge=0;
 //#pragma DATA_SECTION(DQbufIn,"EBSS3");
 float DQbufIn[MEANPOINT_QUARTER][MEANPOINT_QUARTER_CHAN];
-
-#if EN_MEANNUM_F
-//float32 MeanSlid[MEANNUM][MEANPOINT];
-//float32 MeanSum[MEANNUM];
-//float32 MeanSlid_F[MEANNUM_F][MEANPOINT_F];
-//float32 MeanSum_F[MEANNUM_F];
-#endif
 
 #define CLARKE2AlphaBeta(A,B,C,Z) 	\
 				Z = ((A) + (B) + (C))*S1DIV3;\
@@ -83,11 +73,7 @@ float DQbufIn[MEANPOINT_QUARTER][MEANPOINT_QUARTER_CHAN];
 				alpha = (SQRT2* SQRT_2DIV3) * (zA - 0.5f*zB - 0.5f*zC);\
 			 	beta  = (SQRT2*SQRT2_DIV2) * (zB - zC)
 
-//#define PARK2()\
-//	 	betaSin = beta * SPLL.PLLResSin;\
-//	 	alphaSin= alpha* SPLL.PLLResSin;\
-//	 	betaCos	= beta * SPLL.PLLResCos;\
-//	 	alphaCos= alpha* SPLL.PLLResCos
+
 
 inline float PARK2D(float alpha,float beta,float resSin,float resCos){
  	return (beta *resSin + alpha*resCos)*(SQRT2_DIV2);
@@ -98,22 +84,7 @@ inline float PARK2Q(float alpha,float beta ,float resSin,float resCos){
 }
 
 
-//return * 指针偏移.
-//*p:输入指针,positive d axis,The positive q axis,The negative d axis,The negative q axis
-//inline float * CLARKE2DQ(float A,float B,float C,float *Z,float *p,float resSin,float resCos){
-//    float zZ = (A + B + C)*S1DIV3;
-//    *Z=zZ;
-//    float zA = A-zZ;
-//    float zB = B-zZ;
-//    float zC = C-zZ;
-//    float alpha = SQRT_2DIV3*(zA - 0.5f*zB - 0.5f*zC);
-//    float beta  = SQRT2_DIV2*(zB - zC);
-//    *p++ = alpha*resCos + beta *resSin;     //The positive d axis
-//    *p++ = beta *resCos - alpha*resSin;     //The positive q axis
-//    *p++ = alpha*resCos - beta *resSin;     //The negative d axis
-//    *p++ = beta *resCos + alpha*resSin;     //The negative q axis
-//    return p;
-//}
+
 
 inline float * PARK2DQ(float *p,float resSin,float resCos,float alpha,float beta)
 {
@@ -250,95 +221,6 @@ void SigPhDQCal(void)
     GridFundaCurQ       =*pOut++;       //35
 }
 
-/*
-
-float ESC_L = 0;//,CurrentRateA = 0,CurrentRateB = 0,CurrentRateC = 0;
-int16 ZCPJudge(float VoltIn,float VoltOut,float Esc_Phase,float CurrIn,Uint16 TBCTR)//,float *pCurrentRate)
-{
-    float CurrAD = 0,a = 0,b = 0;
-    float VolCha = (VoltIn - VoltOut);//注意,VoltIn与VoltOut应该为相减的关系,在此因为VoltOut采样反了
-    float CurrentV = CurrIn;
-    if(VolCha > 700)    VolCha = 700;
-    if(CurrentV > 500)    CurrentV = 500;
-//    if(EPwm4Regs.TBSTS.bit.CTRDIR == 1) //表示载波向上计数,
-//       if( T1PR-CNT)  > 1000  //说明向下计数,  否则则是向上计数
-//    {
-//        *pCurrentRate = T1PR*0.01f*harmCompPerc*VolCha*ESC_L;   //harmCompPerc表示上管占空比
-//    }else{
-//        *pCurrentRate = T1PR*0.01f*(1 - harmCompPerc)*VoltOut*ESC_L;
-//    }
-    a = T1PR*0.01f*0.5*harmCompPerc*fabs(VolCha)*ESC_L;           //上管开时候的电压差导致的电流变化率
-    b = T1PR*0.01f*0.5*(1 - harmCompPerc)*fabs(VoltOut)*ESC_L;    //下管开的时候,输出电压导致的电流变化率
-    if((Esc_Phase > 0)&&(Esc_Phase <= PI))
-    {
-        if(TBCTR > T1PR*0.5)      //    //电压下半波 上管对应 最上面IGBT,开通
-            CurrAD = CurrentV + a;
-        else            //下管开        计数器是在减计数
-            CurrAD = CurrentV - b;
-    }
-    else
-    {
-        if(TBCTR < T1PR*0.5)       //上管开   计数器是在增计数
-            CurrAD = CurrentV - a;
-        else                      //下管开        计数器是在减计数
-            CurrAD = CurrentV + b;
-    }
-    if(CurrAD > 0)
-    {
-        return 1;
-    }else{
-        return 0;
-    }
-}
-
-float CurrAD = 0,ZCPJudgea = 0,ZCPJudgeb = 0;
-float VolCha =0;
-float CurrentV = 0,DBG_TBCTR =0,DBG_Esc_Phase =0;
-
-int16 ZCPJudgeA(float VoltIn,float VoltOut,float Esc_Phase,float CurrIn,Uint16 TBCTR)//,float *pCurrentRate)
-{
-    DBG_TBCTR=TBCTR;
-    DBG_Esc_Phase =Esc_Phase;
-    CurrentV = GridCurrAF;
-    VolCha = (GridVoltAF - LoadVoltUF); //
-    if(VolCha > 700)    VolCha = 700;
-    if(CurrentV > 500)    CurrentV = 500;
-//    if(EPwm4Regs.TBSTS.bit.CTRDIR == 1) //表示载波向上计数,
-//       if( T1PR-CNT)  > 1000  //说明向下计数,  否则则是向上计数
-//    {
-//        *pCurrentRate = T1PR*0.01f*harmCompPerc*VolCha*ESC_L;   //harmCompPerc表示上管占空比
-//    }else{
-//        *pCurrentRate = T1PR*0.01f*(1 - harmCompPerc)*VoltOut*ESC_L;
-//    }
-    ZCPJudgea = T1PR*0.01f*0.5*harmCompPerc*fabs(VolCha)*ESC_L;           //上管开时候的电压差导致的电流变化率
-    ZCPJudgeb = T1PR*0.01f*0.5*(1 - harmCompPerc)*fabs(VoltOut)*ESC_L;    //下管开的时候,输出电压导致的电流变化率
-    if((Esc_Phase > 0)&&(Esc_Phase < PI))
-    {
-        if(TBCTR > T1PR*0.5)      //    //电压下半波 上管对应 最上面IGBT,开通
-            CurrAD = CurrentV + ZCPJudgea;
-        else            //下管开        计数器是在减计数
-            CurrAD = CurrentV - ZCPJudgeb;
-    }
-    else
-    {
-        if(TBCTR < T1PR*0.5)       //上管开   计数器是在增计数
-            CurrAD = CurrentV - ZCPJudgea;
-        else                      //下管开        计数器是在减计数
-            CurrAD = CurrentV + ZCPJudgeb;
-    }
-
-    if(CurrAD > 0)
-    {
-        return 1;
-    }else{
-        return 0;
-    }
-}*/
-//float elems[FIFO_DQ_BLOCK_NUM][FIFO_DQ_DATA_SIZE] ={{1,2,3},{4,5,6},{7,8,9},{10,11,12},{13,14,15}};
-//float testdata[110]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-//float outdata[110]={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-//float *ELEMS_OUT=&outdata[0];
-//float *ELEMS_IN=&testdata[0];
 
 float testin[FIFO_DQ_DATA_SIZE];
 
@@ -417,78 +299,6 @@ void SigPhDQComput(void)
     GridRealCurErrC =DCL_runPI(&GridCurrPICtrlC, GridRealCurQC2 , 0);
 }
 
-//void Funda3sTo2rTransf(void)
-//{
-//	float32 zA,zB,zC,tmp;//zZ,
-// 	float32 alpha,beta,betaSin,alphaSin,betaCos,alphaCos;
-//
-// 	//Fundamental zero sequence current needs to be done after the operation of the fundamental wave FFT
-// 	LoadFundaCurZ  =(FundwaveA + FundwaveB + FundwaveC)*S1DIV3;	//The Fundamental zero sequence
-//
-// 	//The positive and negative d,q,zero axis of Load current
-//    CLARKE2(pfifo[21],pfifo[23],pfifo[25],LoadRealCurZ);
-//    pIn= PARK2DQ(alpha,beta,     pIn, resSinA,resCosA);      //InvFundaCurD,InvFundaCurQ
-//    pIn= PARK2DQ(alpha,beta,     pIn, resCosA,-resSinA);      //InvFundaCurND,InvFundaCurNQ
-//
-//
-//	//The positive and negative d,q,zero axis of Load current ,for decoupling control
-//	CLARKE2(pfifo[15],pfifo[17],pfifo[19],ApfOutCurZ);
-//    pIn= PARK2DQ(alpha,beta,     pIn, resSinA,resCosA);      //InvFundaCurD,InvFundaCurQ
-//    pIn= PARK2DQ(alpha,beta,     pIn, resCosA,-resSinA);      //InvFundaCurND,InvFundaCurNQ
-//    //The positive and negative d,q,zero axis of grid Current
-//    CLARKE2(pfifo[9],pfifo[11],pfifo[13],GridZeroCur);
-//    pIn= PARK2DQ(alpha,beta,     pIn, resSinA,resCosA);      //GridFundaCurD,GridFundaCurQ
-//
-////    CLARKE2(LoadRealCurA,LoadRealCurB,LoadRealCurC,LoadRealCurZ);
-////  PARK2();    //2s/2r transfer
-////  tmp  = alphaCos + betaSin;                      //The positive d axis
-////  MEANCALC(tmp,LoadFundaCurD,LOAD_FUNDCURR_D);
-////  tmp  = betaCos  - alphaSin;                     //The positive q axis
-////  MEANCALC(tmp,LoadFundaCurQ,LOAD_FUNDCURR_Q);
-////  tmp = alphaCos - betaSin;                       //The negative d axis
-////  MEANCALC(tmp,LoadFundaCurND,LOAD_FUNDCURR_ND);
-////  tmp = betaCos  + alphaSin;                      //The negative q axis
-////  MEANCALC(tmp,LoadFundaCurNQ,LOAD_FUNDCURR_NQ);
-//
-//// 	PARK2();	//2s/2r transfer
-////	tmp  = alphaCos + betaSin;						//The positive d axis
-////	MEANCALC(tmp,InvFundaCurD,INV_FUNDCURR_D);
-////	tmp  = betaCos  - alphaSin;						//The positive q axis
-////	MEANCALC(tmp,InvFundaCurQ,INV_FUNDCURR_Q);
-////	tmp = alphaCos - betaSin;						//The negative d axis
-////	MEANCALC(tmp,InvFundaCurND,INV_FUNDCURR_ND);
-////	tmp = betaCos  + alphaSin;						//The negative q axis
-////	MEANCALC(tmp,InvFundaCurNQ,INV_FUNDCURR_NQ);
-//
-//
-//
-////  PARK2();	//2s/2r transfer
-////	tmp  = alphaCos + betaSin;						//The positive d axis
-////	MEANCALC(tmp,GridFundaCurD,GRID_FUNDCURR_D);
-////	tmp  = betaCos  - alphaSin;						//The positive q axis
-////	MEANCALC(tmp,GridFundaCurQ,GRID_FUNDCURR_Q);
-//
-//	MEANCALC(dcVoltUpF - dcVoltDnF,dcVoltDiv2Err,NEUTRAL_LINE_VOLT);
-//
-//	if(MeanInitChan>=0){
-//		switch(MeanInitChan){	//注意,必须连续在此swithc里面进行所有的初始化.否则会出现两个地方初始化而导致序号最大的通道无法初始化
-//		case LOAD_FUNDCURR_D:	LoadFundaCurD =MeanInit(LOAD_FUNDCURR_D);break;
-//		case LOAD_FUNDCURR_Q:	LoadFundaCurQ =MeanInit(LOAD_FUNDCURR_Q);break;
-//		case LOAD_FUNDCURR_ND:	LoadFundaCurND=MeanInit(LOAD_FUNDCURR_ND);break;
-//		case LOAD_FUNDCURR_NQ:	LoadFundaCurNQ=MeanInit(LOAD_FUNDCURR_NQ);break;
-//		case INV_FUNDCURR_D:	InvFundaCurD  =MeanInit(INV_FUNDCURR_D);break;
-//		case INV_FUNDCURR_Q:	InvFundaCurQ  =MeanInit(INV_FUNDCURR_Q);break;
-//		case INV_FUNDCURR_ND:	InvFundaCurND =MeanInit(INV_FUNDCURR_ND);break;
-//		case INV_FUNDCURR_NQ:	InvFundaCurNQ =MeanInit(INV_FUNDCURR_NQ);break;
-//		case GRID_FUNDCURR_D:	GridFundaCurD =MeanInit(GRID_FUNDCURR_D);break;
-//		case GRID_FUNDCURR_Q:	GridFundaCurQ =MeanInit(GRID_FUNDCURR_Q);break;
-//		case NEUTRAL_LINE_VOLT:	dcVoltDiv2Err =MeanInit(NEUTRAL_LINE_VOLT);break;
-////		case GRID_FUNDVOLT_D:	GridFundaVoltD=MeanInit(GRID_FUNDVOLT_D);break;
-////		case GRID_FUNDVOLT_Q:	GridFundaVoltQ=MeanInit(GRID_FUNDVOLT_Q);break;
-//		}
-//	}
-//	//Note that if you delete this statement, the initialization will fail and all mean calculation errors will occur;注意,如果删掉此语句,会出现初始化不能完成而导致所有的mean计算错误.
-//}
 
 #define THDI_RMS_SQRT3CALU(chan)\
     pH->im      = (*p++)*(POWERGRID_FREQ*CTRLSTEP_ALGORITHM);\
@@ -617,9 +427,6 @@ void SlowRmsCalc(void)         //慢速算有效值,是将整个周期分为四段,按照1/4进行取
 
         p=&RmsSumOut[FIRST_RMSNUM];                             //重获得RMS输出数组地址
 
-//        THDI_RMS_SQRT3CALU(gpVoltA_rms);
-//        THDI_RMS_SQRT3CALU(gpVoltB_rms);
-//        THDI_RMS_SQRT3CALU(gpVoltC_rms);
 
         THDI_RMS_CALU(VoltInA_rms);//电网电压          谐波有效值/总的有效值=THDI;基波有效值/总的有效值=THDF;
         THDI_RMS_CALU(VoltInB_rms);
@@ -663,74 +470,86 @@ void SlowRmsCalc(void)         //慢速算有效值,是将整个周期分为四段,按照1/4进行取
     }
 }
 
-
+/*
+ * 功能：计算电压和电流有效值。WY
+ */
 void FirstRmsCalc(void)           //快速有效值算法,取到整个周期的1/4之后,就直接进行有效值计算.
 {
-    Uint16 i,j;
-    int16 addr;
-    float *p=&RmsSumOut[0],*pSrc;                         //获得RMS输出数组的首地址
+	Uint16 i, j;
+	int16 addr;
+	float *p = &RmsSumOut[0], *pSrc; //获得RMS输出数组的首地址
 
-    for(i=FIRST_RMSNUM;i;i--)
-        *p++=0;                                           //RMS输出数组清零
+	for(i = FIRST_RMSNUM; i; i --)
+		*p ++ = 0; //RMS输出数组清零
 
-    addr=RmsCaluCnt;
-    for(i=RMS_CALU_SEGMENT;i;i--){                        //共计RMS_CALU_SEGMENT个数据计算
-        if(--addr<0) addr = RMS_CALU_SEGMENT_NUM-1;       //获取RMS滑动缓冲区的时间最久的地址
-        p = &RmsSumOut[0];                                //获得RMS输出数组的首地址
-        pSrc=&RmsSumQ[addr][0];
-        for(j=FIRST_RMSNUM;j;j--)                         //从FIRST_RMSNUM~ALL_RMSNUM共计有ALL_RMSNUM路输出
-        {
-            *p++ += *pSrc++ ;                             //遍历整个环形缓冲区取和
-        }
-     }
+	addr = RmsCaluCnt;
 
-    p=&RmsSumOut[0];                                      //重获得RMS输出数组的首地址
+	for(i = RMS_CALU_SEGMENT; i; i --)
+	{ //共计RMS_CALU_SEGMENT个数据计算
+		if(-- addr < 0)
+			addr = RMS_CALU_SEGMENT_NUM - 1; //获取RMS滑动缓冲区的时间最久的地址
+		p = &RmsSumOut[0]; //获得RMS输出数组的首地址
+		pSrc = &RmsSumQ[addr][0];
+		for(j = FIRST_RMSNUM; j; j --) //从FIRST_RMSNUM~ALL_RMSNUM共计有ALL_RMSNUM路输出
+		{
+			*p ++ += *pSrc ++; //遍历整个环形缓冲区取和
+		}
+	}
 
-    ESCFlagA.VoltIn_rms = VoltInA_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    ESCFlagB.VoltIn_rms = VoltInB_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    ESCFlagC.VoltIn_rms = VoltInC_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
+	p = &RmsSumOut[0]; //重获得RMS输出数组的首地址
 
-    ESCFlagA.VoltOut_rms = VoltOutA_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    ESCFlagB.VoltOut_rms = VoltOutB_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    ESCFlagC.VoltOut_rms = VoltOutC_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    if(StateFlag.VoltageModeFlag == 0){
-        UnCurrData[0] = ESCFlagA.gridCur_rms = CURRData[0] = gridCurA_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        UnCurrData[1] = ESCFlagB.gridCur_rms = CURRData[1] = gridCurB_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        UnCurrData[2] = ESCFlagC.gridCur_rms = CURRData[2] = gridCurC_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
+	ESCFlagA.VoltIn_rms = VoltInA_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+	ESCFlagB.VoltIn_rms = VoltInB_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+	ESCFlagC.VoltIn_rms = VoltInC_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
 
-        CURRData[3] = ESCFlagA.gridCurrBY_rms = gridCurrBYAF_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        CURRData[4] = ESCFlagB.gridCurrBY_rms = gridCurrBYBF_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        CURRData[5] = ESCFlagC.gridCurrBY_rms = gridCurrBYCF_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    }else if(StateFlag.VoltageModeFlag == 1){
-        ESCFlagA.gridCur_rms = CURRData[0] = gridCurA_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        ESCFlagB.gridCur_rms = CURRData[1] = gridCurB_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        ESCFlagC.gridCur_rms = CURRData[2] = gridCurC_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
+	ESCFlagA.VoltOut_rms = VoltOutA_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+	ESCFlagB.VoltOut_rms = VoltOutB_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+	ESCFlagC.VoltOut_rms = VoltOutC_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
 
-        UnCurrData[0] = CURRData[3] = ESCFlagA.gridCurrBY_rms = gridCurrBYAF_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        UnCurrData[1] = CURRData[4] = ESCFlagB.gridCurrBY_rms = gridCurrBYBF_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-        UnCurrData[2] = CURRData[5] = ESCFlagC.gridCurrBY_rms = gridCurrBYCF_rms = sqrtf(*p++ * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
-    }
+	if(StateFlag.VoltageModeFlag == 0)
+	{
+		UnCurrData[0] = ESCFlagA.gridCur_rms = CURRData[0] = gridCurA_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		UnCurrData[1] = ESCFlagB.gridCur_rms = CURRData[1] = gridCurB_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		UnCurrData[2] = ESCFlagC.gridCur_rms = CURRData[2] = gridCurC_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
 
+		CURRData[3] = ESCFlagA.gridCurrBY_rms = gridCurrBYAF_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		CURRData[4] = ESCFlagB.gridCurrBY_rms = gridCurrBYBF_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		CURRData[5] = ESCFlagC.gridCurrBY_rms = gridCurrBYCF_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+	}
+	else if(StateFlag.VoltageModeFlag == 1)
+	{
+		ESCFlagA.gridCur_rms = CURRData[0] = gridCurA_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		ESCFlagB.gridCur_rms = CURRData[1] = gridCurB_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		ESCFlagC.gridCur_rms = CURRData[2] = gridCurC_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
 
-    ResonProtcABCRms    = sqrtf(*p * (POWERGRID_FREQ*CTRLSTEP_ALGORITHM));
+		UnCurrData[0] = CURRData[3] = ESCFlagA.gridCurrBY_rms = gridCurrBYAF_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		UnCurrData[1] = CURRData[4] = ESCFlagB.gridCurrBY_rms = gridCurrBYBF_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+		UnCurrData[2] = CURRData[5] = ESCFlagC.gridCurrBY_rms = gridCurrBYCF_rms = sqrtf(*p ++ * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
+	}
+
+	ResonProtcABCRms = sqrtf(*p * (POWERGRID_FREQ * CTRLSTEP_ALGORITHM));
 
 #if ESC_THREEPHASECTRL
-    GridVoltRms=(VoltInA_rms+VoltInB_rms+VoltInC_rms)*S1DIV3;
-    ThreeHarmGridVoltRms=GridVoltRms*(S1DIVSQRT3*SQRT2*S1DIV6);
-    if(GridVoltRms>3000)            GridVoltRms=3000;
-    FLVFUN(GridVoltRms_F,GridVoltRms,VOLT);
+	GridVoltRms = (VoltInA_rms + VoltInB_rms + VoltInC_rms) * S1DIV3;
+	ThreeHarmGridVoltRms = GridVoltRms * (S1DIVSQRT3 * SQRT2 * S1DIV6);
+	if(GridVoltRms > 3000)
+		GridVoltRms = 3000;
+	FLVFUN(GridVoltRms_F, GridVoltRms, VOLT);
 
-    LoadVoltRms = (VoltOutA_rms + VoltOutB_rms + VoltOutC_rms)*S1DIV3;
-    if(LoadVoltRms>10000)            LoadVoltRms=10000;
-    FLVFUN(LoadVoltRms_F,LoadVoltRms,LOADCURR);
+	LoadVoltRms = (VoltOutA_rms + VoltOutB_rms + VoltOutC_rms) * S1DIV3;
+	if(LoadVoltRms > 10000)
+		LoadVoltRms = 10000;
+	FLVFUN(LoadVoltRms_F, LoadVoltRms, LOADCURR);
 
-    GridCurRms = (gridCurA_rms + gridCurB_rms + gridCurC_rms)*S1DIV3;
-    if(GridCurRms>10000)            GridCurRms=10000;
-    FLVFUN(GridCurRms_F,GridCurRms,GRIDCURR);
+	GridCurRms = (gridCurA_rms + gridCurB_rms + gridCurC_rms) * S1DIV3;
+	if(GridCurRms > 10000)
+		GridCurRms = 10000;
+	FLVFUN(GridCurRms_F, GridCurRms, GRIDCURR);
 
-    GridCurBYRms = (gridCurrBYAF_rms + gridCurrBYBF_rms + gridCurrBYCF_rms)*S1DIV3;
-    if(GridCurBYRms>10000)            GridCurBYRms=10000;
-    FLVFUN(GridCurBYRms_F,GridCurBYRms,GRIDCURR);
+	GridCurBYRms = (gridCurrBYAF_rms + gridCurrBYBF_rms + gridCurrBYCF_rms) * S1DIV3;
+	if(GridCurBYRms > 10000)
+		GridCurBYRms = 10000;
+	FLVFUN(GridCurBYRms_F, GridCurBYRms, GRIDCURR);
 #elif ESC_SINGLEPHASECTRL
     GridVoltRms = VoltInA_rms;
     if(GridVoltRms>3000)            GridVoltRms=3000;
@@ -852,27 +671,14 @@ void RMSLimit(void)
 
 void ESCfilterMemCopy(Uint16 num)
 {
-//    Uint16 *pInitVar    =(Uint16 *)dst;
-//    Uint16 *pSrcVar     =(Uint16 *)(&ConstantCurrDefault[num]);
-//     for(i=0;i<sizeof(SMconstantCurr);i++)
-//         *pInitVar++=*pSrcVar++;
     int16 i;
     if(num > 2)    num = 0;
     for(i=0;i<3;i++){
-//        ConstantCurr[i].CorrPI.Ki = ConstantCurrDefault[num].CorrPI.Ki;
-//        ConstantCurr[i].CorrPI.Kp = ConstantCurrDefault[num].CorrPI.Kp;
-//        ConstantCurr[i].CorrPI.i10 = ConstantCurrDefault[num].CorrPI.i10;
-//        ConstantCurr[i].CorrPI.Umax = ConstantCurrDefault[num].CorrPI.Umax;
-//        ConstantCurr[i].CorrPI.Umin = ConstantCurrDefault[num].CorrPI.Umin;
-//        ConstantCurr[i].CorrPI.i6 = ConstantCurrDefault[num].CorrPI.i6;
         ConstantCurr[i].VolttargetCorr = ConstantCurrDefault[num].VolttargetCorr;
         ConstantCurr[i].RMS_CONSTANT_CURRENT_OVERLOAD = ConstantCurrDefault[num].RMS_CONSTANT_CURRENT_OVERLOAD;
         ConstantCurr[i].RMS_CONSTANT_CURRENT_DIFF = ConstantCurrDefault[num].RMS_CONSTANT_CURRENT_DIFF;
         ConstantCurr[i].RMS_CONSTANT_CURRENT_RATED = ConstantCurrDefault[num].RMS_CONSTANT_CURRENT_RATED;
         ConstantCurr[i].INS_CONSTANT_CURRENT_RATED = ConstantCurrDefault[num].INS_CONSTANT_CURRENT_RATED;
-//        ConstantCurr[i].state = ConstantCurrDefault[num].state;
-//        ConstantCurr[i].Prvstate = ConstantCurrDefault[num].Prvstate;
-//        ConstantCurr[i].CNT1 = ConstantCurrDefault[num].CNT1;
 
     }
 }
@@ -1460,74 +1266,97 @@ void InitBeforeReadROM(void)
 
 void clock1ms(void)
 {
-    ServiceDog();
-    if(++Time.MicroSec >= 999)         //1秒
-        Time.MicroSec = 0;
+	ServiceDog();
+	if (++Time.MicroSec >= 999)//1秒
+		Time.MicroSec = 0;
 
-    if(SCIC.SendTrsformDelayTim){
-        if(--SCIC.SendTrsformDelayTim==0)
-            vMBPortSerialEnable(&SCIC, TRUE, FALSE );
-    }
+	if (SCIC.SendTrsformDelayTim)
+	{
+		if (--SCIC.SendTrsformDelayTim == 0)
+			vMBPortSerialEnable(&SCIC, TRUE, FALSE);
+	}
 
-    if(SCIB.SendTrsformDelayTim){
-        if(--SCIB.SendTrsformDelayTim==0)
-            vMBPortSerialEnable(&SCIB, TRUE, FALSE );
-    }
+	if (SCIB.SendTrsformDelayTim)
+	{
+		if (--SCIB.SendTrsformDelayTim == 0)
+			vMBPortSerialEnable(&SCIB, TRUE, FALSE);
+	}
 
-    if(SCID.SendTrsformDelayTim){
-        if(--SCID.SendTrsformDelayTim==0)
-            vMBPortSerialEnable(&SCID, TRUE, FALSE );
-        }
+	if (SCID.SendTrsformDelayTim)
+	{
+		if (--SCID.SendTrsformDelayTim == 0)
+			vMBPortSerialEnable(&SCID, TRUE, FALSE);
+	}
 
-    if(SCICMASTERENABLE==1)
-        ModBusMasterTimeCal(&SCIC);
-    else
-        ModBusSlaveTimeCal(&SCIC);
+	if (SCICMASTERENABLE == 1)
+		ModBusMasterTimeCal(&SCIC);
+	else
+		ModBusSlaveTimeCal(&SCIC);
 
-    ModBusSlaveTimeCal(&SCIB);
+	ModBusSlaveTimeCal(&SCIB);
 
-    if(SCIDMASTERENABLE==1)
-        ModBusMasterTimeCal(&SCID);
-    else
-        ModBusSlaveTimeCal(&SCID);
-    if(++CapEmergTim >= 4500)           CapEmergTim = 4500;
-    if(++RandTimCount >= 60)            RandTimCount = 60;
+	if (SCIDMASTERENABLE == 1)
+		ModBusMasterTimeCal(&SCID);
+	else
+		ModBusSlaveTimeCal(&SCID);
+	if (++CapEmergTim >= 4500)
+		CapEmergTim = 4500;
+	if (++RandTimCount >= 60)
+		RandTimCount = 60;
 }
 
+/*
+ * 功能：节拍产生。WY
+ *
+ * 说明：该函数的执行周期为5ms。
+ */
 void clock5ms(void)
 {
-    static int j=2;
-    int16 * pCnt;
-    Uint16 i;
-    pCnt=(int16 *)&CntMs;
-    for(i=sizeof(CntMs);i!=0;i--){
-        if((*pCnt)++>30000) (*pCnt)=30000;  //150秒
-        pCnt++;
-    }
-    pCnt=(int16 *)&ESCFlagA.ESCCntMs;
-    for(i=sizeof(ESCFlagA.ESCCntMs);i!=0;i--){
-        if((*pCnt)++>30000) (*pCnt)=30000;  //150秒
-        pCnt++;
-    }
-    pCnt=(int16 *)&ESCFlagB.ESCCntMs;
-    for(i=sizeof(ESCFlagB.ESCCntMs);i!=0;i--){
-        if((*pCnt)++>30000) (*pCnt)=30000;  //150秒
-        pCnt++;
-    }
-    pCnt=(int16 *)&ESCFlagC.ESCCntMs;
-    for(i=sizeof(ESCFlagC.ESCCntMs);i!=0;i--){
-        if((*pCnt)++>30000) (*pCnt)=30000;  //150秒
-        pCnt++;
-    }
+	static int j = 2;
+	int16 *pCnt;
+	Uint16 i;
 
-    if(j-- <= 0){
-        Event_post(Event_SetStartSM, Event_Id_01);
-        Event_post(Event_CapSwitchSM, Event_Id_02);
-        Event_post(Event_Outside, Event_Id_00);
-        Event_post(Event_SCI_Reveived, Event_Id_00|Event_Id_01 | Event_Id_02);
-        j=1;//(n+1)*5ms
-    }
-    MainContactConfirm(25);
+	pCnt = (int16*) &CntMs;
+	for (i = sizeof(CntMs); i != 0; i--)
+	{
+		if ((*pCnt)++ > 30000)
+			(*pCnt) = 30000;
+		pCnt++;
+	}
+
+	pCnt = (int16*) &ESCFlagA.ESCCntMs;
+	for (i = sizeof(ESCFlagA.ESCCntMs); i != 0; i--)
+	{
+		if ((*pCnt)++ > 30000)
+			(*pCnt) = 30000;
+		pCnt++;
+	}
+
+	pCnt = (int16*) &ESCFlagB.ESCCntMs;
+	for (i = sizeof(ESCFlagB.ESCCntMs); i != 0; i--)
+	{
+		if ((*pCnt)++ > 30000)
+			(*pCnt) = 30000;
+		pCnt++;
+	}
+
+	pCnt = (int16*) &ESCFlagC.ESCCntMs;
+	for (i = sizeof(ESCFlagC.ESCCntMs); i != 0; i--)
+	{
+		if ((*pCnt)++ > 30000)
+			(*pCnt) = 30000;
+		pCnt++;
+	}
+
+	if (j-- <= 0)
+	{
+		Event_post(Event_SetStartSM, Event_Id_01);
+		Event_post(Event_CapSwitchSM, Event_Id_02);
+		Event_post(Event_Outside, Event_Id_00);
+		Event_post(Event_SCI_Reveived, Event_Id_00 | Event_Id_01 | Event_Id_02);
+		j = 1;
+	}
+	MainContactConfirm(25); //该函数未定义。WY
 }
 
 void clock1Second(void)
@@ -1535,57 +1364,76 @@ void clock1Second(void)
 	int16 *pCnt;
 	Uint16 i;
 
-    if(TimSwitchOnStart==1){
-        if(++SwitchTimeOn>600)	SwitchTimeOn=600;
-    }
-    if(TimSwitchOffStart==1){
-        if(++SwitchTimeOff>600)	SwitchTimeOff=600;
-    }
-    if(++FlashRecordTim>10)		StateFlag.RecordWritting = 1;
-    if(++ReFFTDelayTim>40)      ReFFTDelayTim = 40;
-    if(++CpuHeatDelayTime>15)   CpuHeatDelayTime = 15;
+	if (TimSwitchOnStart == 1)
+	{
+		if (++SwitchTimeOn > 600)
+			SwitchTimeOn = 600;
+	}
+	if (TimSwitchOffStart == 1)
+	{
+		if (++SwitchTimeOff > 600)
+			SwitchTimeOff = 600;
+	}
+	if (++FlashRecordTim > 10)
+		StateFlag.RecordWritting = 1;
+	if (++ReFFTDelayTim > 40)
+		ReFFTDelayTim = 40;
+	if (++CpuHeatDelayTime > 15)
+		CpuHeatDelayTime = 15;
 
-    pCnt=&CntSec.MeasureDelay;
-    for(i=0;i<sizeof(CntSec);i++){
-        if((*pCnt)++>3600) (*pCnt)=3600;
-        pCnt++;
-    }
-    pCnt=&ESCFlagA.ESCCntSec.ChargingTime;
-    for(i=0;i<sizeof(ESCFlagA.ESCCntSec);i++){
-        if((*pCnt)++>3600) (*pCnt)=3600;
-        pCnt++;
-    }
-    pCnt=&ESCFlagB.ESCCntSec.ChargingTime;
-    for(i=0;i<sizeof(ESCFlagB.ESCCntSec);i++){
-        if((*pCnt)++>3600) (*pCnt)=3600;
-        pCnt++;
-    }
-    pCnt=&ESCFlagC.ESCCntSec.ChargingTime;
-    for(i=0;i<sizeof(ESCFlagC.ESCCntSec);i++){
-        if((*pCnt)++>3600) (*pCnt)=3600;
-        pCnt++;
-    }
+	pCnt = &CntSec.MeasureDelay;
+	for (i = 0; i < sizeof(CntSec); i++)
+	{
+		if ((*pCnt)++ > 3600)
+			(*pCnt) = 3600;
+		pCnt++;
+	}
+	pCnt = &ESCFlagA.ESCCntSec.ChargingTime;
+	for (i = 0; i < sizeof(ESCFlagA.ESCCntSec); i++)
+	{
+		if ((*pCnt)++ > 3600)
+			(*pCnt) = 3600;
+		pCnt++;
+	}
+	pCnt = &ESCFlagB.ESCCntSec.ChargingTime;
+	for (i = 0; i < sizeof(ESCFlagB.ESCCntSec); i++)
+	{
+		if ((*pCnt)++ > 3600)
+			(*pCnt) = 3600;
+		pCnt++;
+	}
+	pCnt = &ESCFlagC.ESCCntSec.ChargingTime;
+	for (i = 0; i < sizeof(ESCFlagC.ESCCntSec); i++)
+	{
+		if ((*pCnt)++ > 3600)
+			(*pCnt) = 3600;
+		pCnt++;
+	}
 
-    Fan_Cnt();
-    if(++Time.Second >= 60){             //1分钟定时计数
-        Time.Second = 0;
-        cntForAutoStIn30++;
-        if(++Time.Minute >= 60){          // 1小时定时计数
-            Time.Minute = 0;
-//            cntForAutoStIn24++;
-            if(++Time.Hour >= 24){
-                Time.Hour = 0;
-                if(++Time.Day>Monthnum(Time.Year,Time.Month))	//加万年历程序
-                {
-                    Time.Day = 1;
-                    if(++Time.Month>12){
-                        Time.Month = 1;
-                        Time.Year++;
-                    }
-                }
-            }
-        }
-    }
+	Fan_Cnt();
+	if (++Time.Second >= 60)
+	{//1分钟定时计数
+		Time.Second = 0;
+		cntForAutoStIn30++;
+		if (++Time.Minute >= 60)
+		{// 1小时定时计数
+			Time.Minute = 0;
+
+			if (++Time.Hour >= 24)
+			{
+				Time.Hour = 0;
+				if (++Time.Day > Monthnum(Time.Year, Time.Month))//加万年历程序
+				{
+					Time.Day = 1;
+					if (++Time.Month > 12)
+					{
+						Time.Month = 1;
+						Time.Year++;
+					}
+				}
+			}
+		}
+	}
 }
 
 //2 功能控制模块
@@ -1603,246 +1451,3 @@ int Monthnum(unsigned char y,unsigned char m)
 		month[2]=29;//闰年二月29天，平年28天
 	return month[m];
 }
-
-//int Yearnum(int y)
-//{
-//     int t=365; //平年365天
-//     t+=LeapYear(y);//闰年366天
-//     return t;
-//}
-//
-//int isWeek(int y,int m)
-//{
-//     int year=1900,week=1,i; //定义万年历是从1900年开始
-//     long sum=0;
-//     for(i=year;i<y;i++)
-//         sum+=Yearnum(i);
-//     for(i=1;i<m;i++)
-//         sum+=Monthnum(y,i);
-//     i=sum%7;
-//     week=(week+i)%7;
-//     return week;
-//}
-//
-//char *getWeek(int y,int m,int d)
-//{
-//     char *Eweek; int week;
-//    week=(d+isWeek(y,m)-1)%7; //计算星期
-//     switch(week)
-//     {
-//     case 0:Eweek="Sunday";break;
-//     case 1:Eweek="Monday";break;
-//     case 2:Eweek="Tuesday";break;
-//     case 3:Eweek="Wendesday";break;
-//     case 4:Eweek="Thursday";break;
-//     case 5:Eweek="Friday";break;
-//     case 6:Eweek="Sadurday";break;
-//     }
-//    return Eweek ;
-//}
-
-
-
-//    float32 zA,zB,zC,tmp;//zZ,
-//    float32 alpha,beta,betaSin,alphaSin,betaCos,alphaCos;
-//
-//    //Fundamental zero sequence current needs to be done after the operation of the fundamental wave FFT
-//    LoadFundaCurZ  =(FundwaveA + FundwaveB + FundwaveC)*S1DIV3; //The Fundamental zero sequence
-//
-//    //The positive and negative d,q,zero axis of Load current
-//    CLARKE2(LoadRealCurA,LoadRealCurB,LoadRealCurC,LoadRealCurZ);
-//    PARK2();    //2s/2r transfer
-//
-//    tmp  = alphaCos + betaSin;                      //The positive d axis
-//    MEANCALC(tmp,LoadFundaCurD,LOAD_FUNDCURR_D);
-//    tmp  = betaCos  - alphaSin;                     //The positive q axis
-//    MEANCALC(tmp,LoadFundaCurQ,LOAD_FUNDCURR_Q);
-//    tmp = alphaCos - betaSin;                       //The negative d axis
-//    MEANCALC(tmp,LoadFundaCurND,LOAD_FUNDCURR_ND);
-//    tmp = betaCos  + alphaSin;                      //The negative q axis
-//    MEANCALC(tmp,LoadFundaCurNQ,LOAD_FUNDCURR_NQ);
-//
-//
-//    //The positive and negative d,q,zero axis of Load current ,for decoupling control
-//    CLARKE2(ApfOutCurA,ApfOutCurB,ApfOutCurC,ApfOutCurZ);
-//    PARK2();    //2s/2r transfer
-//
-//    tmp  = alphaCos + betaSin;                      //The positive d axis
-//    MEANCALC(tmp,InvFundaCurD,INV_FUNDCURR_D);
-//    tmp  = betaCos  - alphaSin;                     //The positive q axis
-//    MEANCALC(tmp,InvFundaCurQ,INV_FUNDCURR_Q);
-//    tmp = alphaCos - betaSin;                       //The negative d axis
-//    MEANCALC(tmp,InvFundaCurND,INV_FUNDCURR_ND);
-//    tmp = betaCos  + alphaSin;                      //The negative q axis
-//    MEANCALC(tmp,InvFundaCurNQ,INV_FUNDCURR_NQ);
-//
-//    //The positive and negative d,q,zero axis of grid Current
-//    CLARKE2(GridCurrA,GridCurrB,GridCurrC,GridZeroCur);
-//    PARK2();    //2s/2r transfer
-//
-//    tmp  = alphaCos + betaSin;                      //The positive d axis
-//    MEANCALC(tmp,GridFundaCurD,GRID_FUNDCURR_D);
-//    tmp  = betaCos  - alphaSin;                     //The positive q axis
-//    MEANCALC(tmp,GridFundaCurQ,GRID_FUNDCURR_Q);
-//
-//    MEANCALC(dcVoltUpF - dcVoltDnF,dcVoltDiv2Err,NEUTRAL_LINE_VOLT);
-
-
-    //  VoltThetaB=Theta-PllCalibrPhase+(PI/2-(PI*2/3));        //Corrected to the lead of the PI/2 phase-locked angle.超前90
-    //  if(VoltThetaB > PI2)    VoltThetaB -= PI2;              //2*PI limiting
-    //  if(VoltThetaB < 0)      VoltThetaB += PI2;              //2*PI limiting
-    //  temp0 = (Uint16)(VoltThetaB*PLL_STEP);                  //float convert to int
-    //  temp0 %=  SINE_LOOKTABLE_LEN;
-    //  float resSinB=pSineLookTab(temp0);
-    //  float resCosB=pCoseLookTab(temp0);
-
-    //  VoltThetaC=Theta-PllCalibrPhase+(PI/2+(PI*2/3));        //Corrected to the lead of the PI/2 phase-locked angle.超前90
-    //  if(VoltThetaC > PI2)    VoltThetaC -= PI2;              //2*PI limiting
-    //  if(VoltThetaC < 0)      VoltThetaC += PI2;              //2*PI limiting
-    //  temp0 = (Uint16)(VoltThetaC*PLL_STEP);                  //float convert to int
-    //  temp0 %=  SINE_LOOKTABLE_LEN;
-    //  float resSinC=pSineLookTab(temp0);
-    //  float resCosC=pCoseLookTab(temp0);
-
-//  GridVoltDA      =-DCL_runDF22(&SinglePhaseDispFilter[0],    PARK2D(GridVoltAF,GridVoltAF_S,     resSin,resCos));
-//  GridVoltDB      =-DCL_runDF22(&SinglePhaseDispFilter[1],    PARK2D(GridVoltBF,GridVoltBF_S,     resSinB,resCosB));
-//  GridVoltDC      =-DCL_runDF22(&SinglePhaseDispFilter[2],    PARK2D(GridVoltCF,GridVoltCF_S,     resSinC,resCosC));
-//  LoadRealCurDA   =-DCL_runDF22(&SinglePhaseDispFilter[3],    PARK2D(LoadRealCurA,LoadRealCurA_S, resSin,resCos));
-//  LoadRealCurDB   =-DCL_runDF22(&SinglePhaseDispFilter[4],    PARK2D(LoadRealCurB,LoadRealCurB_S, resSinB,resCosB));
-//  LoadRealCurDC   =-DCL_runDF22(&SinglePhaseDispFilter[5],    PARK2D(LoadRealCurC,LoadRealCurC_S, resSinC,resCosC));
-//  GridRealCurDA   =-DCL_runDF22(&SinglePhaseDispFilter[6],    PARK2D(GridCurrA,GridCurrA_S,       resSin,resCos));
-//  GridRealCurDB   =-DCL_runDF22(&SinglePhaseDispFilter[7],    PARK2D(GridCurrB,GridCurrB_S,       resSinB,resCosB));
-//  GridRealCurDC   =-DCL_runDF22(&SinglePhaseDispFilter[8],    PARK2D(GridCurrC,GridCurrC_S,       resSinC,resCosC));
-//  LoadRealCurQA   = DCL_runDF22(&SinglePhaseDispFilter[9],    PARK2Q(LoadRealCurA,LoadRealCurA_S, resSin,resCos));
-//  LoadRealCurQB   = DCL_runDF22(&SinglePhaseDispFilter[10],   PARK2Q(LoadRealCurB,LoadRealCurB_S, resSinB,resCosB));
-//  LoadRealCurQC   = DCL_runDF22(&SinglePhaseDispFilter[11],   PARK2Q(LoadRealCurC,LoadRealCurC_S, resSinC,resCosC));
-//  GridRealCurQA   = DCL_runDF22(&SinglePhaseDispFilter[12],   PARK2Q(GridCurrA,GridCurrA_S,       resSin,resCos));
-//  GridRealCurQB   = DCL_runDF22(&SinglePhaseDispFilter[13],   PARK2Q(GridCurrB,GridCurrB_S,       resSinB,resCosB));
-//  GridRealCurQC   = DCL_runDF22(&SinglePhaseDispFilter[14],   PARK2Q(GridCurrC,GridCurrC_S,       resSinC,resCosC));
-//  IverRealCurQA   = DCL_runDF22(&SinglePhaseDispFilter[15],   PARK2Q(ApfOutCurAD,ApfOutCurAD_S,   resSin,resCos));
-//  IverRealCurQB   = DCL_runDF22(&SinglePhaseDispFilter[16],   PARK2Q(ApfOutCurBD,ApfOutCurBD_S,   resSinB,resCosB));
-//  IverRealCurQC   = DCL_runDF22(&SinglePhaseDispFilter[17],   PARK2Q(ApfOutCurCD,ApfOutCurCD_S,   resSinC,resCosC));
-
-/*void MeanAllInit(void)
-{
-    Uint16 *pInitVar,i;
-    MeanPos=0;
-    MeanPos_F=0;
-
-    pInitVar = (Uint16 *)(&MeanSlid);
-    for(i=0;i<sizeof(MeanSlid);i++)
-        *pInitVar++ = 0;
-
-    pInitVar = (Uint16 *)(&MeanSum);
-    for(i=0;i<sizeof(MeanSum);i++)
-        *pInitVar++ = 0;
-
-//  i=MEANPOINT_F*MEANNUM_F;
-//  p=&MeanSlid_F[0][0];
-//  while(i--) *p++=0;
-}
-
-float32 MeanInit(Uint16 chan)
-{
-    int16 i;
-    float32 sum=0;
-    float32 *p;
-
-    if(chan<MEANNUM){
-        MeanInitChan--;
-        i=MEANPOINT/16;
-        p=&MeanSlid[chan][0];
-
-        while(i--) {sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;
-                    sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;
-                    sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;
-                    sum+=*p++; }
-        MeanSum[chan]=sum;
-        return MEANSTEP*GridFreq*sum;
-//  }else if((chan-MEANNUM)<MEANNUM_F){
-//      MeanInitChan--;
-//      i=MEANPOINT_F/20;
-//      p=&MeanSlid_F[chan-MEANNUM][0];
-//
-//      while(i--) {sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;
-//                  sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;
-//                  sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;
-//                  sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++; sum+=*p++;}
-//      MeanSum_F[chan-MEANNUM]=sum;
-//      return MEANSTEP_F*GridFreq*sum;
-    }else{
-        MeanInitChan=-1;
-        return 0;
-    }
-}
-*/
-/*
-void Funda3sTo2rTransf(void)
-{
-    float32 zA,zB,zC,tmp;//zZ,
-    float32 alpha,beta,betaSin,alphaSin,betaCos,alphaCos;
-
-    //Fundamental zero sequence current needs to be done after the operation of the fundamental wave FFT
-    LoadFundaCurZ  =(FundwaveA + FundwaveB + FundwaveC)*S1DIV3; //The Fundamental zero sequence
-
-    //The positive and negative d,q,zero axis of Load current
-    CLARKE2(LoadRealCurA,LoadRealCurB,LoadRealCurC,LoadRealCurZ);
-    PARK2();    //2s/2r transfer
-
-    tmp  = alphaCos + betaSin;                      //The positive d axis
-    MEANCALC(tmp,LoadFundaCurD,LOAD_FUNDCURR_D);
-    tmp  = betaCos  - alphaSin;                     //The positive q axis
-    MEANCALC(tmp,LoadFundaCurQ,LOAD_FUNDCURR_Q);
-    tmp = alphaCos - betaSin;                       //The negative d axis
-    MEANCALC(tmp,LoadFundaCurND,LOAD_FUNDCURR_ND);
-    tmp = betaCos  + alphaSin;                      //The negative q axis
-    MEANCALC(tmp,LoadFundaCurNQ,LOAD_FUNDCURR_NQ);
-
-
-    //The positive and negative d,q,zero axis of Load current ,for decoupling control
-    CLARKE2(ApfOutCurA,ApfOutCurB,ApfOutCurC,ApfOutCurZ);
-    PARK2();    //2s/2r transfer
-
-    tmp  = alphaCos + betaSin;                      //The positive d axis
-    MEANCALC(tmp,InvFundaCurD,INV_FUNDCURR_D);
-    tmp  = betaCos  - alphaSin;                     //The positive q axis
-    MEANCALC(tmp,InvFundaCurQ,INV_FUNDCURR_Q);
-    tmp = alphaCos - betaSin;                       //The negative d axis
-    MEANCALC(tmp,InvFundaCurND,INV_FUNDCURR_ND);
-    tmp = betaCos  + alphaSin;                      //The negative q axis
-    MEANCALC(tmp,InvFundaCurNQ,INV_FUNDCURR_NQ);
-
-    //The positive and negative d,q,zero axis of grid Current
-    CLARKE2(GridCurrA,GridCurrB,GridCurrC,GridZeroCur);
-    PARK2();    //2s/2r transfer
-
-    tmp  = alphaCos + betaSin;                      //The positive d axis
-    MEANCALC(tmp,GridFundaCurD,GRID_FUNDCURR_D);
-    tmp  = betaCos  - alphaSin;                     //The positive q axis
-    MEANCALC(tmp,GridFundaCurQ,GRID_FUNDCURR_Q);
-
-    MEANCALC(dcVoltUpF - dcVoltDnF,dcVoltDiv2Err,NEUTRAL_LINE_VOLT);
-
-    if(MeanInitChan>=0){
-        switch(MeanInitChan){   //注意,必须连续在此swithc里面进行所有的初始化.否则会出现两个地方初始化而导致序号最大的通道无法初始化
-        case LOAD_FUNDCURR_D:   LoadFundaCurD =MeanInit(LOAD_FUNDCURR_D);break;
-        case LOAD_FUNDCURR_Q:   LoadFundaCurQ =MeanInit(LOAD_FUNDCURR_Q);break;
-        case LOAD_FUNDCURR_ND:  LoadFundaCurND=MeanInit(LOAD_FUNDCURR_ND);break;
-        case LOAD_FUNDCURR_NQ:  LoadFundaCurNQ=MeanInit(LOAD_FUNDCURR_NQ);break;
-        case INV_FUNDCURR_D:    InvFundaCurD  =MeanInit(INV_FUNDCURR_D);break;
-        case INV_FUNDCURR_Q:    InvFundaCurQ  =MeanInit(INV_FUNDCURR_Q);break;
-        case INV_FUNDCURR_ND:   InvFundaCurND =MeanInit(INV_FUNDCURR_ND);break;
-        case INV_FUNDCURR_NQ:   InvFundaCurNQ =MeanInit(INV_FUNDCURR_NQ);break;
-        case GRID_FUNDCURR_D:   GridFundaCurD =MeanInit(GRID_FUNDCURR_D);break;
-        case GRID_FUNDCURR_Q:   GridFundaCurQ =MeanInit(GRID_FUNDCURR_Q);break;
-        case NEUTRAL_LINE_VOLT: dcVoltDiv2Err =MeanInit(NEUTRAL_LINE_VOLT);break;
-//      case GRID_FUNDVOLT_D:   GridFundaVoltD=MeanInit(GRID_FUNDVOLT_D);break;
-//      case GRID_FUNDVOLT_Q:   GridFundaVoltQ=MeanInit(GRID_FUNDVOLT_Q);break;
-        }
-    }
-    //Note that if you delete this statement, the initialization will fail and all mean calculation errors will occur;注意,如果删掉此语句,会出现初始化不能完成而导致所有的mean计算错误.
-}
-*/
-//--------------------------------- NO MORE -----------------------------//
-
-

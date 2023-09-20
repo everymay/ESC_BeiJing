@@ -19,9 +19,11 @@
 #pragma	CODE_SECTION(EPWM7INT ,"ram2func")
 
 /*
- * 文件版本：V2023.7.10
- * 修改日期：2023年7月10日
+ * 文件版本：V2023.8.12
+ * 修改日期：2023年8月12日
  */
+
+/*调试程序。WY*/
 
 void main(void)
 {
@@ -58,8 +60,8 @@ void main(void)
 
     InitAfterReadROM(); //读取铁电后的初始化操作。WY
 	InitModbusSCI(); //初始化Modbus。WY
-	InitCtrlParam(0); //初始化控制参数。WY
-	InitParameters();			//Initialization of key parameters
+	InitCtrlParam(0); //初始化PI控制器参数。WY
+	InitParameters();	//Initialization of key parameters
 	DMAInitialize(); //本项目未启用DMA。WY
     InitAdc(); //配置ADC。WY
     InitEPwmGpio(); //配置EPWM相关的引脚。WY
@@ -67,7 +69,6 @@ void main(void)
 
 	Log_info1("start bios====%d", 0); //打印日志
     BIOS_start(); //启动BIOS。WY
-
 }
 
 /* 委托实验可以进行：1绝缘 2轻载 3负载 4保护 5温升 6输出电压变化 7输出频率变化实验（可选）

@@ -149,8 +149,9 @@ void InitSciGpio(void)
 
 void ReadSpiPara(void)
 {
-	int err =0,cnt=0;
-	do{
+	int err = 0, cnt = 0;
+	do
+	{
 		err |= UserHarmnoicReading();  			//用户谐波
 		err |= HarmnoicParamReading();  		//厂家谐波
 		err |= ManufacturerParametersReading();	//工厂设置
@@ -159,20 +160,25 @@ void ReadSpiPara(void)
 		err |= IDPreferencesReading();			//地址设置
 		err |= VirtuPreferencesReading();		//零偏设置
 		err |= FlashPreferencesReading();		//故障录波
-	}while((cnt++ < 5) && err);
+	}
+	while((cnt ++ < 5) && err);
 
-	if(err){
-	    ESCFlagA.FAULTCONFIRFlag = 1;
-	    ESCFlagB.FAULTCONFIRFlag = 1;
-	    ESCFlagC.FAULTCONFIRFlag = 1;
-		if(softwareFaultWord3.B.ESCTieDianReadErrFlag == 0){
-            ESCFlagA.ESCCntMs.StartDelay = 0;
-            ESCFlagB.ESCCntMs.StartDelay = 0;
-            ESCFlagC.ESCCntMs.StartDelay = 0;
-			softwareFaultWord3.B.ESCTieDianReadErrFlag = THREEPHASEFaultDetect(SOE_GP_FAULT+37,CNT_PARAM_STORAGE_EEPROM,0);
+	if(err)
+	{
+		ESCFlagA.FAULTCONFIRFlag = 1;
+		ESCFlagB.FAULTCONFIRFlag = 1;
+		ESCFlagC.FAULTCONFIRFlag = 1;
+		if(softwareFaultWord3.B.ESCTieDianReadErrFlag == 0)
+		{
+			ESCFlagA.ESCCntMs.StartDelay = 0;
+			ESCFlagB.ESCCntMs.StartDelay = 0;
+			ESCFlagC.ESCCntMs.StartDelay = 0;
+			softwareFaultWord3.B.ESCTieDianReadErrFlag = THREEPHASEFaultDetect(SOE_GP_FAULT + 37, CNT_PARAM_STORAGE_EEPROM, 0);
 		}
-	}else{		//可在此加入EEPROM错误后的处理函数
-		SetFaultDelayCounter(CNT_PARAM_STORAGE_EEPROM,1);
+	}
+	else
+	{		//可在此加入EEPROM错误后的处理函数
+		SetFaultDelayCounter(CNT_PARAM_STORAGE_EEPROM, 1);
 		softwareFaultWord3.B.ESCTieDianReadErrFlag = 0;
 	}
 //	FlashPreferencesRefresh();              //故障录波设置
@@ -180,8 +186,9 @@ void ReadSpiPara(void)
 	ManufacturerParametersRefresh();		//更新工厂设置(新)
 	CapParamRefresh();						//更新电容设置
 	IDParametersRefresh();					//更新地址设置
-    VirtuPreferencesRefresh();				//更新零偏设置和采样参数
-	if(StateFlag.isHarmCompensateMode)		HarmnoicCorrection();	//更新谐波设置
+	VirtuPreferencesRefresh();				//更新零偏设置和采样参数
+	if(StateFlag.isHarmCompensateMode)
+		HarmnoicCorrection();	//更新谐波设置
 	InitCtrlParam(1);
 }
 

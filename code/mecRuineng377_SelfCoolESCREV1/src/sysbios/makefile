@@ -6,25 +6,25 @@
 #  template: ti.sysbios/makefile.xdt
 #  target: ti.targets.C28_float
 
-vpath % E:/APP/TI/SYSBIOS/bios_6_73_01_01/packages/ti/sysbios/
-vpath %.c E:/APP/TI/CCS/xdctools_3_50_08_24_core/packages/
+vpath % D:/APP/TI/Bios/bios_6_73_01_01/packages/ti/sysbios/
+vpath %.c D:/APP/TI/CodeComposerStudio/xdctools_3_50_08_24_core/packages/
 
-XOPTS = -I"E:/APP/TI/CCS/xdctools_3_50_08_24_core/packages/" -Dxdc_target_types__=E:/APP/TI/SYSBIOS/bios_6_73_01_01/packages/ti/targets/std.h -Dxdc_target_name__=C28_float
+XOPTS = -I"D:/APP/TI/CodeComposerStudio/xdctools_3_50_08_24_core/packages/" -Dxdc_target_types__=D:/APP/TI/Bios/bios_6_73_01_01/packages/ti/targets/std.h -Dxdc_target_name__=C28_float
 
 BIOS_DEFS =  -Dti_sysbios_BIOS_swiEnabled__D=TRUE -Dti_sysbios_BIOS_taskEnabled__D=TRUE -Dti_sysbios_BIOS_clockEnabled__D=TRUE -Dti_sysbios_BIOS_runtimeCreatesEnabled__D=TRUE -Dti_sysbios_knl_Task_moduleStateCheckFlag__D=FALSE -Dti_sysbios_knl_Task_objectCheckFlag__D=FALSE -Dti_sysbios_hal_Hwi_DISABLE_ALL_HOOKS -Dti_sysbios_knl_Swi_DISABLE_ALL_HOOKS -Dti_sysbios_BIOS_smpEnabled__D=FALSE -Dti_sysbios_BIOS_mpeEnabled__D=FALSE -Dti_sysbios_Build_useHwiMacros -Dti_sysbios_knl_Swi_numPriorities__D=16 -Dti_sysbios_knl_Task_deleteTerminatedTasks__D=FALSE -Dti_sysbios_knl_Task_numPriorities__D=16 -Dti_sysbios_knl_Task_checkStackFlag__D=TRUE -Dti_sysbios_knl_Task_initStackFlag__D=TRUE -Dti_sysbios_knl_Task_DISABLE_ALL_HOOKS -Dti_sysbios_knl_Clock_TICK_SOURCE=ti_sysbios_knl_Clock_TickSource_TIMER -Dti_sysbios_knl_Clock_TICK_MODE=ti_sysbios_knl_Clock_TickMode_PERIODIC -Dti_sysbios_hal_Core_delegate_getId=ti_sysbios_hal_CoreNull_getId__E -Dti_sysbios_hal_Core_delegate_interruptCore=ti_sysbios_hal_CoreNull_interruptCore__E -Dti_sysbios_hal_Core_delegate_lock=ti_sysbios_hal_CoreNull_lock__E -Dti_sysbios_hal_Core_delegate_unlock=ti_sysbios_hal_CoreNull_unlock__E -Dti_sysbios_hal_Core_numCores__D=1 -Dti_sysbios_hal_CoreNull_numCores__D=1 -Dti_sysbios_utils_Load_taskEnabled__D=TRUE -Dti_sysbios_utils_Load_swiEnabled__D=FALSE -Dti_sysbios_utils_Load_hwiEnabled__D=FALSE -Dti_sysbios_family_c28_Hwi_dispatcherSwiSupport__D=TRUE -Dti_sysbios_family_c28_Hwi_dispatcherTaskSupport__D=TRUE -Dti_sysbios_family_c28_Hwi_dispatcherAutoNestingSupport__D=TRUE -Dti_sysbios_family_c28_Hwi_dispatcherIrpTrackingSupport__D=TRUE -Dti_sysbios_knl_Semaphore_supportsEvents__D=FALSE -Dti_sysbios_knl_Semaphore_supportsPriority__D=TRUE -Dxdc_runtime_Assert_DISABLE_ALL -Dxdc_runtime_Log_DISABLE_ALL -Dfar= 
 
 CCOPTS = -v28 -DLARGE_MODEL=1 -ml --float_support=fpu32 -q -mo  --program_level_compile -o3 -g -Dti_sysbios_family_c28_Hwi_zeroLatencyIERMask__D=0U -Dti_sysbios_knl_Clock_stopCheckNext__D=FALSE -Dti_sysbios_knl_Task_minimizeLatency__D=FALSE
 
-BIOS_INC = -I"E:/APP/TI/SYSBIOS/bios_6_73_01_01/packages/"
+BIOS_INC = -I"D:/APP/TI/Bios/bios_6_73_01_01/packages/"
 ANNEX_INCS = 
-INCS = $(BIOS_INC) $(ANNEX_INCS) -I"E:/APP/TI/SYSBIOS/bios_6_73_01_01/packages/" -I"E:/APP/TI/UIA/uia_2_30_01_02/packages/" -I"D:/TI/controlSUITE/" -I"F:/packages/" -I"E:/APP/TI/CCS/xdctools_3_50_08_24_core/packages/" -I"../" -I"/packages//"  -IE:/APP/TI/CCS/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/include
+INCS = $(BIOS_INC) $(ANNEX_INCS) -I"D:/APP/TI/Bios/bios_6_73_01_01/packages/" -I"D:/APP/TI/UIA/uia_2_30_01_02/packages/" -I"D:/TI/controlSUITE/" -I"E:/packages/" -I"D:/APP/TI/CodeComposerStudio/xdctools_3_50_08_24_core/packages/" -I"../" -I"/packages//"  -ID:/APP/TI/CodeComposerStudio/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/include
 
-CC = E:/APP/TI/CCS/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/bin/cl2000 -c $(CCOPTS)
-ASM = E:/APP/TI/CCS/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/bin/cl2000 -c $(CCOPTS)
-AR = E:/APP/TI/CCS/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/bin/ar2000 rq
+CC = D:/APP/TI/CodeComposerStudio/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/bin/cl2000 -c $(CCOPTS)
+ASM = D:/APP/TI/CodeComposerStudio/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/bin/cl2000 -c $(CCOPTS)
+AR = D:/APP/TI/CodeComposerStudio/ccs/tools/compiler/ti-cgt-c2000_18.1.2.LTS/bin/ar2000 rq
 
-DEL = E:/APP/TI/CCS/xdctools_3_50_08_24_core/packages/../bin/rm -f
-CP = E:/APP/TI/CCS/xdctools_3_50_08_24_core/packages/../bin/cp -f
+DEL = D:/APP/TI/CodeComposerStudio/xdctools_3_50_08_24_core/packages/../bin/rm -f
+CP = D:/APP/TI/CodeComposerStudio/xdctools_3_50_08_24_core/packages/../bin/cp -f
 
 define RM
 	$(if $(wildcard $1),$(DEL) $1,:)

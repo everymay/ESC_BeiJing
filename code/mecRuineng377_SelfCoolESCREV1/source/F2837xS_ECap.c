@@ -176,7 +176,7 @@ void InitECap(void)
 void InitECapGpio()
 {
     InitECap1Gpio(94); //A相硬件过流检测
-    InitECap2Gpio(85); //B相硬件过流检测
+    InitECap2Gpio(92); //B相硬件过流检测
     InitECap3Gpio(97); //C相硬件过流检测
 }
 

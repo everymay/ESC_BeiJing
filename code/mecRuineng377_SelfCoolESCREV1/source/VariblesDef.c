@@ -85,6 +85,7 @@ float PWM_PERIOD_MIN = 2444;  	//
 float PIlim_I = 2984;   		//  12K   2930*0.98/0.866*0.9 = 2984
 float FUNT1PR = 1000;
 float quarterPeriod = 0;  // spwm /2= 3750/2=1875
+
 float GridVoltAF = 0;
 float GridVoltBF = 0;
 float GridVoltCF = 0;
@@ -255,9 +256,9 @@ int ArithFlagC = 0; //C相电网电流突变标志位。0，存在突变；1，不存在突变。WY
 /*
  * 为防止系统调节过程中的抖动，故设置锁定标志位：将系统锁定在指定状态并持续指定的时间。WY
  */
-int TestArithFlagA = 1; //A相电网电压突变锁定标志位。WY
-int TestArithFlagB = 1; //B相电网电压突变锁定标志位。WY
-int TestArithFlagC = 1; //C相电网电压突变锁定标志位。WY
+int TestArithFlagA = 1; //A相电网电压突变锁定标志位。0：上锁；1：解锁（默认）。WY
+int TestArithFlagB = 1; //B相电网电压突变锁定标志位。0：上锁；1：解锁（默认）。WY
+int TestArithFlagC = 1; //C相电网电压突变锁定标志位。0：上锁；1：解锁（默认）。WY
 
 Uint16 GridcurrCnt = 0;
 
@@ -476,11 +477,12 @@ int CapacitySelection = 0;
 float SyncHardwareLead=1100;
 float SampleLead=100;
 float GV_RMS_OVER_RLY_PROT = 460;
-float GV_INS_OVER =  800 ; // 400*1.15*1.414*1.05 = 682.962
 
-float GV_RMS_OVER = 460; //电网电压有效值上限。WY       // 400*1.15 = 460
+float GV_INS_OVER = 800;// 400*1.15*1.414*1.05 = 682.962
 
-float GV_RMS_UNDER = 340; //电网电压有效值下限。WY // 400*0.85 = 340   试验设定20
+float GV_RMS_OVER = 460; //电压（有效值）上限。？WY       // 400*1.15 = 460
+
+float GV_RMS_UNDER = 340; //电压（有效值）下限。？WY // 400*0.85 = 340   试验设定20
 
 float GF_OVER = 63; //电网频率上限值。WY    // 50*1.1 = 55
 float GF_UNDER = 40; //电网频率下限值。WY    // 50*0.9 = 45
@@ -513,7 +515,7 @@ float UnCurrData[3];
 float UNCurDiffData[10];
 
 /*
- * 在调节三相不平衡时，负载电压（有效值）目标值。WY
+ * 在调节三相不平衡时，修正后的负载电压（有效值）目标值。WY
  * [0]：A相负载电压（有效值）目标值
  * [1]：B相负载电压（有效值）目标值
  * [2]：C相负载电压（有效值）目标值
@@ -553,11 +555,16 @@ int RechageskipstopFlag = 0;
 int ESCtestVAL1 = 0,ESCtestVAL2 = 0;
 float dutytmpA1,dutytmpA2,dutytmpB1,dutytmpB2,dutytmpC1,dutytmpC2;
 
-float dutytmp,dutytmp1,TESEINSGridIn,TESETarget,TESEPIerr,testvalue1,FeedVAl,DEBUGduty,DEBUGData,PhaseValue,TESTRMSGridInVAL,NumeratorValue,DenominatorVAL;
+float dutytmp,TESEINSGridIn,TESETarget,TESEPIerr,testvalue1,FeedVAl,DEBUGduty,DEBUGData,PhaseValue,TESTRMSGridInVAL;
 
-float VolttargetCorrA; //A相负载电压有效值的目标值的修正系数。WY
-float VolttargetCorrB; //A相负载电压有效值的目标值的修正系数。WY
-float VolttargetCorrC; //A相负载电压有效值的目标值的修正系数。WY
+float dutytmp1; //PWM占空比的前馈值。WY
+
+float NumeratorValue; //电网电压（瞬时值）突变值 = 电网电压（瞬时值） - 上个周波电网电压（瞬时值）。WY
+float DenominatorVAL; //该变量未使用。WY
+
+float VolttargetCorrA; //A相负载电压(有效值)目标值的修正系数。WY
+float VolttargetCorrB; //A相负载电压(有效值)目标值的修正系数。WY
+float VolttargetCorrC; //A相负载电压(有效值)目标值的修正系数。WY
 
 int ConstantCurrInsFlagA = 0,ConstantCurrInsFlagB = 0,ConstantCurrInsFlagC = 0;
 
@@ -568,7 +575,7 @@ int ConstantCurrInsFlagA = 0,ConstantCurrInsFlagB = 0,ConstantCurrInsFlagC = 0;
  * 1. 电网电流（有效值） > 电网电流（有效值）额定值；
  * 2. 电网电流（有效值） < 电网电流（有效值）过载值。
  *
- * 恒电流模式：根据设备温度查表，以修正负载电流（有效值）目标值。？
+ * 恒电流模式：根据设备温度查表，以修正负载电流（有效值）目标值。
  */
 float CurrTargetTemper;
 
@@ -588,7 +595,7 @@ float reactPrCompPerc = 1;
 float restantReactCurrent = 0;
 float transfRatio = 100;   // 下发参数为X:5   600/5= 120
 
-float TargetCurrentUnbalance; //三相不平衡度的上限。WY
+float TargetCurrentUnbalance; //三相不平衡度的上限（范围：0 ~ 1）。WY
 
 float ConstantReactivePower;
 float transfRatioVirtu = 100;
@@ -596,19 +603,26 @@ float dcCapVoltRatio = 0.293;    //200欧 600-2048 0.293少1.5倍
 float loadVoltRatio = 0.293;
 float gridVoltRatio = 0.4395;    //
 float outputCurRatio =0.061;     //12.2欧  50A--1707
-float bypassCurrRatio = 0.061;
+float bypassCurrRatio = 0.061; //旁路电流采样系数。WY
 float outputCurRatioCurrA = 0.167;
 float outputCurRatioCurrB = 0.167;
 float outputCurRatioCurrC = 0.167;
-float outputCurBypassCurrA = 0.167;
-float outputCurBypassCurrB = 0.167;
-float outputCurBypassCurrC = 0.167;
+
+float outputCurBypassCurrA = 0.167; //A相旁路电流采样系数。WY
+float outputCurBypassCurrB = 0.167; //B相旁路电流采样系数。WY
+float outputCurBypassCurrC = 0.167; //C相旁路电流采样系数。WY
+
 float DcCapVoltRatioVirtu = 0.293;
 float dcVoltUpRatioVirtu_reciprocal =1;
-float loadVoltRatioVirtu = 0.293;
+
+float loadVoltRatioVirtu = 0.293; //负载电压采样系数。WY
+
 float gridVoltRatioVirtu = 0.4395;
-float outputCurRatioVirtu = 0.061;
-float bypassCurrRatioVirtu = 0.061;
+
+float outputCurRatioVirtu = 0.061; //输出电流采样系数。WY
+
+float bypassCurrRatioVirtu = 0.061; //旁路电流采样系数。WY
+
 float loadCurRatio =0.13;		//0.00325*40=0.13(200A:5A)
 //float gridCurRatio =0.13;
 volatile int cntForSpecCstop = 0;
@@ -667,6 +681,10 @@ float dcBusVtInc = 0;
 //}\
 //BGMODLE_3P_APF,0x60~6f,0x70~7f,0x80~8d
 //value = 下发值*协议当中的倍率/程序当中的倍率//根据结构体来结算倍率
+
+/*
+ * 厂家设置参数的倍率。WY
+ */
 #define FACTORY_PARAM_RATIO_3P_APF_DEFUALT {\
 	1,1,1,1,1,0,10,10,10,10,\
 	100,10,10,1000,1000,1000,1000,0,0,1,\
@@ -678,7 +696,9 @@ float dcBusVtInc = 0;
 	1,1,10000,10000,10,\
 	0,0,0,0,0,0,0,0,0,0,\
 	0,0,0,0,0,0,0,0,0\
-}//94
+}
+
+//94
 //BGMODLE_3P_APF,0xC9~BA
 //#define FAULT_PARAM_RATIO_3P_APF_DEFUALT {\
 //	100,100,100,1,100,100,100,1,1,1,\
@@ -690,6 +710,9 @@ float dcBusVtInc = 0;
 		1000,1000,1000,1000,1000\
 }
 
+/*
+ * 由触控屏下发AD零偏基准值的倍率。WY
+ */
 #define ESCVARIZEROOFFSETRATIO {\
         1,1,1,1,1,1,1,1,1,1,1,1\
 }
@@ -811,8 +834,17 @@ Uni_State StateEventFlag1;
 #pragma DATA_SECTION(HarmTHD, "EBSS1")
 STRU_HarmTHD HarmTHD[HARM_CALU_NUM];
 VirtulADStru VirtulAD={0,0,0,0,0,0,0,0,0,0,2076,2080,2080,2083,2081,2078,2053,2062,2056,1,1,1,1,1};
+
+/*
+ * AD真实采样值。WY
+ */
 VirtulADStruVAL VirtulADVAL;
-VirtulADStruval VirtulADval={2076,2080,2080,2083,2081,2078,2053,2062,2056,2054,2052,2055,0,0,0};
+
+/*
+ * 由触控屏下发AD零偏基准值。WY
+ */
+VirtulADStruval VirtulADval =
+{ 2076, 2080, 2080, 2083, 2081, 2078, 2053, 2062, 2056, 2054, 2052, 2055, 0, 0, 0 };
 
 STRU_WinCold WindCold =
 { 95, //单元外壳温度上限。WY
@@ -822,19 +854,14 @@ STRU_WinCold WindCold =
 #pragma DATA_SECTION(SyncInformation, "EBSS2")
 Stru_SyncInformation SyncInformation;
 Stru_Time Time;
-//#pragma DATA_SECTION(CntMs, "EBSS1")
-//#pragma DATA_SECTION(CntSec, "EBSS1")
-//#pragma DATA_SECTION(RecordFlash, "EBSS1")
+
 struct STRU_CNT_MS CntMs;
 struct STRU_CNT_SEC CntSec;
 struct STRU_FAURCD RecordFlash;
-//Stru_remoteCommState remoteCommState;
-//struct STRU_SCI SCI1=SCI1_DEFAULTS;
-//struct STRU_SCI SCI2=SCI2_DEFAULTS;
-//struct STRU_SCI SCI3=SCI3_DEFAULTS;
-//UNI_STATE_FLAG2 StateFlag2;
+
 Uint16 IOstate1=0;
 Uint16 IOstate2=0;
+
 int16 Choose1 = 0;
 int16 Choose2 = 0;
 int16 Choose3 = 0;
@@ -892,30 +919,26 @@ const unsigned int Tempera_Volt[171]={
 STRU_ERR_RECORD ErrorRecord;
 struct Stru_APFID MuFaciID;
 struct Fan_temp FanTempValue;
-struct Stru_UserSetting UserSetting;
+struct Stru_UserSetting UserSetting; //用户设置参数。WY
 struct Stru_UserSetting UserParamRatio				= USER_PARAM_RATIO_3P_MEC_DEFUALT;
-struct Stru_FactorySet FactorySet;
-struct Stru_FactorySet FactorySetupRatio			= FACTORY_PARAM_RATIO_3P_APF_DEFUALT;
+
+struct Stru_FactorySet FactorySet; //厂家设置参数。WY
+
+struct Stru_FactorySet FactorySetupRatio = FACTORY_PARAM_RATIO_3P_APF_DEFUALT;
+
 struct VARIZERO VariZeroOffset;
 struct VARIZERO VariZeroOffsetRatio					= VARIZEROOFFSETRATIO;
 
+/*
+ * 由触控屏下发AD零偏基准值。WY
+ */
 struct VARIZEROVAL VariZeroOffsetVAL;
-struct VARIZEROVAL VariZeroOffsetRatioVAL           = ESCVARIZEROOFFSETRATIO;
 
-//#pragma DATA_SECTION(CLA_StateFlagm,"CLADataLS01");
-//long CLA_StateFlagm;            //厂家参数,非及时刷新的变量可放在这里面节省空间
-//CLA_STATE_FLAG CLA_StateFlag;
+/*
+ * 由触控屏下发AD零偏基准值的倍率。WY
+ */
+struct VARIZEROVAL VariZeroOffsetRatioVAL = ESCVARIZEROOFFSETRATIO;
 
-//struct STRU_ParamEnviron ParamEnviron;
-//struct Stru_UserParam UserParamMEC;
-//const struct Stru_UserParam UserParamRatioAPF				= USER_PARAM_RATIO_3P_APF_DEFUALT;
-//struct Stru_FactoryParam FactorySetting;
-//struct Stru_FaultParam FaultParam;
-//const struct Stru_FaultParam FaultParamRatio				= FAULT_PARAM_RATIO_3P_APF_DEFUALT;
-//const struct SET_FFT_STORAGE_RATIO_STRUCT	SetCalibCorrRatio		= FAULT_PARAM_RATIO_3P_CalibCorr_DEFUALT;
-//const struct SET_FFT_STORAGE_RATIO_STRUCT	GenFFTCoeffRatio		= FAULT_PARAM_RATIO_3P_GenFFTCoeff_DEFUALT;
-//struct SET_FFT_STORAGE_STRUCT GenFFTCoeff;
-//struct SET_FFT_STORAGE_STRUCT SetCalibCorr;
 #pragma DATA_SECTION(CapGroupAct,"EBSS3");
 struct CapSwitch CapGroupAct;
 CapSwitchEvent CapEventFlag = STATE_EV_WRCTRL;

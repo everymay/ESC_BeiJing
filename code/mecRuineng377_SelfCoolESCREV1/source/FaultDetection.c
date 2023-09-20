@@ -14,6 +14,36 @@
 #pragma CODE_SECTION(EcapINT3 ,"ram2func")
 #pragma CODE_SECTION(StateFeedBackJudge ,"ram2func")
 
+
+	/*
+	 * 测试程序：
+	   记录电网电压有效值VoltInA_rms和负载电压有效值VoltOutA_rms
+	 */
+#define LENTH 50 //数组长度
+
+	unsigned int voltage_grid_A[LENTH] = {0}; //测试。A相电网电压有效值。WY
+	unsigned int voltage_load_A[LENTH] = {0}; //测试。A相负载电压有效值。WY
+
+	unsigned int voltage_grid_B[LENTH] = {0}; //测试。WY
+	unsigned int voltage_load_B[LENTH] = {0}; //测试。WY
+
+	unsigned int voltage_grid_C[LENTH] = {0}; //测试。WY
+	unsigned int voltage_load_C[LENTH] = {0}; //测试。WY
+
+	unsigned int AD_grid_A[LENTH] = {0}; //测试。A相电网侧采样值。WY
+	unsigned int AD_load_A[LENTH] = {0}; //测试。
+
+	unsigned int AD_grid_B[LENTH] = {0}; //测试。
+	unsigned int AD_load_B[LENTH] = {0}; //测试。
+
+	unsigned int AD_grid_C[LENTH] = {0}; //测试。
+	unsigned int AD_load_C[LENTH] = {0}; //测试。
+
+
+	unsigned int index_A = 0; //测试。A相数组索引。WY
+	unsigned int index_B = 0; //测试。数组索引。WY
+	unsigned int index_C = 0; //测试。数组索引。WY
+
 /*
  * 功能：故障停机预处理。WY
  */
@@ -88,7 +118,7 @@ void StateFeedBackJudge(void)
 		if (--BypassContactCntA <= 0) //多次检测。WY
 		{
 			BypassContactCntA = 0;
-			ESCFlagA.ByPassContactFlag = 0; //A相旁路磁保持继电器闭合。WY
+			ESCFlagA.ByPassContactFlag = 0; //A相旁路磁保持继电器断开。WY
 		}
 	}
 
@@ -185,6 +215,7 @@ void StateFeedBackJudge(void)
 
 /*
  * 功能：检测故障。WY
+ *
  * 输入参数SoeName：触控屏上显示的故障类型索引。WY
  * 输入参数counterName：故障信号计数器的索引。
  * 输入参数FaultDelayTime：故障信号次数上限值。
@@ -192,7 +223,7 @@ void StateFeedBackJudge(void)
    故障信号计数器 > 故障信号次数上限值，执行故障判定。
  * 输入参数ESCPHASE：待判定故障类型的相。
  */
-int16 FaultDetect(Uint16 SoeName,Uint16 counterName,Uint16 FaultDelayTime,Uint16 ESCPHASE)
+int16 FaultDetect(Uint16 SoeName, Uint16 counterName, Uint16 FaultDelayTime, Uint16 ESCPHASE)
 {
 	/*
 	 * 故障信号计数器 > 故障信号次数上限值，执行故障判定。WY
@@ -514,7 +545,7 @@ int16 BYRelayFaultDetect(Uint16 SoeName, Uint16 counterName, Uint16 FaultDelayTi
 
 		return 1;
 	}
-	else
+	else //故障信号计数器 <= 故障信号次数上限值。WY
 	{
 		ESCFlagA.ESCCntSec.HWPowerFaultDelay = 0;
 		ESCFlagA.ESCCntSec.HWPowerStopDelay = 0;
@@ -1057,6 +1088,8 @@ void FaultFastDetectInInt(void)
 
 /*
  * 功能：故障检测。WY
+ *
+ * 说明：该函数在RTOS任务中被调用，调用周期约40ms。WY
  */
 void FaultDetectInMainLoop(void)
 {
@@ -1262,67 +1295,6 @@ void FaultDetectInMainLoop(void)
 	else
 	{
 		SetFaultDelayCounter(CNT_BYRelay_C, 0);
-	}
-
-	/*A相SiC管损坏。WY*/
-	if (((VoltInA_rms - VoltOutA_rms) > 20) //A相电网电压有效值 - A相负载电压有效值 > 20。WY
-			&& (StateEventFlag_A == STATE_EVENT_RUN_A) //A相处于运行状态。WY
-			&& (VoltInA_rms > 100)) //A相电网电压有效值 > 100
-	{
-		ESCFlagA.FAULTCONFIRFlag = 1; //A相存在故障信号。WY
-
-		if (softwareFaultWord3.B.ESCSicFaultFlagA == 0) //不存在A相SiC管损坏故障。WY
-		{
-			ESCFlagA.ESCCntMs.StartDelay = 0;
-			softwareFaultWord3.B.ESCSicFaultFlagA = FaultDetect(SOE_GP_FAULT + 39, CNT_SICFAULT_A, 2, ESCFlagA.PHASE); //产生A相SiC管损坏故障。WY
-
-			if (softwareFaultWord3.B.ESCSicFaultFlagA == 1) //存在A相SiC管损坏故障。WY
-			{
-				ESCSicFaultCNTA = 1; //A相SiC管状态异常。WY
-			}
-		}
-	}
-	else
-	{
-		SetFaultDelayCounter(CNT_SICFAULT_A, 0); //清零：A相SiC管损坏故障信号次数。WY
-	}
-
-	/*B相SiC管损坏。WY*/
-	if (((VoltInB_rms - VoltOutB_rms) > 20) && (StateEventFlag_B == STATE_EVENT_RUN_B) && (VoltInB_rms > 100))
-	{
-		ESCFlagB.FAULTCONFIRFlag = 1;
-		if (softwareFaultWord3.B.ESCSicFaultFlagB == 0)
-		{
-			ESCFlagB.ESCCntMs.StartDelay = 0;
-			softwareFaultWord3.B.ESCSicFaultFlagB = FaultDetect(SOE_GP_FAULT + 39, CNT_SICFAULT_B, 2, ESCFlagB.PHASE);
-			if (softwareFaultWord3.B.ESCSicFaultFlagB == 1)
-			{
-				ESCSicFaultCNTB = 1;
-			}
-		}
-	}
-	else
-	{
-		SetFaultDelayCounter(CNT_SICFAULT_B, 0);
-	}
-
-	/*C相SiC管损坏。WY*/
-	if (((VoltInC_rms - VoltOutC_rms) > 20) && (StateEventFlag_C == STATE_EVENT_RUN_C) && (VoltInC_rms > 100))
-	{
-		ESCFlagC.FAULTCONFIRFlag = 1;
-		if (softwareFaultWord3.B.ESCSicFaultFlagC == 0)
-		{
-			ESCFlagC.ESCCntMs.StartDelay = 0;
-			softwareFaultWord3.B.ESCSicFaultFlagC = FaultDetect(SOE_GP_FAULT + 39, CNT_SICFAULT_C, 2, ESCFlagC.PHASE);
-			if (softwareFaultWord3.B.ESCSicFaultFlagC == 1)
-			{
-				ESCSicFaultCNTC = 1;
-			}
-		}
-	}
-	else
-	{
-		SetFaultDelayCounter(CNT_SICFAULT_C, 0);
 	}
 
 	/*电网过频故障。WY*/

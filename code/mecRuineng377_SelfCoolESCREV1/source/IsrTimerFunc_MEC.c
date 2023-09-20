@@ -37,7 +37,6 @@ float GridRealCurDA2,GridRealCurDB2,GridRealCurDC2,GridRealCurQA2,GridRealCurQB2
 float GridRealCurErrA,GridRealCurErrB,GridRealCurErrC;
 
 extern const Swi_Handle RMSstart;
-//int16 ZCPJudgeA(float VoltIn,float VoltOut,float Esc_Phase,float CurrIn,Uint16 TBCTR);
 
 #if TESTMODE
     float32 DbgStepPhaA=D2R(0),DbgStepPhaB=D2R(240),DbgStepPhaC=D2R(120);
@@ -74,247 +73,187 @@ void getFFTData(void)
 }
 
 /*
- * 功能：校正AD零偏。WY
+ * 功能：计算电压和电流。WY
+ * 说明：该函数在ADC-D-1的中断服务函数中被调用。
  */
-inline void GetVolAndInvCurr(void)                  //获得电压和逆变侧电流
+inline void GetVolAndInvCurr(void)
 {
-#if TEST_VIRTUALSOURCE == 0
-    VirtulADStruVAL *pAD = &VirtulADVAL;
-    VirtulADStruval *pID = &VirtulADval;            //零偏初始值
-    float Buff[15];
-    float *pBuff=Buff;
-    if(StateFlag.VoltageModeFlag == 1){             //降压
-        *pBuff++ = (*pAD->GridHVoltA      - pID->gridHVoltA)*gridVoltRatio;          //电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridHVoltB      - pID->gridHVoltB)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridHVoltC      - pID->gridHVoltC)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridLVoltA      - pID->gridLVoltA)*loadVoltRatio;          //负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridLVoltB      - pID->gridLVoltB)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridLVoltC      - pID->gridLVoltC)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridMainCurA    - pID->gridMainCurA)*outputCurRatioCurrA;     //电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
-        *pBuff++ = (*pAD->GridMainCurB    - pID->gridMainCurB)*outputCurRatioCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridMainCurC    - pID->gridMainCurC)*outputCurRatioCurrC;
-        *pBuff++ = (*pAD->GridBypassCurA  - pID->gridBypassCurA)*outputCurBypassCurrA;     //旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
-        *pBuff++ = (*pAD->GridBypassCurB  - pID->gridBypassCurB)*outputCurBypassCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridBypassCurC  - pID->gridBypassCurC)*outputCurBypassCurrC;
-        *pBuff++ = (*pAD->ADCUDCA         - pID->aDCUDCA)*dcCapVoltRatio;                  //直流电容电压,电压采样系数
-        *pBuff++ = (*pAD->ADCUDCB         - pID->aDCUDCB)*dcCapVoltRatio;
-        *pBuff++ = (*pAD->ADCUDCC         - pID->aDCUDCC)*dcCapVoltRatio;
-    }else if(StateFlag.VoltageModeFlag == 0){       //升压
-        *pBuff++ = (*pAD->GridLVoltA      - pID->gridLVoltA)*loadVoltRatio;          //负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridLVoltB      - pID->gridLVoltB)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridLVoltC      - pID->gridLVoltC)*loadVoltRatio;
-        *pBuff++ = (*pAD->GridHVoltA      - pID->gridHVoltA)*gridVoltRatio;          //电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
-        *pBuff++ = (*pAD->GridHVoltB      - pID->gridHVoltB)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridHVoltC      - pID->gridHVoltC)*gridVoltRatio;
-        *pBuff++ = (*pAD->GridMainCurA    - pID->gridMainCurA)*outputCurRatioCurrA;     //电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
-        *pBuff++ = (*pAD->GridMainCurB    - pID->gridMainCurB)*outputCurRatioCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridMainCurC    - pID->gridMainCurC)*outputCurRatioCurrC;
-        *pBuff++ = (*pAD->GridBypassCurA  - pID->gridBypassCurA)*outputCurBypassCurrA;     //旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
-        *pBuff++ = (*pAD->GridBypassCurB  - pID->gridBypassCurB)*outputCurBypassCurrB;     //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
-        *pBuff++ = (*pAD->GridBypassCurC  - pID->gridBypassCurC)*outputCurBypassCurrC;
-        *pBuff++ = (*pAD->ADCUDCA         - pID->aDCUDCA)*dcCapVoltRatio;                  //直流电容电压,电压采样系数
-        *pBuff++ = (*pAD->ADCUDCB         - pID->aDCUDCB)*dcCapVoltRatio;
-        *pBuff++ = (*pAD->ADCUDCC         - pID->aDCUDCC)*dcCapVoltRatio;
-    }
+	VirtulADStruVAL *pAD = &VirtulADVAL; //AD真实采样值。WY
+	VirtulADStruval *pID = &VirtulADval; //由触控屏下发AD零偏基准值。WY
 
-    DCL_runDF22Group(VolAndInvCurrFilter,Buff,Buff,15);       //滤波
+	/*
+	 * 经零偏校准后的模拟量（瞬时值）。WY
+	   [0]：A相负载电压（瞬时值）
+	   [1]：B相负载电压（瞬时值）
+	   [2]：C相负载电压（瞬时值）
 
-    pBuff=Buff;
-    float *pOutSrc = VoltSlid[VoltPrvPos];  //实时采样波形
-    if(StateFlag.VoltageModeFlag == 1){
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        pOutSrc = VoltSlid[VoltPos];     //进行电压校正
-        GridVoltAF = *pOutSrc++;         //电网电压
-        GridVoltBF = *pOutSrc++;
-        GridVoltCF = *pOutSrc++;
-        LoadVoltUF = *pBuff++;           //负载电压
-        LoadVoltVF = *pBuff++;
-        LoadVoltWF = *pBuff++;
-    }else if(StateFlag.VoltageModeFlag == 0){
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        *pOutSrc++ = *pBuff++;
-        pOutSrc = VoltSlid[VoltPos];     //进行电压校正
-        LoadVoltUF = *pOutSrc++;         //电网电压
-        LoadVoltVF = *pOutSrc++;
-        LoadVoltWF = *pOutSrc++;
-        GridVoltAF = *pBuff++;           //负载电压
-        GridVoltBF = *pBuff++;
-        GridVoltCF = *pBuff++;
-    }
-    GridCurrAF = *pBuff++;     //电抗主电流
-    GridCurrBF = *pBuff++;
-    GridCurrCF = *pBuff++;
-    GridBPCurrAF = *pBuff++;   //旁路电流
-    GridBPCurrBF = *pBuff++;
-    GridBPCurrCF = *pBuff++;
-    DccapVoltA = *pBuff++;     //直流电容电压
-    DccapVoltB = *pBuff++;
-    DccapVoltC = *pBuff;
+	   [3]：A相电网电压（瞬时值）
+	   [4]：B相电网电压（瞬时值）
+	   [5]：C相电网电压（瞬时值）
 
-    if(StateFlag.VoltageModeFlag == 1){ //降压
-        VoltInAF = GridVoltAF;   VoltInBF = GridVoltBF;   VoltInCF = GridVoltCF;
-        VoltOutAF = LoadVoltUF;  VoltOutBF = LoadVoltVF;  VoltOutCF = LoadVoltWF;
-    } else if(StateFlag.VoltageModeFlag == 0){   //升压
-        VoltInAF = LoadVoltUF;   VoltInBF = LoadVoltVF;   VoltInCF = LoadVoltWF;
-        VoltOutAF = GridVoltAF;  VoltOutBF = GridVoltBF;  VoltOutCF = GridVoltCF;
-    }
+	   [6]：A相负载电流（瞬时值）
+	   [7]：B相负载电流（瞬时值）
+	   [8]：C相负载电流（瞬时值）
 
-    //延时90度构造Beta    单相锁相
+	   [9]：A相旁路电流（瞬时值）
+	   [10]：B相旁路电流（瞬时值）
+	   [11]：C相旁路电流（瞬时值）
 
-    VoltSlidA[MeanHalfPos]  = VoltInAF;                //grid real value
-    VoltSlidB[MeanHalfPos]  = VoltInBF;
-    VoltSlidC[MeanHalfPos]  = VoltInCF;
-    GridCurrSlidA[MeanHalfPos] = GridCurrAF;
-    GridCurrSlidB[MeanHalfPos] = GridCurrBF;
-    GridCurrSlidC[MeanHalfPos] = GridCurrCF;
+	   [12]：A相直流电容电压（瞬时值）
+	   [13]：B相直流电容电压（瞬时值）
+	   [14]：C相直流电容电压（瞬时值）
+	 */
+	float Buff[15];
 
-    if(MeanHalfPos == (MEANPOINTHALF - 1)){
-        VoltInAF_Beta=VoltSlidA[0];
-        VoltInBF_Beta=VoltSlidB[0];
-        VoltInCF_Beta=VoltSlidC[0];
-        GridCurrAF_Beta = GridCurrSlidA[0];
-        GridCurrBF_Beta = GridCurrSlidB[0];
-        GridCurrCF_Beta = GridCurrSlidC[0];
+	float *pBuff = Buff; //指向浮点数的指针，指向经零偏校准后的模拟量。WY
 
-    }else{
-        VoltInAF_Beta=VoltSlidA[MeanHalfPos+1];
-        VoltInBF_Beta=VoltSlidB[MeanHalfPos+1];
-        VoltInCF_Beta=VoltSlidC[MeanHalfPos+1];
-        GridCurrAF_Beta = GridCurrSlidA[MeanHalfPos+1];
-        GridCurrBF_Beta = GridCurrSlidB[MeanHalfPos+1];
-        GridCurrCF_Beta = GridCurrSlidC[MeanHalfPos+1];
-    }
-    if(++MeanHalfPos >= MEANPOINTHALF)   MeanHalfPos = 0;
+	/*降压模式。WY*/
+	if(StateFlag.VoltageModeFlag == 1)
+	{
+		*pBuff ++ = (*pAD->GridHVoltA - pID->gridHVoltA) * gridVoltRatio;                  //电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff ++ = (*pAD->GridHVoltB - pID->gridHVoltB) * gridVoltRatio;
+		*pBuff ++ = (*pAD->GridHVoltC - pID->gridHVoltC) * gridVoltRatio;
 
-#if 0
-    VirtulADStru *pAD = &VirtulAD;
-    float sumApfOut=0,tmp1,tmp2,tmp3;
-    float Buff[10];
-    float *pBuff=Buff;
+		*pBuff ++ = (*pAD->GridLVoltA - pID->gridLVoltA) * loadVoltRatio;                  //负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff ++ = (*pAD->GridLVoltB - pID->gridLVoltB) * loadVoltRatio;
+		*pBuff ++ = (*pAD->GridLVoltC - pID->gridLVoltC) * loadVoltRatio;
 
-    *pBuff++ =        (*pAD->GridVolt1 - pAD->gridVoltAB)*gridVoltRatio;          //filter(GridVoltAF)
-    *pBuff++ =        (*pAD->GridVolt2 - pAD->gridVoltBC)*gridVoltRatio;
-    *pBuff++ =        (*pAD->GridVolt3 - pAD->gridVoltCA)*gridVoltRatio;
-    *pBuff++ = tmp1 = (*pAD->ApfOutCur1 - pAD->apfOutputCurA)*outputCurRatio;     //filter(ApfOutCurA)
-    *pBuff++ = tmp2 = (*pAD->ApfOutCur2 - pAD->apfOutputCurB)*outputCurRatio;
-    *pBuff++ = tmp3 = (*pAD->ApfOutCur3 - pAD->apfOutputCurC)*outputCurRatio;
-    sumApfOut += *pBuff++ = tmp1;         //filter(ApfOutCurAD)
-    sumApfOut += *pBuff++ = tmp2;
-    sumApfOut += *pBuff++ = tmp3;
-    *pBuff++ = sumApfOut;                 //filter(ResonProtcABC)
+		*pBuff ++ = (*pAD->GridMainCurA - pID->gridMainCurA) * outputCurRatioCurrA;                  //电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
+		*pBuff ++ = (*pAD->GridMainCurB - pID->gridMainCurB) * outputCurRatioCurrB;                  //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff ++ = (*pAD->GridMainCurC - pID->gridMainCurC) * outputCurRatioCurrC;
 
-    DCL_runDF22Group(VolAndInvCurrFilter,Buff,Buff,10);
+		*pBuff ++ = (*pAD->GridBypassCurA - pID->gridBypassCurA) * outputCurBypassCurrA;                  //旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
+		*pBuff ++ = (*pAD->GridBypassCurB - pID->gridBypassCurB) * outputCurBypassCurrB;                  //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff ++ = (*pAD->GridBypassCurC - pID->gridBypassCurC) * outputCurBypassCurrC;
 
-    pBuff=Buff;
-    float *pOutSrc = VoltSlid[VoltPrvPos];  //实时采样波形
-    *pOutSrc++ = *pBuff++;
-    *pOutSrc++ = *pBuff++;
-    *pOutSrc++ = *pBuff++;
-    if(!StateFlag.VoltFilterEn)    //用上周波值校正电网电压滞后的相差//是否需要电压校正?//    if(!(CLA_StateFlagm&CAPGROUPSWITCH_CAPVARUNSEAL)){
-        pOutSrc=  VoltSlid[VoltPos];     //进行电压校正
-    else                            //做电流前馈时,打算用dq校正电网电压滞后的相差,此时未校正
-        pOutSrc=  VoltSlid[VoltPrvPos];  //不进行校正,直接将电压实时采样给 pOutSrc
+		*pBuff ++ = (*pAD->ADCUDCA - pID->aDCUDCA) * dcCapVoltRatio;                  //直流电容电压,电压采样系数
+		*pBuff ++ = (*pAD->ADCUDCB - pID->aDCUDCB) * dcCapVoltRatio;
+		*pBuff ++ = (*pAD->ADCUDCC - pID->aDCUDCC) * dcCapVoltRatio;
+	}
+	else if(StateFlag.VoltageModeFlag == 0) //升压模式。WY
+	{
+		*pBuff ++ = (*pAD->GridLVoltA - pID->gridLVoltA) * loadVoltRatio;                  //负载电压,电压采样系数        //负载电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff ++ = (*pAD->GridLVoltB - pID->gridLVoltB) * loadVoltRatio;
+		*pBuff ++ = (*pAD->GridLVoltC - pID->gridLVoltC) * loadVoltRatio;
 
-    GridVoltAF = *pOutSrc++;
-    GridVoltBF = *pOutSrc++;
-    GridVoltCF = *pOutSrc++;
-    ApfOutCurA = *pBuff++;
-    ApfOutCurB = *pBuff++;
-    ApfOutCurC = *pBuff++;
-    ApfOutCurAD= *pBuff++;
-    ApfOutCurBD= *pBuff++;
-    ApfOutCurCD= *pBuff++;
-    ResonProtcABC=  DCL_runDF22(&ResonancePortectABC[1],DCL_runDF22(&ResonancePortectABC[0],*pBuff)); //谐振检测
-//    ApfOutCurA = tmp1;//使用滤波前的电流做运算
-//    ApfOutCurB = tmp2;
-//    ApfOutCurC = tmp3;
-#endif
+		*pBuff ++ = (*pAD->GridHVoltA - pID->gridHVoltA) * gridVoltRatio;                  //电网电压,电压采样系数        //电网电压采样点(运放输出点)与实际电压波形方向反向
+		*pBuff ++ = (*pAD->GridHVoltB - pID->gridHVoltB) * gridVoltRatio;
+		*pBuff ++ = (*pAD->GridHVoltC - pID->gridHVoltC) * gridVoltRatio;
 
-#if TEST_DEBUGFFT
-    if(!StateFlag.VoltFilterEn)
-        pOutSrc = VoltSlid[VoltPos];
-    else
-        pOutSrc=  VoltSlid[VoltPrvPos];
-    DbgStepPhaA=PhaseLimit(DbgStepPhaA + PI2/FUNDPOINT);
-    DbgStepPhaB=PhaseLimit(DbgStepPhaB + PI2/FUNDPOINT);
-    DbgStepPhaC=PhaseLimit(DbgStepPhaC + PI2/FUNDPOINT);
-    *pOutSrc++=GridVoltAF= cosf(DbgStepPhaA) *311+xrand;
-    *pOutSrc++=GridVoltBF= cosf(DbgStepPhaB) *10-xrand;
-    *pOutSrc++=GridVoltCF= cosf(DbgStepPhaC) *1+xrand*0.5;
+		*pBuff ++ = (*pAD->GridMainCurA - pID->gridMainCurA) * outputCurRatioCurrA;                  //电抗主电流,输出电流采样系数   //主电抗电流采样点(运放输出点)与实际电流波形方向相反(继电器板霍尔采样反了)
+		*pBuff ++ = (*pAD->GridMainCurB - pID->gridMainCurB) * outputCurRatioCurrB;                  //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff ++ = (*pAD->GridMainCurC - pID->gridMainCurC) * outputCurRatioCurrC;
 
-    TestADTempBufp=SPLL.Theta*(GEN_FUNDPOINT/PI2);
-    ApfOutCurA=ApfOutCurAD=TestLoadCurS(0);
-    ApfOutCurB=ApfOutCurBD=TestLoadCurS(1);
-    ApfOutCurC=ApfOutCurCD=TestLoadCurS(2);
-#endif
+		*pBuff ++ = (*pAD->GridBypassCurA - pID->gridBypassCurA) * outputCurBypassCurrA;                  //旁路电流,输出电流采样系数   //旁路电流采样点(运放输出点)与实际电流波形方向相反(需验证???)
+		*pBuff ++ = (*pAD->GridBypassCurB - pID->gridBypassCurB) * outputCurBypassCurrB;                  //A相电流方向与B,C相电流方向相反,需要解决?????--LJH
+		*pBuff ++ = (*pAD->GridBypassCurC - pID->gridBypassCurC) * outputCurBypassCurrC;
 
-#else
-    int16 xPhaseA,xPhaseB,xPhaseC,xPhaseA1,xPhaseB1,xPhaseC1,xPhaseA2,xPhaseB2,xPhaseC2;
+		*pBuff ++ = (*pAD->ADCUDCA - pID->aDCUDCA) * dcCapVoltRatio;                  //直流电容电压,电压采样系数
+		*pBuff ++ = (*pAD->ADCUDCB - pID->aDCUDCB) * dcCapVoltRatio;
+		*pBuff ++ = (*pAD->ADCUDCC - pID->aDCUDCC) * dcCapVoltRatio;
+	}
 
-    DbgStepPhaA+=PI2/FUNDPOINT;
-    PhaseLimit(DbgStepPhaA);
-    DbgStepPhaB+=PI2/FUNDPOINT;
-    PhaseLimit(DbgStepPhaB);
-    DbgStepPhaC+=PI2/FUNDPOINT;
-    PhaseLimit(DbgStepPhaC);
-    //To calculate the fundamental power
-    xPhaseA=PhaseLimitI( (DbgStepPhaA )*(PI2_SINE_LOOKTABLE/PI2) );
-    xPhaseB=PhaseLimitI( (DbgStepPhaB )*(PI2_SINE_LOOKTABLE/PI2) );
-    xPhaseC=PhaseLimitI( (DbgStepPhaC )*(PI2_SINE_LOOKTABLE/PI2) );
-    xPhaseA1=PhaseLimitI( (DbgStepPhaA*3 )*(PI2_SINE_LOOKTABLE/PI2) );  //3次谐波
-    xPhaseB1=PhaseLimitI( (DbgStepPhaB*3 )*(PI2_SINE_LOOKTABLE/PI2) );
-    xPhaseC1=PhaseLimitI( (DbgStepPhaC*3 )*(PI2_SINE_LOOKTABLE/PI2) );
-    xPhaseA2=PhaseLimitI( (DbgStepPhaA*5 )*(PI2_SINE_LOOKTABLE/PI2) );  //5次谐波
-    xPhaseB2=PhaseLimitI( (DbgStepPhaB*5 )*(PI2_SINE_LOOKTABLE/PI2) );
-    xPhaseC2=PhaseLimitI( (DbgStepPhaC*5 )*(PI2_SINE_LOOKTABLE/PI2) );
+	DCL_runDF22Group(VolAndInvCurrFilter, Buff, Buff, 15);  //滤波
 
-    GridVoltAF= pSineLookTab(xPhaseA) *311 + pSineLookTab(xPhaseA1) *(311*0.2) + pSineLookTab(xPhaseA2) *(311*0.3); //matrix realA*realB-imagA*imagB
-//  if(debugUnbVol==0){
-        GridVoltBF= pSineLookTab(xPhaseB) *311 + pSineLookTab(xPhaseB1) *(311*0.2) + pSineLookTab(xPhaseB2) *(311*0.3);
-        GridVoltCF= pSineLookTab(xPhaseC) *311 + pSineLookTab(xPhaseC1) *(311*0.2) + pSineLookTab(xPhaseC2) *(311*0.3);
-//  }else if(debugUnbVol==1){
-//      GridVoltBF= pSineLookTab(xPhaseB) *311 + pSineLookTab(xPhaseB1) *(311*0.2) + pSineLookTab(xPhaseB2) *(311*0.3);
-//      GridVoltCF=0;
-//  }else{
-//      GridVoltBF=0;
-//      GridVoltCF=0;
-//  }
+	pBuff = Buff;
 
-    ApfOutCurA=TestLoadCurS(0);
-    ApfOutCurB=TestLoadCurS(1);
-    ApfOutCurC=TestLoadCurS(2);
-#endif
+	float *pOutSrc = VoltSlid[VoltPrvPos]; //实时采样波形
 
-#if TEST_NULLPULSE
+	/*降压模式。WY*/
+	if(StateFlag.VoltageModeFlag == 1)
+	{
+		*pOutSrc ++ = *pBuff ++;
+		*pOutSrc ++ = *pBuff ++;
+		*pOutSrc ++ = *pBuff ++;
 
-    float testDcVoltF;
-    static float32 DbgStepPhaA=D2R(0),DbgStepPhaB=D2R(240),DbgStepPhaC=D2R(120);
-    if(dcVoltF<10)
-        testDcVoltF=10;
-    else
-        testDcVoltF=dcVoltF;
+		pOutSrc = VoltSlid[VoltPos];                  //进行电压校正
 
-//    DbgStepPhaA=PhaseLimit(GridVoltTheta);
-//    DbgStepPhaB=PhaseLimit(GridVoltTheta+D2R(240));
-//    DbgStepPhaC=PhaseLimit(GridVoltTheta+D2R(120));
-    DbgStepPhaA+=PI2/(2*PWMFREQUENCY/50);
-    DbgStepPhaA=PhaseLimit(DbgStepPhaA);
-    DbgStepPhaB+=PI2/(2*PWMFREQUENCY/50);
-    DbgStepPhaB=PhaseLimit(DbgStepPhaB);
-    DbgStepPhaC+=PI2/(2*PWMFREQUENCY/50);
-    DbgStepPhaC=PhaseLimit(DbgStepPhaC);
-    GridVoltAF= cosf(DbgStepPhaA) *312;//testDcVoltF*0.48f;   //matrix realA*realB-imagA*imagB
-    GridVoltBF= cosf(DbgStepPhaB) *312;//testDcVoltF*0.48f;
-    GridVoltCF= cosf(DbgStepPhaC) *312;//testDcVoltF*0.48f;
+		GridVoltAF = *pOutSrc ++;                  //电网电压
+		GridVoltBF = *pOutSrc ++;
+		GridVoltCF = *pOutSrc ++;
 
-#endif  //endif TEST_NULLPULSE
+		LoadVoltUF = *pBuff ++;                  //负载电压
+		LoadVoltVF = *pBuff ++;
+		LoadVoltWF = *pBuff ++;
+	}
+	else if(StateFlag.VoltageModeFlag == 0) //升压模式。WY
+	{
+		*pOutSrc ++ = *pBuff ++; //负载电压。WY
+		*pOutSrc ++ = *pBuff ++;
+		*pOutSrc ++ = *pBuff ++;
 
-#if TEST_RUNTIME
-    StateEventFlag = STATE_EVENT_RUN;   //测试区域
-#endif
+		pOutSrc = VoltSlid[VoltPos];                  //进行电压校正
+
+		LoadVoltUF = *pOutSrc ++;
+		LoadVoltVF = *pOutSrc ++;
+		LoadVoltWF = *pOutSrc ++;
+
+		GridVoltAF = *pBuff ++; //电网电压
+		GridVoltBF = *pBuff ++;
+		GridVoltCF = *pBuff ++;
+	}
+
+	GridCurrAF = *pBuff ++;                  //电抗主电流
+	GridCurrBF = *pBuff ++;
+	GridCurrCF = *pBuff ++;
+
+	GridBPCurrAF = *pBuff ++;                  //旁路电流
+	GridBPCurrBF = *pBuff ++;
+	GridBPCurrCF = *pBuff ++;
+
+	DccapVoltA = *pBuff ++;                  //直流电容电压
+	DccapVoltB = *pBuff ++;
+	DccapVoltC = *pBuff;
+
+	if(StateFlag.VoltageModeFlag == 1)
+	{                  //降压
+		VoltInAF = GridVoltAF;
+		VoltInBF = GridVoltBF;
+		VoltInCF = GridVoltCF;
+		VoltOutAF = LoadVoltUF;
+		VoltOutBF = LoadVoltVF;
+		VoltOutCF = LoadVoltWF;
+	}
+	else if(StateFlag.VoltageModeFlag == 0)
+	{                  //升压
+		VoltInAF = LoadVoltUF;
+		VoltInBF = LoadVoltVF;
+		VoltInCF = LoadVoltWF;
+		VoltOutAF = GridVoltAF;
+		VoltOutBF = GridVoltBF;
+		VoltOutCF = GridVoltCF;
+	}
+
+//延时90度构造Beta    单相锁相
+
+	VoltSlidA[MeanHalfPos] = VoltInAF;                  //grid real value
+	VoltSlidB[MeanHalfPos] = VoltInBF;
+	VoltSlidC[MeanHalfPos] = VoltInCF;
+	GridCurrSlidA[MeanHalfPos] = GridCurrAF;
+	GridCurrSlidB[MeanHalfPos] = GridCurrBF;
+	GridCurrSlidC[MeanHalfPos] = GridCurrCF;
+
+	if(MeanHalfPos == (MEANPOINTHALF - 1))
+	{
+		VoltInAF_Beta = VoltSlidA[0];
+		VoltInBF_Beta = VoltSlidB[0];
+		VoltInCF_Beta = VoltSlidC[0];
+		GridCurrAF_Beta = GridCurrSlidA[0];
+		GridCurrBF_Beta = GridCurrSlidB[0];
+		GridCurrCF_Beta = GridCurrSlidC[0];
+
+	}
+	else
+	{
+		VoltInAF_Beta = VoltSlidA[MeanHalfPos + 1];
+		VoltInBF_Beta = VoltSlidB[MeanHalfPos + 1];
+		VoltInCF_Beta = VoltSlidC[MeanHalfPos + 1];
+		GridCurrAF_Beta = GridCurrSlidA[MeanHalfPos + 1];
+		GridCurrBF_Beta = GridCurrSlidB[MeanHalfPos + 1];
+		GridCurrCF_Beta = GridCurrSlidC[MeanHalfPos + 1];
+	}
+	if(++ MeanHalfPos >= MEANPOINTHALF)
+		MeanHalfPos = 0;
 }
 
 #define DQ2UALPHA_NEG(D,Q)  dq2Ualpha = (D)*GridResCos + (Q)*GridResSin;\
@@ -368,22 +307,20 @@ void CurrRefCaul(void)
 
     if(CurrRefC>OutCurMaxLimit)     CurrRefC=OutCurMaxLimit;
     if(CurrRefC<OutCurMaxLimitNeg)  CurrRefC=OutCurMaxLimitNeg;
-    #if TEST_NULLPULSE
-        CurrRefA=0;CurrRefB=0;CurrRefC=0;
- //       ApfOutCurA=0;ApfOutCurB=0;ApfOutCurC=0;
-    #endif
 }
-//只有在非6.4k的整倍数频率需要用到此函数
-//用于计算非整采样点间的数据,现在为1/2
+
+/*该函数未定义。WY*/
 void GetGridLoadcurrAD(void)
 {
 }
 
-void GetGridLoadcurr(void)      //12.8k
+/*该函数未定义。WY*/
+void GetGridLoadcurr(void)
 {
 
 }
 
+/*该函数未定义。WY*/
 void GetUdc(void)
 {
 }
@@ -426,7 +363,7 @@ inline void FaultRecordSel(void)
  */
 inline void  SetHeatPulse(void)
 {
-#if HEATPULSE==1
+#if HEATPULSE == 1
 	TOGGLE_PULSE(); //翻转GPIO电平。WY
 #endif
 }
@@ -442,7 +379,7 @@ inline void ADPosCnt(void)
 		ADBufPos = 0;
 	}
 
-	TimeStamp = PhaseLimit(TimeStamp + IFFT_PHASE_STEP);//ifft用的时间戳产生
+	TimeStamp = PhaseLimit(TimeStamp + IFFT_PHASE_STEP);//该函数无意义。WY //ifft用的时间戳产生
 }
 
 /*
@@ -467,69 +404,17 @@ inline void VoltSlidPosCnt(void)
 }
 
 #if PWM_FREQUENCE_16KHZ
+
+/*该函数未定义。WY*/
 void PIController(void)
 {
 }
-#endif
 
-#ifdef BOOST_DEBUG
-void PRController(void)
-{
-    StateFlag.InvCurUVRmsReadyFlag = 1;
-    GardVoltIntissued = 50;           //界面下发值
-    GardVoltTarVal = GardVoltIntissued-gpVoltA_rms;     //目标值
-    if(StateEventFlag == STATE_EVENT_RUN){
-            if(StateFlag.InvCurUVRmsReadyFlag){
-                    currRef_D = RunPIRE(&OutInvUVCurrRMS,GardVoltTarVal,gpVoltC_rms);
-                    CtrlVoltUV = (currRef_D *(SQRT2)* GridResCos );
-        }else{
-        OutInvUVCurrD.i10=0;
-        OutInvUVCurrD.i6=0;
-        OutInvUVCurrQ.i10=0;
-        OutInvUVCurrQ.i6=0;
-        OutInvUVCurrRMS.i10=0;
-        OutInvUVCurrRMS.i6=0;
-        CtrlVoltUV = 0;
-    }
-}
-}
-
-#define AD_FITING_N 3
-#define FITING_A (5.0f)       //0*0+1*1+...(N-1)*(N-1)
-#define FITING_B (3.0f)        //0+1+...+(N-1)
-#define FITING_S  (1.0f/((AD_FITING_N*FITING_A) - (FITING_B*FITING_B)))
-float debug_Y = 0,debugA_Y = 0,debugB_Y = 0,debugC_Y = 0,debugA_ratio,debugA_offset,debugB_ratio,debugB_offset;
-
-inline ZCPJudgeA_ovsample(volatile Uint16 *ADResult,int ADoffset,int NumPort,Uint16 *pflag)
-{
-    Int16 i,Ci=0,Di=0;
-    float ratio = 0, offset = 0;
-    float C,D;
-    for(i=0; i<AD_FITING_N; i++){
-        Di += i* *ADResult;    //data_x[i] * data_y[i];
-        Ci += *ADResult++;      //data_y[i];
-    }
-    C= (float)Ci;
-    D= (float)Di;
-
-    ratio  = (AD_FITING_N*C - FITING_B*D) * FITING_S;
-    offset = (FITING_A*D - FITING_B*C) * FITING_S;
-    float Y=(ratio*(dcVoltUpRatioVirtu_reciprocal) * T1PR * harmCompPerc + offset - ADoffset)*outputCurRatio;   //y=(kx+b-零偏)*霍尔硬件系数
-    *pflag = Y>0?0:1;
-    if(NumPort == 0){
-        debugA_Y = Y;
-        debugA_ratio = ratio;
-        debugA_offset = offset;
-    }else{
-        debugB_Y = Y;
-        debugB_ratio = ratio;
-        debugB_offset = offset;
-    }
-}
 #endif
 
 #define DEAD_CORR_HYSTERESIS 3
 
+/*该宏定义未使用。WY*/
 #define GetVlotFeedback()\
     V_dq2Ualpha = SPLL.GridPLLVoltD  * GridResCos - SPLL.GridPLLVoltQ  * GridResSin;\
     V_dq2Ubeta =  SPLL.GridPLLVoltD  * GridResSin + SPLL.GridPLLVoltQ  * GridResCos;\
@@ -542,7 +427,8 @@ inline ZCPJudgeA_ovsample(volatile Uint16 *ADResult,int ADoffset,int NumPort,Uin
     VolforwardA += V_dq2Ualpha*  SQRT_2DIV3;\
     VolforwardB += V_dq2Ualpha*(-SQRT_2DIV3_DIV2) + V_dq2Ubeta *  SQRT2_DIV2;\
     VolforwardC += V_dq2Ualpha*(-SQRT_2DIV3_DIV2) + V_dq2Ubeta *(-SQRT2_DIV2);
-float escdebugpll=0,escdebugdata;
+
+float escdebugpll = 0, escdebugdata;
 #define LooktablePower2Amplitude 0.05f
 
 float ReactivePowerComFUN(float Esc_VoltPLL,float Q)  //ESC无功补偿函数
@@ -565,110 +451,10 @@ float ReactivePowerComFUN(float Esc_VoltPLL,float Q)  //ESC无功补偿函数
 }
 
 #ifdef unblance_gravity
-float  UNCurtestdata=0.0001f;
-int unbalanceGenFlag =0;
-int midNumber=0;
-float CurMeanValue;
-float CurDiffMAXValue;
-
-
-void UnCurrCompFUN(void)
-{
-#define MAXMODE 1
-#define MINMODE -1
-#define NORMMODE 0
-
-    CurMeanValue = (UnCurrData[0]+UnCurrData[1]+UnCurrData[2])/3;
-    CurDiffMAXValue = Max3(UnCurrData[0],UnCurrData[1],UnCurrData[2]);
-    midNumber = Max3(UnCurrData[0],UnCurrData[1],UnCurrData[2]);
-    currentUnbalance = (CurDiffMAXValue-CurMeanValue)/CurMeanValue;
-
-    if(currentUnbalance > TargetCurrentUnbalance){
-        if(ESCFlagA.ESCCntSec.UNCurrDelay1 >= CNT_SEC(1)){
-            unbalanceGenFlag=TRUE;
-        }else{
-
-    }
-    }else{
-        ESCFlagA.ESCCntSec.UNCurrDelay1 = 0;
-    }
-
-    if(currentUnbalance < TargetCurrentUnbalance-0.01){
-        if(ESCFlagA.ESCCntSec.UNCurrDelay2 >= CNT_SEC(3)){
-            unbalanceGenFlag=FALSE;
-    }
-    }else{
-        ESCFlagA.ESCCntSec.UNCurrDelay2 = 0;
-}
-
-    if(unbalanceGenFlag == TRUE){
-
-        centreGravity=(VoltageOverflow[0]+VoltageOverflow[1]+VoltageOverflow[2]);
-        if(centreGravity>=2){
-            centreGravityValue-=0.00001;
-        }else if(centreGravity<=-2){
-            centreGravityValue+=0.00001;
-        }else{
-            centreGravityValue =0;
-            }
-        if(centreGravityValue<-0.2)
-            centreGravityValue=-0.2;
-        if(centreGravityValue>0.2)
-            centreGravityValue=0.2;
-
-        if((UnCurrData[0] > CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[0] -= UNCurtestdata;
-        }else if((UnCurrData[0] < CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[0] += UNCurtestdata;
-            }
-
-        if(CurrentUnbalanceRegularVoltage[0]>ESCFlagA.Volttarget){
-            CurrentUnbalanceRegularVoltage[0]=ESCFlagA.Volttarget;
-            VoltageOverflow[0]=MAXMODE;
-        }else if(CurrentUnbalanceRegularVoltage[0]<ESCFlagA.VoltThreShold){
-            CurrentUnbalanceRegularVoltage[0]=ESCFlagA.VoltThreShold;
-            VoltageOverflow[0]=MINMODE;
-        }else{
-            VoltageOverflow[0]=NORMMODE;
-            }
-
-        if((UnCurrData[1] > CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[1] -= UNCurtestdata;
-        }else if((UnCurrData[1] < CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[1] += UNCurtestdata;
-            }
-
-        if(CurrentUnbalanceRegularVoltage[1]>ESCFlagB.Volttarget){
-            CurrentUnbalanceRegularVoltage[1]=ESCFlagB.Volttarget;
-            VoltageOverflow[1]=MAXMODE;
-        }else if(CurrentUnbalanceRegularVoltage[1]<ESCFlagB.VoltThreShold){
-            CurrentUnbalanceRegularVoltage[1]=ESCFlagB.VoltThreShold;
-            VoltageOverflow[1]=MINMODE;
-        }else{
-            VoltageOverflow[1]=NORMMODE;
-        }
-
-        if((UnCurrData[2] > CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[2] -= UNCurtestdata;
-        }else if((UnCurrData[2] < CurMeanValue*(1+centreGravityValue))){
-            CurrentUnbalanceRegularVoltage[2] += UNCurtestdata;
-        }
-
-        if(CurrentUnbalanceRegularVoltage[2]>ESCFlagC.Volttarget){
-            CurrentUnbalanceRegularVoltage[2]=ESCFlagC.Volttarget;
-            VoltageOverflow[2]=MAXMODE;
-        }else if(CurrentUnbalanceRegularVoltage[2]<ESCFlagC.VoltThreShold){
-            CurrentUnbalanceRegularVoltage[2]=ESCFlagC.VoltThreShold;
-            VoltageOverflow[2]=MINMODE;
-        }else{
-            VoltageOverflow[2]=NORMMODE;
-        }
-    }
-}
 #else
 
 /*
- * 在分析三相不平衡时，用于标识电流有效值大小排序。WY
+ * 在分析三相电流不平衡时，用于标识电流有效值大小排序。WY
  */
 enum ChanMaxName
 {
@@ -758,9 +544,7 @@ void UnCurrCompFUN(void)
 	float tmp = 0; //临时变量。WY
 
 	float CurMeanValue = (UnCurrData[0] + UnCurrData[1] + UnCurrData[2]) * S1DIV3;//求解三相电网电流（有效值）平均值。WY
-
 	float CurDiffMAXValue = Max3(UnCurrData[0], UnCurrData[1], UnCurrData[2]); //求解三相电网电流（有效值）的最大值。WY
-
 	currentUnbalance = (CurDiffMAXValue - CurMeanValue) / CurMeanValue; //求解三相电网电流（有效值）不平衡度。WY
 
 	if (currentUnbalance > TargetCurrentUnbalance) //三相电网电流（有效值）的不平衡度 > 三相电网电流（有效值）的不平衡度上限。WY
@@ -779,7 +563,7 @@ void UnCurrCompFUN(void)
 	{
 		if (CntMs.UNCurrDelay2 >= CNT_MS(20000)) //持续时间超过20000ms。目的：防止系统抖动。WY
 		{
-			unbalanceGenFlag = FALSE; //设备处于三相电网电流（有效值）不平衡状态。WY
+			unbalanceGenFlag = FALSE; //设备处于三相电网电流（有效值）平衡状态。WY
 		}
 	}
 	else
@@ -791,95 +575,64 @@ void UnCurrCompFUN(void)
 	if (unbalanceGenFlag == TRUE)
 	{
 		ChanMax3(UnCurrData[0], UnCurrData[1], UnCurrData[2], &maxCh, &minCh, &middCh); //将三相电网电流（有效值）按照降序排序。WY
-		CurrentUnbalanceRegularVoltage[maxCh] -= UN_CURR_COMP_STEP_VOLT; //降低三相电网电流（有效值）最大者对应的电压（有效值）。WY
+		CurrentUnbalanceRegularVoltage[maxCh] -= UN_CURR_COMP_STEP_VOLT; //降低电网电流（有效值）最大相对应的负载电压（有效值）目标值。WY
 		tmp = CurrentUnbalanceRegularVoltage[maxCh];
-		CurrentUnbalanceRegularVoltage[minCh] += UN_CURR_COMP_STEP_VOLT; //提高三相电网电流（有效值）最小者对应的电压（有效值）。WY
+		CurrentUnbalanceRegularVoltage[minCh] += UN_CURR_COMP_STEP_VOLT; //提高电网电流（有效值）最小相对应的负载电压（有效值）目标值。WY
 		tmp += CurrentUnbalanceRegularVoltage[minCh];
-		float sum = ESCFlagA.Volttarget + ESCFlagB.Volttarget + ESCFlagC.Volttarget; //负载电压（有效值）目标值的和。WY
+		float sum = ESCFlagA.Volttarget + ESCFlagB.Volttarget + ESCFlagC.Volttarget; //用户设定的负载电压（有效值）目标值的和。WY
 
 		CurrentUnbalanceRegularVoltage[middCh] = sum - tmp; //调节三相电网电流（有效值）居中者对应的电压（有效值）。WY
 	};
 
-	/*处理A相*/
+	/*处理A相：负载电压（有效值）目标值限幅*/
 	if (CurrentUnbalanceRegularVoltage[0] > GV_RMS_OVER - 25) //A相负载电压（有效值）目标值 > 上限值。WY
 	{
 		CurrentUnbalanceRegularVoltage[0] = GV_RMS_OVER - 25; //限幅：限定A相负载电压（有效值）目标值的上限。WY
+
 	}
-	if (CurrentUnbalanceRegularVoltage[0] < GV_RMS_UNDER + 70) //A相负载电压（有效值）目标值 < 下限值。WY
+	if (CurrentUnbalanceRegularVoltage[0] < GV_RMS_UNDER + 40) //A相负载电压（有效值）目标值 < 下限值。WY
 	{
-		CurrentUnbalanceRegularVoltage[0] = GV_RMS_UNDER + 70; //限幅：限定A相负载电压（有效值）目标值的下限。WY
+		CurrentUnbalanceRegularVoltage[0] = GV_RMS_UNDER + 40; //限幅：限定A相负载电压（有效值）目标值的下限。WY
 	}
 
-	/*处理B相*/
+	/*处理B相：负载电压（有效值）目标值限幅*/
 	if (CurrentUnbalanceRegularVoltage[1] > GV_RMS_OVER - 25)
 	{
 		CurrentUnbalanceRegularVoltage[1] = GV_RMS_OVER - 25;
 	}
-	if (CurrentUnbalanceRegularVoltage[1] < GV_RMS_UNDER + 70)
+	if (CurrentUnbalanceRegularVoltage[1] < GV_RMS_UNDER + 40)
 	{
-		CurrentUnbalanceRegularVoltage[1] = GV_RMS_UNDER + 70;
+		CurrentUnbalanceRegularVoltage[1] = GV_RMS_UNDER + 40;
 	}
 
-	/*处理C相*/
+	/*处理C相：负载电压（有效值）目标值限幅*/
 	if (CurrentUnbalanceRegularVoltage[2] > GV_RMS_OVER - 25)
 	{
 		CurrentUnbalanceRegularVoltage[2] = GV_RMS_OVER - 25;
 	}
-	if (CurrentUnbalanceRegularVoltage[2] < GV_RMS_UNDER + 70)
+	if (CurrentUnbalanceRegularVoltage[2] < GV_RMS_UNDER + 40)
 	{
-		CurrentUnbalanceRegularVoltage[2] = GV_RMS_UNDER + 70;
+		CurrentUnbalanceRegularVoltage[2] = GV_RMS_UNDER + 40;
 	}
 }
 
-
 #endif
-float Esczct_CNTA = 0,Esczct_CNTB = 0,Esczct_CNTC = 0;
-float StepSize = 0.703125;
 
 float ESC_FeedForward_DutyA = 0; //A相PWM占空比前馈值。WY
 float ESC_FeedForward_DutyB = 0; //B相PWM占空比前馈值。WY
 float ESC_FeedForward_DutyC = 0; //C相PWM占空比前馈值。WY
 
-
 float PIOutVoltValueA = 0; //A相PI调节器的输出值。WY
 float PIOutVoltValueB = 0; //B相PI调节器的输出值。WY
 float PIOutVoltValueC = 0; //C相PI调节器的输出值。WY
 
-int ESCLowCurrFlagA = 0,ESCLowCurrFlagB = 0,ESCLowCurrFlagC = 0;
+int ESCLowCurrFlagA = 0,ESCLowCurrFlagB = 0,ESCLowCurrFlagC = 0; //该变量未使用。WY
 
-#define LEAD_SAMPLE_INCREMENT_DUTY  0.0f
-#define LEAD_SAMPLE_DECREMENT_DUTY  0.0f
+#define LEAD_SAMPLE_INCREMENT_DUTY  0.0f //该宏定义未使用。WY
+#define LEAD_SAMPLE_DECREMENT_DUTY  0.0f //该宏定义未使用。WY
 
-float DBG_leadSampleIncrementDuty = LEAD_SAMPLE_INCREMENT_DUTY;
-float DBG_leadSampleDecrementDuty = LEAD_SAMPLE_DECREMENT_DUTY;
-
-/*! 实现对调制值的限值
-* @private NumeratorValue
-* @private DenominatorVAL
-* @private TestArithFlagA 测试用...
-*
-* @param[in] RMSGridInVAL 输入电压(RMS)
-* @param[in] INSGridIn 输入电压瞬时值波形
-* @param[in] target 目标值(RMS)
-* @param[in] PIerr (目标值-输出值)的PID输出的误差值
-* @param[in] LockPhAngle 电压锁相角
-* @param[in] *pStorage 前馈值存储
-* @param[in] ESCPHASE 三相选择,这个是权宜之计,可优化
-*/
-//#define RMS_CONSTANT_CURRENT_OVERLOAD_30 58
-//#define RMS_CONSTANT_CURRENT_DIFF_30 13        //
-//#define RMS_CONSTANT_CURRENT_RATED_30 45       //额定电流
-//#define INS_CONSTANT_CURRENT_RATED_30 82
-//
-//#define RMS_CONSTANT_CURRENT_OVERLOAD_50 93
-//#define RMS_CONSTANT_CURRENT_DIFF_50 18        //
-//#define RMS_CONSTANT_CURRENT_RATED_50 75       //额定电流
-//#define INS_CONSTANT_CURRENT_RATED_50 132
-//
-//#define RMS_CONSTANT_CURRENT_OVERLOAD_75 140
-//#define RMS_CONSTANT_CURRENT_DIFF_75 23        //
-//#define RMS_CONSTANT_CURRENT_RATED_75 114       //额定电流
-//#define INS_CONSTANT_CURRENT_RATED_75 198
+float DBG_leadSampleIncrementDuty = LEAD_SAMPLE_INCREMENT_DUTY; //该变量未使用。WY
+float DBG_leadSampleDecrementDuty = LEAD_SAMPLE_DECREMENT_DUTY; //该变量未使用。WY
 
 /*
  * 功能：根据电网电压是否存在突变，求解PWM占空比。WY
@@ -889,7 +642,7 @@ float DBG_leadSampleDecrementDuty = LEAD_SAMPLE_DECREMENT_DUTY;
  * 输入参数target：负载电压（有效值）目标值
  * 输入参数PIerr：PI调节器的输出值
  * 输入参数LockPhAngle：经锁相环得到的相位
- * 输出参数pStorage：PWM占空比的前馈值
+ * 输出参数pStorage：PWM占空比预设值。当电网电压未发生突变时，使得PWM占空比预设值缓慢逼近PWM前馈值，实现稳定系统振荡的作用。
  * 输入参数ESCPHASE：相位选择
  *
  * 返回值：PWM占空比
@@ -897,14 +650,14 @@ float DBG_leadSampleDecrementDuty = LEAD_SAMPLE_DECREMENT_DUTY;
 float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
 				   float INSGridIn, //电网电压（瞬时值）
 				   float target, //负载电压（有效值）目标值
-				   float PIerr, //PI调节器的输出值(用于修正PWM占空比)
-				   float LockPhAngle, //经锁相环得到的相位
-				   float *pStorage, //PWM占空比的前馈值
+				   float PIerr, //PI调节器的输出值(用于修正PWM占空比的前馈值)
+				   float LockPhAngle, //经锁相环得到的相位。当电网电压未发生突变时，使得PWM占空比预设值缓慢逼近PWM前馈值，实现稳定系统振荡的作用。
+				   float *pStorage, //PWM占空比预设值。
 				   int ESCPHASE) //相位选择
 {
-	ArithFlagA = 2; //A相电网电流突变标志位。0，存在突变；1，不存在突变。WY
-	ArithFlagB = 2; //B相电网电流突变标志位。0，存在突变；1，不存在突变。WY
-	ArithFlagC = 2; //C相电网电流突变标志位。0，存在突变；1，不存在突变。WY
+	ArithFlagA = 2; //A相电网电压突变标志位。0，存在突变；1，不存在突变。WY
+	ArithFlagB = 2; //B相电网电压突变标志位。0，存在突变；1，不存在突变。WY
+	ArithFlagC = 2; //C相电网电压突变标志位。0，存在突变；1，不存在突变。WY
 
 	TESTVALUE = 0; //该变量未使用。WY
 	TESEPIerr = PIerr; //该变量未使用。WY
@@ -915,10 +668,10 @@ float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
 	TESEINSGridIn = INSGridIn; //该变量未使用。WY
 
 	NumeratorValue = INSGridIn - RMSGridInVAL * 1.4142 * sin(LockPhAngle); //电网电压（瞬时值）的突变值 = 电网电压（瞬时值） - 上个周波电网电压（瞬时值）。WY
-	DenominatorVAL = target * 1.4142 * sin(LockPhAngle); //负载电压的目标值（瞬时值）。WY
+	DenominatorVAL = target * 1.4142 * sin(LockPhAngle); //该变量未使用。WY
 
 	if ((RMSGridInVAL > 10) //电网电压（有效值） > 10V。WY
-			&& (target > 10)) //负载电压（有效值）的目标值 > 10V。
+			&& (target > 10)) //负载电压（有效值）目标值 > 10V。
 	{
 		 /*电网电压不在过零点附近。WY*/
 		if (((LockPhAngle >= 0.3f)
@@ -932,14 +685,14 @@ float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
 				/*处理A相*/
 				if (ESCPHASE == 1)
 				{
-					/*电流不存在突变。WY*/
+					/*电压不存在突变。WY*/
 					if ((TestArithFlagA == 1) //解锁状态。WY
 							&& (((NumeratorValue < ArithVAL) //电网电压（瞬时值）突变值 < 电网电压（瞬时值）的突变值上限。WY
 							&& (NumeratorValue > ArithVal)) //电网电压（瞬时值）突变值 > 电网电压（瞬时值）的突变值下限。WY
-							|| (ESCFlagA.ESCCntMs.HarmDisDelay > CNT_MS(20)))) //电网电压（瞬时值）突变计时 > 20ms。当电网电压（瞬时值）突变计时 > 20ms时，认为电网电压处于新的稳定状态，而非突变状态。WY
+							|| (ESCFlagA.ESCCntMs.HarmDisDelay > CNT_MS(20)))) //电网电压（瞬时值）突变计时 > 20ms。WY
 					{
 						dutytmp = dutytmp1 = RMSGridInVAL / target; //PWM占空比 = 电网电压（有效值） / 负载电压（有效值）目标值。WY
-						ArithFlagA = 1; //A相电网电流不存在突变。WY
+						ArithFlagA = 1; //A相电网电压不存在突变。WY
 
 						if ((NumeratorValue < ArithVAL) //电网电压突变值 < 电网电压突变值上限。WY
 								&& (NumeratorValue > ArithVal)) //电网电压突变值 > 电网电压突变值下限。WY
@@ -948,7 +701,7 @@ float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
 						}
 					}
 					else if
-					/*电流存在突变。WY*/
+					/*电压存在突变。WY*/
 					((NumeratorValue >= ArithVAL) //电网电压（瞬时值）突变值 > 电网电压（瞬时值）突变值上限。WY
 							|| (NumeratorValue <= ArithVal) //电网电压（瞬时值）突变值 < 电网电压（瞬时值）突变值下限。WY
 							|| (TestArithFlagA == 0) //上锁状态。WY
@@ -957,15 +710,15 @@ float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
 
 						if ((ESCFlagA.ESCCntMs.HarmDisDelay <= CNT_MS(20))) //电网电压突变持续时间 < 20ms。WY
 						{
-							dutytmp = dutytmp1 = (RMSGridInVAL / target)  //电网电压（有效值） / 电网电压（有效值）的目标值。WY
+							dutytmp = dutytmp1 = (RMSGridInVAL / target)  //电网电压（有效值） / 负载电压（有效值）的目标值。WY
 									+ ((INSGridIn - RMSGridInVAL * SQRT2 * sin(LockPhAngle)) / (target * SQRT2 * sin(LockPhAngle))); //电压突变比例 = (电网电压瞬时值 - 上个周波电网电压的瞬时值) / 负载电压瞬时值的目标值。WY
-							ArithFlagA = 0; //A相电网电流存在突变。WY
+							ArithFlagA = 0; //A相电网电压存在突变。WY
 							TestArithFlagA = 0; //上锁。WY
 						}
 						else //电网电压突变计时 > 20ms。WY
 						{
 							TestArithFlagA = 1; //解锁。WY
-							*pStorage = RMSGridInVAL / target; //PWM占空比 = 当前电网电压有效值 / 电网电压有效值的目标值。WY
+							*pStorage = RMSGridInVAL / target; //PWM占空比 = 当前电网电压(有效值) / 负载电压(有效值)目标值。WY
 						}
 					}
 				}
@@ -1065,37 +818,37 @@ float RMSDutyLimit(float RMSGridInVAL, //电网电压（有效值）
 //幅值变化斜率控制,每秒变化率390%:=0.00001*25.6k
 
 	/*处理A相*/
-	if ((ArithFlagA == 1) //A相电网电流不存在突变。WY
+	if ((ArithFlagA == 1) //A相电网电压不存在突变。WY
 			&& (ESCPHASE == 1)) //A相。WY
 	{
-		if ((dutytmp1 > 0.499) && (dutytmp1 < 0.961)) //PWM占空比在范围内。WY
+		if ((dutytmp1 > 0.499) && (dutytmp1 < 0.961)) //PWM占空比的前馈值在范围内。WY
 		{
-			if (*pStorage > dutytmp1) //PWM占空比的前馈值 > PWM占空比。WY
+			if (*pStorage > dutytmp1) //PWM占空比的预设值 > PWM占空比的前馈值。WY
 			{
-				*pStorage -= 0.0001; //微调PWM占空比的前馈值。目的：防止PWM变化太快？WY
+				*pStorage -= 0.0001; //微调PWM占空比的预设值，使其缓慢逼近PWM占空比的前馈值。WY
 			}
 			else if (*pStorage < dutytmp1) //PWM占空比的前馈值 < PWM占空比。WY
 			{
-				*pStorage += 0.0001; //微调PWM占空比的前馈值。WY
+				*pStorage += 0.0001; //微调PWM占空比的预设值，使其缓慢逼近PWM占空比的前馈值。WY
 			}
-			else
+			else //该条件恒不成立。原因：无法将两个浮点数相比较。WY
 			{
-				*pStorage = dutytmp1; //无需微调PWM占空比的前馈值。WY
+				*pStorage = dutytmp1; //无需微调微调PWM占空比的预设值。WY
 			}
 		}
-		else if (dutytmp1 > 0.962) //PWM占空比超过上限。WY
+		else if (dutytmp1 > 0.962) //PWM占空比的前馈值。注意：该条件恒不成立。WY
 		{
-			*pStorage = dutytmp1 = 0.962; //限定PWM占空比的上限。WY
+			*pStorage = dutytmp1 = 0.962; //限定PWM占空比的前馈值的上限。WY
 		}
-		else if (dutytmp1 < 0.497) //PWM占空比低于下限。WY
+		else if (dutytmp1 < 0.497) //PWM占空比的前馈值。注意：该条件恒不成立。WY
 		{
-			*pStorage = dutytmp1 = 0.497; //限定PWM占空比的下限。WY
+			*pStorage = dutytmp1 = 0.497; //限定PWM占空比的前馈值的下限。WY
 		}
 
 		/*升压模式。WY*/
 		if (StateFlag.VoltageModeFlag == 0)
 		{
-			dutytmp1 = *pStorage - PIerr; //？？？WY
+			dutytmp1 = *pStorage - PIerr; //PWM占空比的预设值 - PI调节器的输出值。注意：经过PI调节器的修正后，得出PWM占空比的最终值。WY
 		}
 		/*降压模式。WY*/
 		else if (StateFlag.VoltageModeFlag == 1)
@@ -1218,7 +971,7 @@ const SMconstantCurr ConstantCurrDefault[3] =
 	  13.0f, //该成员未使用。WY
 	  45.0f, //电网电流有效值的额定值。WY
 	  82.0f, // 电网电流瞬时值的限定值。WY
-	  0, //状态机状态（用于描述电网电流）。WY
+	  0, //状态机状态（用于描述电网电流状态）。WY
 	  0, //前一次电网电流状态。WY
 	  0 //计数器。目的：防止状态机频繁切换引发抖动。WY
 	},
@@ -1249,10 +1002,29 @@ const SMconstantCurr ConstantCurrDefault[3] =
 };
 
 /*
- * ABC三相容量参数。WY
+ * ABC三相PI控制器参数。WY
+ *
+ * 该参数用于如下场景：
+   根据电网电流状态，计算负载电压（有效值）目标值的修正系数。
+ *
+ * 注意：该参数可能会被其他函数重新赋值。
  */
 SMconstantCurr ConstantCurr[3] =
 {
+ 	 /*A相参数*/
+	{
+	  VOLT_TARGET_CORR_DEFAULT,
+	  0.0f, //负载电压有效值的目标值的修正系数（范围：-0.6 ~ 0（由仿真器观测得出））。WY
+	  58.0f, //电网电流（有效值）过载值。WY
+	  13.0f, //该成员未使用。WY
+	  45.0f, //电网电流（有效值）额定值。WY
+	  82.0f, // 电网电流（瞬时值）额定值。WY
+	  0, //状态机状态（用于描述电网电流）。WY
+	  0, //前一次状态机状态。WY
+	  0 //计数器。目的：防止状态机频繁切换引发抖动。WY
+	},
+
+	/*B相参数*/
 	{
 	  VOLT_TARGET_CORR_DEFAULT,
 	  0.0f,
@@ -1265,18 +1037,7 @@ SMconstantCurr ConstantCurr[3] =
 	  0
 	},
 
-	{
-	  VOLT_TARGET_CORR_DEFAULT,
-	  0.0f,
-	  58.0f,
-	  13.0f,
-	  45.0f,
-	  82.0f,
-	  0,
-	  0,
-	  0
-	},
-
+	/*C相参数*/
 	{
 	  VOLT_TARGET_CORR_DEFAULT,
 	  0.0f,
@@ -1293,95 +1054,94 @@ SMconstantCurr ConstantCurr[3] =
 
 /*
  * 功能：根据电网电流状态，计算负载电压（有效值）目标值的修正系数。WY
+ * 说明：根据电网电流的大小划分3种状态，分别为：
+         1. 电网电流正常模式；
+         2. 电网电流恒定模式；
+         3. 电网电流突变模式。
  *
  * 输入参数SMconstantCurr：设备容量相关参数
- * 输入参数gridCur_rms：电网电流有效值
- * 输入参数GridCurrF：电网电流瞬时值
- * 输入参数CurrTargetValue：电网电流（有效值）目标值
+ * 输入参数gridCur_rms：电网电流（有效值）
+ * 输入参数GridCurrF：电网电流（瞬时值）
+ * 输入参数CurrTargetValue：不同环境温度下对应的电网电流（有效值）目标值
  *
- * 返回值：负载电压有效值的目标值的修正系数
+ * 返回值：负载电压（有效值）目标值的修正系数
  */
-float ConstantCurrFSM(SMconstantCurr *pst, float gridCur_rms, float GridCurrF, float CurrTargetValue)
+float ConstantCurrFSM(SMconstantCurr *pst, //设备容量相关参数。WY
+					  float gridCur_rms, //电网电流（有效值）。WY
+					  float GridCurrF, //电网电流（瞬时值）。WY
+					  float CurrTargetValue //不同环境温度下对应的电网电流（有效值）目标值。WY
+					  )
 {
-	/*状态机的跳转逻辑。WY*/
+	/*状态机跳转逻辑。WY*/
 	switch (pst->state)
 	{
-		 /*电网电流正常。WY*/
+		 /*电网电流正常模式。WY*/
 		case SM_CONSTANT_CURR_NORMAL:
 		{
 			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流（有效值 ）> 电网电流（有效值）过载值。WY
 					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流（瞬时值） > 电网电流（瞬时值）额定值上限。WY
 					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流（瞬时值） < 电网电流（瞬时值）额定值下限。WY
 			{
-				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流突变。WY
+				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流瞬时模式。WY
 			}
 			else
 			{
 				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值 ） > 电网电流（有效值）额定值。WY
 						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流（有效值） < 电网电流（有效值）过载值。WY
 				{
-					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定。WY
+					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定模式。WY
 				}
 				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值） < 电网电流（有效值）额定值。WY
 				{
-					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
-				}
-				else
-				{
+					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常模式。WY
 				}
 			}
 		}
 			break;
 
-		/*电网电流恒定。WY*/
+		/*电网电流恒定模式。WY*/
 		case SM_CONSTANT_CURR_CONSTANT:
 		{
 			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流（有效值 ）> 电网电流（有效值）过载值。WY
 					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流（瞬时值） > 电网电流（瞬时值）额定值上限。WY
 					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流（瞬时值） < 电网电流（瞬时值）额定值下限。WY
 			{
-				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流突变。WY
+				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流瞬时模式。WY
 			}
 			else
 			{
 				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值 ） > 电网电流（有效值）额定值。WY
 						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流（有效值） < 电网电流（有效值）过载值。WY
 				{
-					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定。WY
+					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定模式。WY
 				}
 				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值） < 电网电流（有效值）额定值。WY
 				{
-					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
-				}
-				else
-				{
+					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常模式。WY
 				}
 			}
 		}
 			break;
 
-		/*电网电流突变：WY*/
+		/*电网电流瞬时模式：WY*/
 		case SM_CONSTANT_CURR_INS:
 		{
-			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流有效值 > 电网电流有效值的过载值。WY
-					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流瞬时值 > 电网电流瞬时值上限。WY
-					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流瞬时值 < 电网电流瞬时值下限。WY
+			if ((gridCur_rms >= pst->RMS_CONSTANT_CURRENT_OVERLOAD) //电网电流（有效值） > 电网电流（有效值）过载值。WY
+					|| (GridCurrF > pst->INS_CONSTANT_CURRENT_RATED) //电网电流（瞬时值） > 电网电流（瞬时值）上限。WY
+					|| (GridCurrF < -pst->INS_CONSTANT_CURRENT_RATED)) //电网电流（瞬时值） < 电网电流（瞬时值）下限。WY
 			{
-				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流突变。WY
+				pst->state = SM_CONSTANT_CURR_INS; //切换状态机至：电网电流瞬时模式。WY
 			}
 			else
 			{
-				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流有效值 > 电网电流有效值的额定值。WY
-						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流有效值 < 电网电流有效值的过载值。WY
+				if ((gridCur_rms > pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值 > 电网电流（有效值）额定值。WY
+						&& (gridCur_rms < pst->RMS_CONSTANT_CURRENT_OVERLOAD)) //电网电流（有效值 ）< 电网电流（有效值）过载值。WY
 				{
-					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定。WY
+					pst->state = SM_CONSTANT_CURR_CONSTANT; //切换状态机至：电网电流恒定模式。WY
 				}
-				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流有效值 < 电网电流有效值的额定值。WY
+				else if (gridCur_rms <= pst->RMS_CONSTANT_CURRENT_RATED) //电网电流（有效值） < 电网电流（有效值）额定值。WY
 				{
-					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常。WY
-				}
-				else
-				{
+					pst->state = SM_CONSTANT_CURR_NORMAL; //切换状态机至：电网电流正常模式。WY
 				}
 			}
 		}
@@ -1399,54 +1159,56 @@ float ConstantCurrFSM(SMconstantCurr *pst, float gridCur_rms, float GridCurrF, f
 	/*状态机的行为。WY*/
 	switch (pst->state)
 	{
-		/*电网电流正常。WY*/
+		/*电网电流正常模式。WY*/
 		case SM_CONSTANT_CURR_NORMAL:
 		{
 			if (pst->VolttargetCorr < 0)
 			{
-				pst->VolttargetCorr += 0.00005; //递增负载电压目标值修正系数。WY
+				pst->VolttargetCorr += 0.00005; //递增负载电压（有效值）目标值修正系数。WY
 			}
 
-			if (pst->Prvstate == SM_CONSTANT_CURR_CONSTANT) //上一次状态机事件为：电网电流恒定。WY
+			/*这段代码疑似无实际作用。WY*/
 			{
-				pst->CNT1 = 10000; //赋值周期计数器，防止抖动。WY
+			if (pst->Prvstate == SM_CONSTANT_CURR_CONSTANT) //上一次状态机事件为：电网电流恒定模式。WY
+			{
+				pst->CNT1 = 10000; //赋值周期计数器，防止抖动？该语句疑似无实际作用。WYWY
 			}
-
 			if (pst->CNT1 >= 0)
 			{
 				if (--pst->CNT1 == 0)
 				{
-					pst->CorrPI.i10 = 0;
+					pst->CorrPI.i10 = 0; //该语句疑似无实际作用。WY
 				}
 			}
+			}
 
 			pst->Prvstate = pst->state; //记录状态机状态。WY
 		}
-			break;
+		break;
 
-		/*电网电流恒定。WY*/
+		/*电网电流恒定模式。WY*/
 		case SM_CONSTANT_CURR_CONSTANT:
 		{
-			if (pst->Prvstate == SM_CONSTANT_CURR_INS) //上一次状态机事件为：电网电流突变。WY
+			if (pst->Prvstate == SM_CONSTANT_CURR_INS) //上一次状态机事件为：电网电流瞬时模式。WY
 			{
 				pst->CorrPI.i10 = pst->VolttargetCorr;
 			}
 
-			if (pst->Prvstate == SM_CONSTANT_CURR_NORMAL) //上一次状态机事件为：电网电流正常。WY
+			if (pst->Prvstate == SM_CONSTANT_CURR_NORMAL) //上一次状态机事件为：电网电流正常模式。WY
 			{
 				pst->CorrPI.i10 = pst->VolttargetCorr;
 			}
 
-			pst->VolttargetCorr = DCL_runPI(&(pst->CorrPI), CurrTargetValue, gridCur_rms); //计算负载电压（有效值）目标值的修正系数。参数不对？？？。WY
+			pst->VolttargetCorr = DCL_runPI(&(pst->CorrPI), CurrTargetValue, gridCur_rms); //计算负载电压（有效值）目标值的修正系数。WY
 
 			pst->Prvstate = pst->state; //记录状态机状态。WY
 		}
 			break;
 
-		/*电网电流突变*/
+		/*电网电流瞬时模式*/
 		case SM_CONSTANT_CURR_INS:
 		{
-			pst->VolttargetCorr = -0.5; //不升压。范围？
+			pst->VolttargetCorr = -0.5; //不升压。
 
 			pst->Prvstate = pst->state; //记录状态机状态。WY
 		}
@@ -1461,7 +1223,7 @@ float ConstantCurrFSM(SMconstantCurr *pst, float gridCur_rms, float GridCurrF, f
 		}
 	}
 
-	return pst->VolttargetCorr;
+	return pst->VolttargetCorr; //返回负载电压（有效值）目标值的修正系数。WY
 }
 
 
@@ -1476,8 +1238,7 @@ inline void GenModulation(void)
 	T1PR_INT16 = (int) T1PR; //该变量未使用。WY
 
 #if ESC_THREEPHASE
-	if (((StateFlag.VoltageMode == 3) //不平衡模式。WY
-			|| (StateFlag.VoltageMode == 0)) //升压模式。WY
+	if ((StateFlag.VoltageMode == 3) //不平衡模式。WY
 			&& (StateEventFlag_A == STATE_EVENT_RUN_A) //A相处于运行状态。WY
 			&& (ESCFlagA.PWM_ins_index == 0) //A相主路处于PWM调制状态。WY
 			&& (StateEventFlag_B == STATE_EVENT_RUN_B) //B相处于运行状态。WY
@@ -1867,7 +1628,7 @@ inline void GenModulation(void)
 }
 
 /*
- * ADCD-1的中断服务函数。WY
+ * ADC-D-1的中断服务函数。WY
  * 说明：中断频率20K，中断周期50us。
  */
 void ADCD1INT(void)
@@ -1876,7 +1637,7 @@ void ADCD1INT(void)
 	VoltSlidPosCnt(); //构造正弦波。WY
 	GenModulation(); //PWM调制。WY
 	ADPosCnt(); //产生节拍。WY
-	GetVolAndInvCurr(); //校正零偏。WY
+	GetVolAndInvCurr(); //计算电压和电流。WY
 
 	switch (T1PRPwmFrequency)
 	{
@@ -1961,8 +1722,9 @@ void RMSswi(void)
 {
     FaultDetectInInt();             //0.61us
     FaultRecordSel();
-    if(StateFlag.onceTimeAdcAutoAdjust){    //上电后自动运行一次
-      AdRegeditOffset();
+    if (StateFlag.onceTimeAdcAutoAdjust)
+    {    //上电后自动运行一次
+        AdRegeditOffset();
     }
 }
 

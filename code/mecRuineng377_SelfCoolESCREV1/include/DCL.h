@@ -217,6 +217,9 @@ extern float RunPIRE(PIcalc *p, float rk, float yk);
 
 /*
  * PI控制器参数。WY
+ *
+ * 用于如下场景：
+   根据电网电流状态，计算负载电压（有效值）目标值的修正系数
  */
 #define VOLT_TARGET_CORR_DEFAULT        { 0.003f, 0.0001f, 0, 1.0f, 0.6f,1}
 
@@ -594,37 +597,35 @@ extern PIcalc FFTPICtrl[2][CALIBRATION_COEFF_LEN];
 extern PIcalc GridCurrPICtrlA,GridCurrPICtrlB,GridCurrPICtrlC;
 extern PIcalc VolttargetCorrPIA,VolttargetCorrPIB,VolttargetCorrPIC;
 
+/*
+ * 用于如下场景：
+   根据电网电流状态，计算负载电压（有效值）目标值的修正系数
+ */
 typedef volatile struct {
     PIcalc CorrPI; //PI控制器相关参数。WY
     float VolttargetCorr; //负载电压有效值的目标值的修正系数（范围：-0.5 ~ 0）。WY
-    float RMS_CONSTANT_CURRENT_OVERLOAD; //电网电流有效值的过载值。WY
+    float RMS_CONSTANT_CURRENT_OVERLOAD; //电网电流（有效值）过载值。WY
     float RMS_CONSTANT_CURRENT_DIFF; //该成员未使用。WY
-    float RMS_CONSTANT_CURRENT_RATED; //电网电流有效值的额定值。WY
-    float INS_CONSTANT_CURRENT_RATED; // 电网电流瞬时值的额定值。WY
+    float RMS_CONSTANT_CURRENT_RATED; //电网电流（有效值）额定值。WY
+    float INS_CONSTANT_CURRENT_RATED; // 电网电流（瞬时值）额定值。WY
     int state; //状态机状态（用于描述电网电流）。WY
-    int Prvstate; //前一次电网电流状态。WY
+    int Prvstate; //前一次状态机状态。WY
     int CNT1; //计数器。目的：防止状态机频繁切换引发抖动。WY
 }SMconstantCurr;
 
 extern SMconstantCurr ConstantCurr[3];
 extern const SMconstantCurr ConstantCurrDefault[3];
 
-/*状态机事件：电网电流突变。WY*/
+/*状态机事件：电网电流瞬时模式。WY*/
 #define SM_CONSTANT_CURR_INS 3
 
-/*
- * 状态机事件：电网电流恒定。WY
- * 说明：要使得状态机进入【电网电流恒定】模式，需满足下列条件：
-    1. 电网电力有效值 > 电网电流有效值的额定值；
-    2. 电网电流有效值 < 电网电流有效值的过载值。
- * 在【电网电流恒定】模式下，不再以负载电压目标值为调节对象。
- */
+/*状态机事件：电网电流恒定模式。WY*/
 #define SM_CONSTANT_CURR_CONSTANT 2
 
-/*状态机事件：电网电流正常。WY*/
+/*状态机事件：电网电流正常模式。WY*/
 #define SM_CONSTANT_CURR_NORMAL 1
 
-/*状态机事件：电网电流初始。WY*/
+/*状态机事件：电网电流初始模式。WY*/
 #define SM_CONSTANT_CURR_STANDBY 0
 
 #if PR_CTRL==1

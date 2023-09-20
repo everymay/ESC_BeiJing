@@ -61,9 +61,23 @@ PIcalc OutInvUVCurrRMS = PI_Vol_UV;
 
 /*
  * A相：PI控制器参数。WY
+ *
+ * 用于计算PWM占空比
  */
 PIcalc PIVolA = PI_Vol;
+
+/*
+ * B相：PI控制器参数。WY
+ *
+ * 用于计算PWM占空比
+ */
 PIcalc PIVolB = PI_Vol;
+
+/*
+ * C相：PI控制器参数。WY
+ *
+ * 用于计算PWM占空比
+ */
 PIcalc PIVolC = PI_Vol;
 
 PIcalc PIFanCtl = PI_Vol;
@@ -107,16 +121,16 @@ void InitCtrlParam(int mode)
 	ConstantCurr[0].CorrPI.Umin = -(DC_ERR_LIMIT * 0.1);
 
 	/*B相PI控制器参数。WY*/
-	ConstantCurr[1].CorrPI.Kp = kp_Dc_Div*0.0001;
+	ConstantCurr[1].CorrPI.Kp = kp_Dc_Div * 0.0001;
 	ConstantCurr[1].CorrPI.Ki = ki_Dc_Div;
 	ConstantCurr[1].CorrPI.Umax = 0;
-	ConstantCurr[1].CorrPI.Umin = -(DC_ERR_LIMIT*0.1);
+	ConstantCurr[1].CorrPI.Umin = -(DC_ERR_LIMIT * 0.1);
 
 	/*C相PI控制器参数。WY*/
-	ConstantCurr[2].CorrPI.Kp = kp_Dc_Div*0.0001;
+	ConstantCurr[2].CorrPI.Kp = kp_Dc_Div * 0.0001;
 	ConstantCurr[2].CorrPI.Ki = ki_Dc_Div;
 	ConstantCurr[2].CorrPI.Umax = 0;
-	ConstantCurr[2].CorrPI.Umin = -(DC_ERR_LIMIT*0.1);
+	ConstantCurr[2].CorrPI.Umin = -(DC_ERR_LIMIT * 0.1);
 
 	UdcPIBalance.Kp = kp_Dc_Div;
 	UdcPIBalance.Ki = ki_Dc_Div;
@@ -273,101 +287,102 @@ void HarmnoicCorrection(void)        //补谐波
 
 #define COMMU_MAX_UNIT_NUM 8	//8个单元
 
+/*
+ * 功能：刷新用户设置参数。WY
+ */
 void UserPreferencesRefresh(void)
 {
-
-	TargetCurrentUnbalance 	= SETUP_RATIO_CHANGE(UserSetting.TargetCurrentUnbalance,		UserParamRatio.TargetCurrentUnbalance);//0x51
-	transfRatioVirtu	= SETUP_RATIO_CHANGE(UserSetting.transfRatio,			UserParamRatio.transfRatio);//0x5E
-	GV_RMS_UNDER 		= SETUP_RATIO_CHANGE(UserSetting.GV_RMS_UNDER,			UserParamRatio.GV_RMS_UNDER);
-	GV_RMS_OVER			= SETUP_RATIO_CHANGE(UserSetting.GV_RMS_OVER,			UserParamRatio.GV_RMS_OVER);
-	ConstantReactivePower   = SETUP_RATIO_CHANGE(UserSetting.ConstantReactivePower,			UserParamRatio.ConstantReactivePower);//0x59
-	Backdiffvalue		= SETUP_RATIO_CHANGE(UserSetting.Backdiffvalue,	    UserParamRatio.Backdiffvalue);//0x5A
-	TransformRatioVal	= SETUP_RATIO_CHANGE(UserSetting.TransformRatioParall,	UserParamRatio.TransformRatioParall);
-	ESCFlagA.Volttarget = VolttargetA = SETUP_RATIO_CHANGE(UserSetting.VolttargetA,				UserParamRatio.VolttargetA);//0x52
-	ESCFlagB.Volttarget = VolttargetB = SETUP_RATIO_CHANGE(UserSetting.VolttargetB,				UserParamRatio.VolttargetB);//0x53
-	ESCFlagC.Volttarget = VolttargetC = SETUP_RATIO_CHANGE(UserSetting.VolttargetC,			    UserParamRatio.VolttargetC);//0x54
-	ESCFlagA.VoltThreShold = VoltThreSholdA = SETUP_RATIO_CHANGE(UserSetting.VoltThreSholdA,			UserParamRatio.VoltThreSholdA);//0x55
-	ESCFlagB.VoltThreShold = VoltThreSholdB = SETUP_RATIO_CHANGE(UserSetting.VoltThreSholdB,            UserParamRatio.VoltThreSholdB);
-	ESCFlagC.VoltThreShold = VoltThreSholdC = SETUP_RATIO_CHANGE(UserSetting.VoltThreSholdC,            UserParamRatio.VoltThreSholdC);
-	AutoWaitCurr		= SETUP_RATIO_CHANGE(UserSetting.AutoWaitCurr,			UserParamRatio.AutoWaitCurr);
-	Mode_PP				= SETUP_RATIO_CHANGE(UserSetting.Mode_PP,				UserParamRatio.Mode_PP);
+	TargetCurrentUnbalance = SETUP_RATIO_CHANGE(UserSetting.TargetCurrentUnbalance, UserParamRatio.TargetCurrentUnbalance);      //0x51
+	transfRatioVirtu = SETUP_RATIO_CHANGE(UserSetting.transfRatio, UserParamRatio.transfRatio);//0x5E
+	GV_RMS_UNDER = SETUP_RATIO_CHANGE(UserSetting.GV_RMS_UNDER, UserParamRatio.GV_RMS_UNDER);
+	GV_RMS_OVER = SETUP_RATIO_CHANGE(UserSetting.GV_RMS_OVER, UserParamRatio.GV_RMS_OVER);
+	ConstantReactivePower = SETUP_RATIO_CHANGE(UserSetting.ConstantReactivePower, UserParamRatio.ConstantReactivePower);//0x59
+	Backdiffvalue = SETUP_RATIO_CHANGE(UserSetting.Backdiffvalue, UserParamRatio.Backdiffvalue);//0x5A
+	TransformRatioVal = SETUP_RATIO_CHANGE(UserSetting.TransformRatioParall, UserParamRatio.TransformRatioParall);
+	ESCFlagA.Volttarget = VolttargetA = SETUP_RATIO_CHANGE(UserSetting.VolttargetA, UserParamRatio.VolttargetA);//0x52
+	ESCFlagB.Volttarget = VolttargetB = SETUP_RATIO_CHANGE(UserSetting.VolttargetB, UserParamRatio.VolttargetB);//0x53
+	ESCFlagC.Volttarget = VolttargetC = SETUP_RATIO_CHANGE(UserSetting.VolttargetC, UserParamRatio.VolttargetC);//0x54
+	ESCFlagA.VoltThreShold = VoltThreSholdA = SETUP_RATIO_CHANGE(UserSetting.VoltThreSholdA, UserParamRatio.VoltThreSholdA);//0x55
+	ESCFlagB.VoltThreShold = VoltThreSholdB = SETUP_RATIO_CHANGE(UserSetting.VoltThreSholdB, UserParamRatio.VoltThreSholdB);
+	ESCFlagC.VoltThreShold = VoltThreSholdC = SETUP_RATIO_CHANGE(UserSetting.VoltThreSholdC, UserParamRatio.VoltThreSholdC);
+	AutoWaitCurr = SETUP_RATIO_CHANGE(UserSetting.AutoWaitCurr, UserParamRatio.AutoWaitCurr);
+	Mode_PP = SETUP_RATIO_CHANGE(UserSetting.Mode_PP, UserParamRatio.Mode_PP);
 	ESCFlagA.Backdiffvalue = ESCFlagB.Backdiffvalue = ESCFlagC.Backdiffvalue = Backdiffvalue;
-    if(GV_RMS_UNDER>50)
-        GV_RMS_UNDER_PowerOnForRecharge = GV_RMS_UNDER;
-    else
-        GV_RMS_UNDER_PowerOnForRecharge = 50;       //防止界面误下发0,导致没有电网电压也能启动,绕过了预充电过程
+	if(GV_RMS_UNDER>50)
+	GV_RMS_UNDER_PowerOnForRecharge = GV_RMS_UNDER;
+	else
+	GV_RMS_UNDER_PowerOnForRecharge = 50;//防止界面误下发0,导致没有电网电压也能启动,绕过了预充电过程
 
-	StateFlag.apfWiringmethod 		= UserSetting.WordMode.B.apfWiringmethod;
+	StateFlag.apfWiringmethod = UserSetting.WordMode.B.apfWiringmethod;
 
-	StateFlag.startingMethod 		= UserSetting.WordMode.B.startingMethod;
-    ESCFlagA.ESCCntMs.StartDelay = 0;
-    ESCFlagB.ESCCntMs.StartDelay = 0;
-    ESCFlagC.ESCCntMs.StartDelay = 0;
-	StateFlag.positionCT 			= UserSetting.WordMode.B.positionCT;
-	StateFlag.harmCompEn 			= UserSetting.WordMode.B.harmCompEn;
-	StateFlag.negCurCompFlag 		= UserSetting.WordMode.B.negCurCompFlag;
-	StateFlag.AVCPrCompFlag 		= UserSetting.WordMode.B.AVCMode;
-	StateFlag.constantQFlag 		= UserSetting.WordMode.B.constantQFlag;
-	StateFlag.prioritizedModeFlag 	= UserSetting.WordMode.B.prioritizedModeFlag;
+	StateFlag.startingMethod = UserSetting.WordMode.B.startingMethod;
+	ESCFlagA.ESCCntMs.StartDelay = 0;
+	ESCFlagB.ESCCntMs.StartDelay = 0;
+	ESCFlagC.ESCCntMs.StartDelay = 0;
+	StateFlag.positionCT = UserSetting.WordMode.B.positionCT;
+	StateFlag.harmCompEn = UserSetting.WordMode.B.harmCompEn;
+	StateFlag.negCurCompFlag = UserSetting.WordMode.B.negCurCompFlag;
+	StateFlag.AVCPrCompFlag = UserSetting.WordMode.B.AVCMode;
+	StateFlag.constantQFlag = UserSetting.WordMode.B.constantQFlag;
+	StateFlag.prioritizedModeFlag = UserSetting.WordMode.B.prioritizedModeFlag;
 
-	StateFlag.VoltageMode           = UserSetting.WordMode.B.VoltageMode;
-//	StateFlag.modeChoosedFlag       = StateFlag.VoltageMode;
+	StateFlag.VoltageMode = UserSetting.WordMode.B.VoltageMode;
 
-	transfRatio						= transfRatioVirtu+VirtulAD.CTOutCurDevcoef;
-    switch(StateFlag.VoltageMode){
-    case 0:
-        StateFlag.VoltageModeFlag = 0;   //升压
-        ArithFlagA = 0;
-        ArithFlagB = 0;
-        ArithFlagC = 0;
-        break;
-    case 1:
-        StateFlag.VoltageModeFlag = 1;   //降压
-        ArithFlagA = 0;
-        ArithFlagB = 0;
-        ArithFlagC = 0;
-        break;
-    case 2: //暂不支持升降压模式.升压模式替代
-        StateFlag.VoltageModeFlag = 0;   //升压
-        ArithFlagA = 0;
-        ArithFlagB = 0;
-        ArithFlagC = 0;
-        break;
-    case 3:
-        StateFlag.VoltageModeFlag = 0;   //升压
-        ArithFlagA = 0;
-        ArithFlagB = 0;
-        ArithFlagC = 0;
-        break;
-    case 4:
-        StateFlag.VoltageModeFlag = 0;   //升压
-        ArithFlagA = 0;
-        ArithFlagB = 0;
-        ArithFlagC = 0;
-        break;
-    }
+	transfRatio = transfRatioVirtu+VirtulAD.CTOutCurDevcoef;
+	switch(StateFlag.VoltageMode)
+	{
+		case 0:
+		StateFlag.VoltageModeFlag = 0;      //升压
+		ArithFlagA = 0;
+		ArithFlagB = 0;
+		ArithFlagC = 0;
+		break;
+		case 1:
+		StateFlag.VoltageModeFlag = 1;//降压
+		ArithFlagA = 0;
+		ArithFlagB = 0;
+		ArithFlagC = 0;
+		break;
+		case 2://暂不支持升降压模式.升压模式替代
+		StateFlag.VoltageModeFlag = 0;//升压
+		ArithFlagA = 0;
+		ArithFlagB = 0;
+		ArithFlagC = 0;
+		break;
+		case 3:
+		StateFlag.VoltageModeFlag = 0;//升压
+		ArithFlagA = 0;
+		ArithFlagB = 0;
+		ArithFlagC = 0;
+		break;
+		case 4:
+		StateFlag.VoltageModeFlag = 0;//升压
+		ArithFlagA = 0;
+		ArithFlagB = 0;
+		ArithFlagC = 0;
+		break;
+	}
 
-    if(StateFlag.VoltageModeFlag == 0){          //升压
-        ESCFlagA.StableValue = ESCFlagA.VoltThreShold + ESCFlagA.Backdiffvalue;         //稳定值A=门限值+回差值;
-        ESCFlagB.StableValue = ESCFlagB.VoltThreShold + ESCFlagB.Backdiffvalue;         //稳定值B=门限值+回差值;
-        ESCFlagC.StableValue = ESCFlagC.VoltThreShold + ESCFlagC.Backdiffvalue;         //稳定值C=门限值+回差值;
-    }else if(StateFlag.VoltageModeFlag == 1){     //降压
-        ESCFlagA.StableValue = ESCFlagA.VoltThreShold - ESCFlagA.Backdiffvalue;         //稳定值A=门限值+回差值;
-        ESCFlagB.StableValue = ESCFlagB.VoltThreShold - ESCFlagB.Backdiffvalue;         //稳定值B=门限值+回差值;
-        ESCFlagC.StableValue = ESCFlagC.VoltThreShold - ESCFlagC.Backdiffvalue;         //稳定值C=门限值+回差值;
-    }
+	if(StateFlag.VoltageModeFlag == 0)
+	{      //升压
+		ESCFlagA.StableValue = ESCFlagA.VoltThreShold + ESCFlagA.Backdiffvalue;//稳定值A=门限值+回差值;
+		ESCFlagB.StableValue = ESCFlagB.VoltThreShold + ESCFlagB.Backdiffvalue;//稳定值B=门限值+回差值;
+		ESCFlagC.StableValue = ESCFlagC.VoltThreShold + ESCFlagC.Backdiffvalue;//稳定值C=门限值+回差值;
+	}
+	else if(StateFlag.VoltageModeFlag == 1)
+	{      //降压
+		ESCFlagA.StableValue = ESCFlagA.VoltThreShold - ESCFlagA.Backdiffvalue;//稳定值A=门限值+回差值;
+		ESCFlagB.StableValue = ESCFlagB.VoltThreShold - ESCFlagB.Backdiffvalue;//稳定值B=门限值+回差值;
+		ESCFlagC.StableValue = ESCFlagC.VoltThreShold - ESCFlagC.Backdiffvalue;//稳定值C=门限值+回差值;
+	}
 
 }
+
+/*该函数未定义。WY*/
 void AddrConfigIOPort(void)    //地址配置输入输出端口
 {
-//    Uint16 IdPress=0;
-//    if((StateEventFlag!=STATE_EVENT_RUN)&&(StateEventFlag!=STATE_EVENT_WAIT)){
-//        IdPress  = !IDInputIoBit0<<0;
-//        IdPress |= !IDInputIoBit1<<1;
-//        IdPress |= !IDInputIoBit2<<2;
-//        MuFaciID.APF_ID = IdPress & 0x07;
-//    }
 }
+
 void IDParametersRefresh(void)
 {
     AddrConfigIOPort();
@@ -394,271 +409,351 @@ void IDParametersRefresh(void)
 }
 
 float VolKp,VolKi;
+
+/*
+ * 功能：刷新厂家设置参数。WY
+ */
 void ManufacturerParametersRefresh(void)
 {
-	struct Stru_FactorySet 			*pOrg= &FactorySet;
-	struct Stru_FactorySet 			*pRat= &FactorySetupRatio;
+	struct Stru_FactorySet *pOrg = &FactorySet; //厂家设置参数。WY
+	struct Stru_FactorySet *pRat = &FactorySetupRatio; //厂家设置参数的倍率。WY
 
-	Uint16 sPWM,isharmcompensatemode,t1prtmp;//VoltLevel,FaultRecord,standbymode;
-	float wholeOutCurRmsLimit,UbanCurPer;//neutralCurLimit;
-//	float VolKp,VolKi;
-	PhaseControl	        = SETUP_RATIO_CHANGE(pOrg->PhaseControl			,pRat->PhaseControl);    //ESC中相位控制作用.
-	LoadCurlimit            = SETUP_RATIO_CHANGE(pOrg->LoadCurlimit         ,pRat->LoadCurlimit);    //ESC中负载电流控制作用.
-	SyncHardwareLead		= SETUP_RATIO_CHANGE(pOrg->SyncHardwareLead		,pRat->SyncHardwareLead);
-	SampleLead				= SETUP_RATIO_CHANGE(pOrg->SampleLead			,pRat->SampleLead);
-	t1prtmp					= SETUP_RATIO_CHANGE(pOrg->T1PR					,pRat->T1PR);
-	Curr_MinCtrlFAN         = SETUP_RATIO_CHANGE(pOrg->Curr_MinCtrlFAN      ,pRat->Curr_MinCtrlFAN); //最小负载控制风机启动
-	Curr_MaxCtrlFAN         = SETUP_RATIO_CHANGE(pOrg->Curr_MaxCtrlFAN      ,pRat->Curr_MaxCtrlFAN); //最大负载控制风机全速
-	Temp_MinCtrlFAN         = SETUP_RATIO_CHANGE(pOrg->Temp_MinCtrlFAN      ,pRat->Temp_MinCtrlFAN); //最小温度控制风机启动
-	Temp_MaxCtrlFAN         = SETUP_RATIO_CHANGE(pOrg->Temp_MaxCtrlFAN      ,pRat->Temp_MaxCtrlFAN); //最大温度控制风机全速
-	FanStartMinDUTY         = SETUP_RATIO_CHANGE(pOrg->FanStartMinDUTY      ,pRat->FanStartMinDUTY); //风机启动最小占空比
-	RateLoadCurrLimit       = SETUP_RATIO_CHANGE(pOrg->RateLoadCurrLimit    ,pRat->RateLoadCurrLimit);//额定负载限流
-	CapacitySelection       = SETUP_RATIO_CHANGE(pOrg->CapacitySelection    ,pRat->CapacitySelection);//容量选择(选择相应的容量(30kva/50kva/75kva)进行限流算法)
-	DcCapVoltRatioVirtu		= SETUP_RATIO_CHANGE(pOrg->dcCapVoltRatio 		,pRat->dcCapVoltRatio);  //ESC--直流吸收电容电压系数
-	loadVoltRatioVirtu		= SETUP_RATIO_CHANGE(pOrg->loadVoltRatio		,pRat->loadVoltRatio);   //ESC--负载电压采样系数
-	gridVoltRatioVirtu		= SETUP_RATIO_CHANGE(pOrg->gridVoltRatio		,pRat->gridVoltRatio);   //ESC--电网电压系数
-	outputCurRatioVirtu		= SETUP_RATIO_CHANGE(pOrg->outputCurRatio		,pRat->outputCurRatio);  //ESC--输出电流采样系数
-	sPWM					= SETUP_RATIO_CHANGE(pOrg->SPWM					,pRat->SPWM);
-	FaultRecSel.RecordMode	= SETUP_RATIO_CHANGE(pOrg->RecordMode			,pRat->RecordMode);
-	isharmcompensatemode	= SETUP_RATIO_CHANGE(pOrg->isHarmCompensateMode	,pRat->isHarmCompensateMode);
-	bypassCurrRatioVirtu	= SETUP_RATIO_CHANGE(pOrg->bypassCurrRatio		,pRat->bypassCurrRatio); //ESC--旁路电流系数
-//	CLATestValue = dcBusVoltGiven;//使用CLA算法中,一个系数K
-	DC_ERR_LIMIT			= SETUP_RATIO_CHANGE(pOrg->DC_ERR_LIMIT			,pRat->DC_ERR_LIMIT);  // ESC新加恒流模式下电流做PI闭环的下限
-	PIlim_Udc				= SETUP_RATIO_CHANGE(pOrg->PIlim_Udc			,pRat->PIlim_Udc);  //ESC电科院做验证无功补偿模式下PI限值
-	PIlim_I					= SETUP_RATIO_CHANGE(pOrg->PIlim_I				,pRat->PIlim_I);
-	SPLL[0].PLLPICtrl.Umax	= SPLL[1].PLLPICtrl.Umax  = SPLL[2].PLLPICtrl.Umax    \
-	                        = SETUP_RATIO_CHANGE(pOrg->phaseErrLimit        ,pRat->phaseErrLimit);
-	SPLL[0].PLLPICtrl.Kp = SPLL[1].PLLPICtrl.Kp	= SPLL[2].PLLPICtrl.Kp            \
-	                        = SETUP_RATIO_CHANGE(pOrg->kp_Pll				,pRat->kp_Pll);
-	SPLL[0].PLLPICtrl.Ki = SPLL[1].PLLPICtrl.Ki = SPLL[2].PLLPICtrl.Ki	          \
-	                        = SETUP_RATIO_CHANGE(pOrg->ki_Pll				,pRat->ki_Pll);
-	kp_Dc_Div				= SETUP_RATIO_CHANGE(pOrg->kp_Dc_Div			,pRat->kp_Dc_Div);  //ESC新加恒流模式下电流做PI闭环的P系数
-	ki_Dc_Div				= SETUP_RATIO_CHANGE(pOrg->ki_Dc_Div			,pRat->ki_Dc_Div);  //ESC新加恒流模式下电流做PI闭环的i系数
-	kp_Dc					= SETUP_RATIO_CHANGE(pOrg->kp_Dc				,pRat->kp_Dc);  //ESC电科院做验证无功补偿模式下P系数
-	ki_Dc					= SETUP_RATIO_CHANGE(pOrg->ki_Dc				,pRat->ki_Dc);  //ESC电科院做验证无功补偿模式下i系数
-	kp_Cur					= SETUP_RATIO_CHANGE(pOrg->kp_Cur				,pRat->kp_Cur);
-	ki_Cur					= (float)pOrg->ki_Cur*RATIO_DNLOAD1000000;
-	GF_OVER					= SETUP_RATIO_CHANGE(pOrg->GF_OVER				,pRat->GF_OVER);
-	GF_UNDER				= SETUP_RATIO_CHANGE(pOrg->GF_UNDER				,pRat->GF_UNDER);
-	ESCDCVOLITLIMIT		    = SETUP_RATIO_CHANGE(pOrg->ESCDCVOLITLIMIT		,pRat->ESCDCVOLITLIMIT);   //ESC吸收回路直流电容电压限值
-	VoltFallResponseLimit	= SETUP_RATIO_CHANGE(pOrg->VoltFallResponseLimit,pRat->VoltFallResponseLimit);
-	ArithVAL = VoltFallResponseLimit;     //ESC电压跌落快速响应限制值
+	Uint16 sPWM, isharmcompensatemode, t1prtmp;
+	float wholeOutCurRmsLimit, UbanCurPer;
+
+	PhaseControl = SETUP_RATIO_CHANGE(pOrg->PhaseControl, pRat->PhaseControl); //ESC中相位控制作用.
+	LoadCurlimit = SETUP_RATIO_CHANGE(pOrg->LoadCurlimit, pRat->LoadCurlimit); //ESC中负载电流控制作用.
+	SyncHardwareLead = SETUP_RATIO_CHANGE(pOrg->SyncHardwareLead, pRat->SyncHardwareLead);
+	SampleLead = SETUP_RATIO_CHANGE(pOrg->SampleLead, pRat->SampleLead);
+	t1prtmp = SETUP_RATIO_CHANGE(pOrg->T1PR, pRat->T1PR);
+	Curr_MinCtrlFAN = SETUP_RATIO_CHANGE(pOrg->Curr_MinCtrlFAN, pRat->Curr_MinCtrlFAN); //最小负载控制风机启动
+	Curr_MaxCtrlFAN = SETUP_RATIO_CHANGE(pOrg->Curr_MaxCtrlFAN, pRat->Curr_MaxCtrlFAN); //最大负载控制风机全速
+	Temp_MinCtrlFAN = SETUP_RATIO_CHANGE(pOrg->Temp_MinCtrlFAN, pRat->Temp_MinCtrlFAN); //最小温度控制风机启动
+	Temp_MaxCtrlFAN = SETUP_RATIO_CHANGE(pOrg->Temp_MaxCtrlFAN, pRat->Temp_MaxCtrlFAN); //最大温度控制风机全速
+	FanStartMinDUTY = SETUP_RATIO_CHANGE(pOrg->FanStartMinDUTY, pRat->FanStartMinDUTY); //风机启动最小占空比
+	RateLoadCurrLimit = SETUP_RATIO_CHANGE(pOrg->RateLoadCurrLimit, pRat->RateLoadCurrLimit); //额定负载限流
+	CapacitySelection = SETUP_RATIO_CHANGE(pOrg->CapacitySelection, pRat->CapacitySelection); //容量选择(选择相应的容量(30kva/50kva/75kva)进行限流算法)
+	DcCapVoltRatioVirtu = SETUP_RATIO_CHANGE(pOrg->dcCapVoltRatio, pRat->dcCapVoltRatio); //ESC--直流吸收电容电压系数
+	loadVoltRatioVirtu = SETUP_RATIO_CHANGE(pOrg->loadVoltRatio, pRat->loadVoltRatio); //ESC--负载电压采样系数
+	gridVoltRatioVirtu = SETUP_RATIO_CHANGE(pOrg->gridVoltRatio, pRat->gridVoltRatio); //ESC--电网电压系数
+	outputCurRatioVirtu = SETUP_RATIO_CHANGE(pOrg->outputCurRatio, pRat->outputCurRatio); //ESC--输出电流采样系数
+	sPWM = SETUP_RATIO_CHANGE(pOrg->SPWM, pRat->SPWM);
+	FaultRecSel.RecordMode = SETUP_RATIO_CHANGE(pOrg->RecordMode, pRat->RecordMode);
+	isharmcompensatemode = SETUP_RATIO_CHANGE(pOrg->isHarmCompensateMode, pRat->isHarmCompensateMode);
+	bypassCurrRatioVirtu = SETUP_RATIO_CHANGE(pOrg->bypassCurrRatio, pRat->bypassCurrRatio); //ESC--旁路电流系数
+
+	DC_ERR_LIMIT = SETUP_RATIO_CHANGE(pOrg->DC_ERR_LIMIT, pRat->DC_ERR_LIMIT); // ESC新加恒流模式下电流做PI闭环的下限
+	PIlim_Udc = SETUP_RATIO_CHANGE(pOrg->PIlim_Udc, pRat->PIlim_Udc); //ESC电科院做验证无功补偿模式下PI限值
+	PIlim_I = SETUP_RATIO_CHANGE(pOrg->PIlim_I, pRat->PIlim_I);
+	SPLL[0].PLLPICtrl.Umax = SPLL[1].PLLPICtrl.Umax = SPLL[2].PLLPICtrl.Umax = SETUP_RATIO_CHANGE(pOrg->phaseErrLimit, pRat->phaseErrLimit);
+	SPLL[0].PLLPICtrl.Kp = SPLL[1].PLLPICtrl.Kp = SPLL[2].PLLPICtrl.Kp = SETUP_RATIO_CHANGE(pOrg->kp_Pll, pRat->kp_Pll);
+	SPLL[0].PLLPICtrl.Ki = SPLL[1].PLLPICtrl.Ki = SPLL[2].PLLPICtrl.Ki = SETUP_RATIO_CHANGE(pOrg->ki_Pll, pRat->ki_Pll);
+	kp_Dc_Div = SETUP_RATIO_CHANGE(pOrg->kp_Dc_Div, pRat->kp_Dc_Div); //ESC新加恒流模式下电流做PI闭环的P系数
+	ki_Dc_Div = SETUP_RATIO_CHANGE(pOrg->ki_Dc_Div, pRat->ki_Dc_Div); //ESC新加恒流模式下电流做PI闭环的i系数
+	kp_Dc = SETUP_RATIO_CHANGE(pOrg->kp_Dc, pRat->kp_Dc); //ESC电科院做验证无功补偿模式下P系数
+	ki_Dc = SETUP_RATIO_CHANGE(pOrg->ki_Dc, pRat->ki_Dc); //ESC电科院做验证无功补偿模式下i系数
+	kp_Cur = SETUP_RATIO_CHANGE(pOrg->kp_Cur, pRat->kp_Cur);
+	ki_Cur = (float) pOrg->ki_Cur * RATIO_DNLOAD1000000;
+	GF_OVER = SETUP_RATIO_CHANGE(pOrg->GF_OVER, pRat->GF_OVER);
+	GF_UNDER = SETUP_RATIO_CHANGE(pOrg->GF_UNDER, pRat->GF_UNDER);
+	ESCDCVOLITLIMIT = SETUP_RATIO_CHANGE(pOrg->ESCDCVOLITLIMIT, pRat->ESCDCVOLITLIMIT); //ESC吸收回路直流电容电压限值
+	VoltFallResponseLimit = SETUP_RATIO_CHANGE(pOrg->VoltFallResponseLimit, pRat->VoltFallResponseLimit);
+	ArithVAL = VoltFallResponseLimit; //ESC电压跌落快速响应限制值
 	ArithVal = -VoltFallResponseLimit;
-	OUTCUR_OVER_INS			= SETUP_RATIO_CHANGE(pOrg->OUTCUR_OVER_INS		,pRat->OUTCUR_OVER_INS);
-	OUTCUR_OVER_RMS			= SETUP_RATIO_CHANGE(pOrg->OUTCUR_OVER_RMS		,pRat->OUTCUR_OVER_RMS);
-	OUT_OVER_LOAD			= SETUP_RATIO_CHANGE(pOrg->OUT_OVER_LOAD		,pRat->OUT_OVER_LOAD);
-	OutCurMaxLimit			= SETUP_RATIO_CHANGE(pOrg->OutCurMaxLimit		,pRat->OutCurMaxLimit);
-	WindCold.UNIT_OVER_TEMP	= SETUP_RATIO_CHANGE(pOrg->UNIT_OVER_TEMP		,pRat->UNIT_OVER_TEMP);
+	OUTCUR_OVER_INS = SETUP_RATIO_CHANGE(pOrg->OUTCUR_OVER_INS, pRat->OUTCUR_OVER_INS);
+	OUTCUR_OVER_RMS = SETUP_RATIO_CHANGE(pOrg->OUTCUR_OVER_RMS, pRat->OUTCUR_OVER_RMS);
+	OUT_OVER_LOAD = SETUP_RATIO_CHANGE(pOrg->OUT_OVER_LOAD, pRat->OUT_OVER_LOAD);
+	OutCurMaxLimit = SETUP_RATIO_CHANGE(pOrg->OutCurMaxLimit, pRat->OutCurMaxLimit);
+	WindCold.UNIT_OVER_TEMP = SETUP_RATIO_CHANGE(pOrg->UNIT_OVER_TEMP, pRat->UNIT_OVER_TEMP);
 
-	reactPrCompPerc         = SETUP_RATIO_CHANGE(pOrg->reactPrCompPerc      ,pRat->reactPrCompPerc);//
-	harmCompPerc            = SETUP_RATIO_CHANGE(pOrg->harmCompPerc         ,pRat->harmCompPerc);   //
-	negCurCompPerc          = SETUP_RATIO_CHANGE(pOrg->negCurCompPerc       ,pRat->negCurCompPerc); //ESC中作用是测试IGBT的死区时间.
-	ESCTESTDATA1            = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA1         ,pRat->ESCTESTDATA1);
-	ESCTESTDATA2            = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA2         ,pRat->ESCTESTDATA2);
-	ESCTESTDATA3            = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA3         ,pRat->ESCTESTDATA3);
-	ESCTESTDATA4            = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA4         ,pRat->ESCTESTDATA4);
-	TempEnvirProvalue       = SETUP_RATIO_CHANGE(pOrg->TempEnvirProvalue    ,pRat->TempEnvirProvalue);
-	THD_K                   = SETUP_RATIO_CHANGE(pOrg->THD_K                ,pRat->THD_K);
-	THD_B                   = SETUP_RATIO_CHANGE(pOrg->THD_B                ,pRat->THD_B);
+	reactPrCompPerc = SETUP_RATIO_CHANGE(pOrg->reactPrCompPerc, pRat->reactPrCompPerc); //
+	harmCompPerc = SETUP_RATIO_CHANGE(pOrg->harmCompPerc, pRat->harmCompPerc); //
+	negCurCompPerc = SETUP_RATIO_CHANGE(pOrg->negCurCompPerc, pRat->negCurCompPerc); //ESC中作用是测试IGBT的死区时间.
+	ESCTESTDATA1 = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA1, pRat->ESCTESTDATA1);
+	ESCTESTDATA2 = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA2, pRat->ESCTESTDATA2);
+	ESCTESTDATA3 = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA3, pRat->ESCTESTDATA3);
+	ESCTESTDATA4 = SETUP_RATIO_CHANGE(pOrg->ESCTESTDATA4, pRat->ESCTESTDATA4);
+	TempEnvirProvalue = SETUP_RATIO_CHANGE(pOrg->TempEnvirProvalue, pRat->TempEnvirProvalue);
+	THD_K = SETUP_RATIO_CHANGE(pOrg->THD_K, pRat->THD_K);
+	THD_B = SETUP_RATIO_CHANGE(pOrg->THD_B, pRat->THD_B);
 
-	VolKp				    = SETUP_RATIO_CHANGE(pOrg->VoltProport			,pRat->VoltProport);//0xba
-	VolKi				    = SETUP_RATIO_CHANGE(pOrg->VoltIntegral			,pRat->VoltIntegral);//0xbb
-	VoltDerivative 			= SETUP_RATIO_CHANGE(pOrg->VoltDerivative		,pRat->VoltDerivative);//0xbc  //ESC中作用是PI限幅.
+	VolKp = SETUP_RATIO_CHANGE(pOrg->VoltProport, pRat->VoltProport); //0xba
+	VolKi = SETUP_RATIO_CHANGE(pOrg->VoltIntegral, pRat->VoltIntegral); //0xbb
+	VoltDerivative = SETUP_RATIO_CHANGE(pOrg->VoltDerivative, pRat->VoltDerivative); //0xbc  //ESC中作用是PI限幅.
 
-	VoltDQSource			= SETUP_RATIO_CHANGE(pOrg->VoltDQSource			,pRat->VoltDQSource);//0xbd//电网欠压延时时间
-	NegaQPowerCalib			= SETUP_RATIO_CHANGE(pOrg->NegaQPowerCalib		,pRat->NegaQPowerCalib);//0xbe
-	NegaDPowerCalib			= SETUP_RATIO_CHANGE(pOrg->NegaDPowerCalib		,pRat->NegaDPowerCalib);//0xbf
-	ReactivePowerCurrCalib  = SETUP_RATIO_CHANGE(pOrg->ReactivePowerCurrCalib	,pRat->ReactivePowerCurrCalib);//0xc0
-	ActivePowerCurrCalib	= SETUP_RATIO_CHANGE(pOrg->ActivePowerCurrCalib	,pRat->ActivePowerCurrCalib);//0xc1
-	TestMU_RATIO			= SETUP_RATIO_CHANGE(pOrg->TestMU_RATIO			,pRat->TestMU_RATIO);//0xc2
-	VoltLeadPoints			= SETUP_RATIO_CHANGE(pOrg->VoltLeadPoints		,pRat->VoltLeadPoints);//0xc3//电压校正延时系数//0-399
-	windColdCtr				= SETUP_RATIO_CHANGE(pOrg->windColdCtr			,pRat->windColdCtr);//0xc4
-	PllCalibrPhase			= D2R(pOrg->PllCalibrPhase);										//0xc5
-	debugDispFlag			= SETUP_RATIO_CHANGE(pOrg->debugDispFlag		,pRat->debugDispFlag);//0xc6
-	R_SSwitchTime           = SETUP_RATIO_CHANGE(pOrg->R_SSwitchTime        ,pRat->R_SSwitchTime); //      ESC--Running/standby switchover time 运行/待机切换时间
-	S_RSwitchTime			= SETUP_RATIO_CHANGE(pOrg->S_RSwitchTime		,pRat->S_RSwitchTime);//0xc8   ESC--待机/运行切换时间
-	wholeOutCurRmsLimit		= SETUP_RATIO_CHANGE(pOrg->WholeOutCurRmsLimit	,pRat->WholeOutCurRmsLimit);//0xc9
-	StandCosFiLimit         = SETUP_RATIO_CHANGE(pOrg->StandCosFiLimit      ,pRat->StandCosFiLimit);
-	UbanCurPer              = SETUP_RATIO_CHANGE(pOrg->StandUbanCurPer      ,pRat->StandUbanCurPer);
-	WindCold.BOARD_OVER_TEMP= SETUP_RATIO_CHANGE(pOrg->BOARD_OVER_TEMP		,pRat->BOARD_OVER_TEMP);
+	VoltDQSource = SETUP_RATIO_CHANGE(pOrg->VoltDQSource, pRat->VoltDQSource); //0xbd//电网欠压延时时间
+	NegaQPowerCalib = SETUP_RATIO_CHANGE(pOrg->NegaQPowerCalib, pRat->NegaQPowerCalib); //0xbe
+	NegaDPowerCalib = SETUP_RATIO_CHANGE(pOrg->NegaDPowerCalib, pRat->NegaDPowerCalib); //0xbf
+	ReactivePowerCurrCalib = SETUP_RATIO_CHANGE(pOrg->ReactivePowerCurrCalib, pRat->ReactivePowerCurrCalib); //0xc0
+	ActivePowerCurrCalib = SETUP_RATIO_CHANGE(pOrg->ActivePowerCurrCalib, pRat->ActivePowerCurrCalib); //0xc1
+	TestMU_RATIO = SETUP_RATIO_CHANGE(pOrg->TestMU_RATIO, pRat->TestMU_RATIO); //0xc2
+	VoltLeadPoints = SETUP_RATIO_CHANGE(pOrg->VoltLeadPoints, pRat->VoltLeadPoints); //0xc3//电压校正延时系数//0-399
+	windColdCtr = SETUP_RATIO_CHANGE(pOrg->windColdCtr, pRat->windColdCtr); //0xc4
+	PllCalibrPhase = D2R(pOrg->PllCalibrPhase); //0xc5
+	debugDispFlag = SETUP_RATIO_CHANGE(pOrg->debugDispFlag, pRat->debugDispFlag); //0xc6
+	R_SSwitchTime = SETUP_RATIO_CHANGE(pOrg->R_SSwitchTime, pRat->R_SSwitchTime); //      ESC--Running/standby switchover time 运行/待机切换时间
+	S_RSwitchTime = SETUP_RATIO_CHANGE(pOrg->S_RSwitchTime, pRat->S_RSwitchTime); //0xc8   ESC--待机/运行切换时间
+	wholeOutCurRmsLimit = SETUP_RATIO_CHANGE(pOrg->WholeOutCurRmsLimit, pRat->WholeOutCurRmsLimit); //0xc9
+	StandCosFiLimit = SETUP_RATIO_CHANGE(pOrg->StandCosFiLimit, pRat->StandCosFiLimit);
+	UbanCurPer = SETUP_RATIO_CHANGE(pOrg->StandUbanCurPer, pRat->StandUbanCurPer);
+	WindCold.BOARD_OVER_TEMP = SETUP_RATIO_CHANGE(pOrg->BOARD_OVER_TEMP, pRat->BOARD_OVER_TEMP);
 
-    //加入代码让开关周期只能重新上电后生效,在线修改只能改EPPORM中的值.
-    if(t1prtmp<1000){       //当T1PR设为小于1000的值的时候,变为如下选择方案,之前直接输入开关周期的方式废弃不用
-        switch(t1prtmp){    //根据主频为200M推算得出
-        case 40:    T1PR=1250;T1PRPwmFrequency=0; ADGROUP_NUM = 8; ADGROUP_MODE = 3;WAVE_REC_FFT_MODE_DATA2= 5;break;
-        case 16:    T1PR=3125;T1PRPwmFrequency=1; ADGROUP_NUM = 8; ADGROUP_MODE = 3;WAVE_REC_FFT_MODE_DATA2= 5;break;
-        case 128:   T1PR=3906;T1PRPwmFrequency=2; ADGROUP_NUM = 8; ADGROUP_MODE = 2;WAVE_REC_FFT_MODE_DATA2= 4;break;
-        case 96:    T1PR=4883;T1PRPwmFrequency=3; ADGROUP_NUM = 6; ADGROUP_MODE = 1;WAVE_REC_FFT_MODE_DATA2= 3;break;
-      //case 8:     T1PR=5860;T1PRPwmFrequency=4; ADGROUP_NUM = 4; ADGROUP_MODE = 0;WAVE_REC_FFT_MODE_DATA2= 3;break;
-        default:    T1PR=3906;T1PRPwmFrequency=1; ADGROUP_NUM = 8; ADGROUP_MODE = 2;WAVE_REC_FFT_MODE_DATA2= 4;break;
-        }
-    }else{
-	    T1PR=3906;T1PRPwmFrequency=1;     //如果界面依然按照之前的开关周期方式下发,则强行选择为12.8k,防止引起其他事故.
-	                                        //并且让pOrg->T1PR的值被修改.这样再次上传时操作人员就可看出问题.
-    }
-    if(T1PR>13000.0f) T1PR=13000.0f;
-    if(T1PR<1150.0f) T1PR=1150.0f;      //Preventing communication failure from unable interrupted
-    T1PRmulESC_T1PR = ((int32)(T1PR))/*<<16*/;
-    if(SyncHardwareLead>T1PR) 		SyncHardwareLead=T1PR-1;    //同步超前点数
-	if(SyncHardwareLead<1.1f)		SyncHardwareLead=1.1f;
-	if(SampleLead>T1PR) 			SampleLead=T1PR-3;  //采样超前点数
-	if(SampleLead<3.0f)	 			SampleLead=3.0f;
-	ActivePowerCurrCalibPH = ActivePowerCurrCalib*S1DIVSQRT3;
-	if(reactPrCompPerc>2)           reactPrCompPerc=2;
-    if(harmCompPerc > 1)              harmCompPerc = 1 ;//2;
-    if(negCurCompPerc > 0.5)            negCurCompPerc = 0.5;//2;  死区最大限制20%
-    else if(negCurCompPerc < -0.5)      negCurCompPerc = -0.5;
+//加入代码让开关周期只能重新上电后生效,在线修改只能改EPPORM中的值.
+	if(t1prtmp < 1000)
+	{ //当T1PR设为小于1000的值的时候,变为如下选择方案,之前直接输入开关周期的方式废弃不用
+		switch(t1prtmp)
+		{ //根据主频为200M推算得出
+			case 40:
+				T1PR = 1250;
+				T1PRPwmFrequency = 0;
+				ADGROUP_NUM = 8;
+				ADGROUP_MODE = 3;
+				WAVE_REC_FFT_MODE_DATA2 = 5;
+			break;
+			case 16:
+				T1PR = 3125;
+				T1PRPwmFrequency = 1;
+				ADGROUP_NUM = 8;
+				ADGROUP_MODE = 3;
+				WAVE_REC_FFT_MODE_DATA2 = 5;
+			break;
+			case 128:
+				T1PR = 3906;
+				T1PRPwmFrequency = 2;
+				ADGROUP_NUM = 8;
+				ADGROUP_MODE = 2;
+				WAVE_REC_FFT_MODE_DATA2 = 4;
+			break;
+			case 96:
+				T1PR = 4883;
+				T1PRPwmFrequency = 3;
+				ADGROUP_NUM = 6;
+				ADGROUP_MODE = 1;
+				WAVE_REC_FFT_MODE_DATA2 = 3;
+			break;
+//case 8:     T1PR=5860;T1PRPwmFrequency=4; ADGROUP_NUM = 4; ADGROUP_MODE = 0;WAVE_REC_FFT_MODE_DATA2= 3;break;
+			default:
+				T1PR = 3906;
+				T1PRPwmFrequency = 1;
+				ADGROUP_NUM = 8;
+				ADGROUP_MODE = 2;
+				WAVE_REC_FFT_MODE_DATA2 = 4;
+			break;
+		}
+	}
+	else
+	{
+		T1PR = 3906;
+		T1PRPwmFrequency = 1; //如果界面依然按照之前的开关周期方式下发,则强行选择为12.8k,防止引起其他事故.
+//并且让pOrg->T1PR的值被修改.这样再次上传时操作人员就可看出问题.
+	}
+	if(T1PR > 13000.0f)
+		T1PR = 13000.0f;
+	if(T1PR < 1150.0f)
+		T1PR = 1150.0f; //Preventing communication failure from unable interrupted
+	T1PRmulESC_T1PR = ((int32) (T1PR))/*<<16*/;
+	if(SyncHardwareLead > T1PR)
+		SyncHardwareLead = T1PR - 1; //同步超前点数
+	if(SyncHardwareLead < 1.1f)
+		SyncHardwareLead = 1.1f;
+	if(SampleLead > T1PR)
+		SampleLead = T1PR - 3; //采样超前点数
+	if(SampleLead < 3.0f)
+		SampleLead = 3.0f;
+	ActivePowerCurrCalibPH = ActivePowerCurrCalib * S1DIVSQRT3;
+	if(reactPrCompPerc > 2)
+		reactPrCompPerc = 2;
+	if(harmCompPerc > 1)
+		harmCompPerc = 1; //2;
+	if(negCurCompPerc > 0.5)
+		negCurCompPerc = 0.5; //2;  死区最大限制20%
+	else if(negCurCompPerc < -0.5)
+		negCurCompPerc = -0.5;
 
-	if(TestMU_RATIO>0){										//如果TestMU_RATIO不为0,则按照TestMU_RATIO的数量作为并联模块数量.
+	if(TestMU_RATIO > 0)
+	{ //如果TestMU_RATIO不为0,则按照TestMU_RATIO的数量作为并联模块数量.
 		MU_LCD_RATIO = TestMU_RATIO;
-		MU_MultRatio = 1.0f /(TestMU_RATIO );				//显示的并联模块数量
-	}else{
-		MU_LCD_RATIO = MuFaciID.MU_UNIT_NUM;			//注意:必须确保MU_UNIT_NUM被正确赋值,注意此函数的调用顺序!!!
-		MU_MultRatio = 1.0f /(MuFaciID.MU_UNIT_NUM );	//显示的并联模块数量
+		MU_MultRatio = 1.0f / (TestMU_RATIO); //显示的并联模块数量
+	}
+	else
+	{
+		MU_LCD_RATIO = MuFaciID.MU_UNIT_NUM; //注意:必须确保MU_UNIT_NUM被正确赋值,注意此函数的调用顺序!!!
+		MU_MultRatio = 1.0f / (MuFaciID.MU_UNIT_NUM); //显示的并联模块数量
 	}
 
-	FactorySet.CommunicationVersion  = COMMUNCICATION_VERSION;
-	StandUbanCurPer = UbanCurPer*0.01;
+	FactorySet.CommunicationVersion = COMMUNCICATION_VERSION;
+	StandUbanCurPer = UbanCurPer * 0.01;
 	SPLL_CUR.PLLPICtrl.Umax = SPLL[0].PLLPICtrl.Umax = SPLL[1].PLLPICtrl.Umax = SPLL[2].PLLPICtrl.Umax;
 	SPLL_CUR.PLLPICtrl.Kp = SPLL[0].PLLPICtrl.Kp = SPLL[1].PLLPICtrl.Kp = SPLL[2].PLLPICtrl.Kp;
 	SPLL_CUR.PLLPICtrl.Ki = SPLL[0].PLLPICtrl.Ki = SPLL[1].PLLPICtrl.Ki = SPLL[2].PLLPICtrl.Ki;
-	SPLL_CUR.PLLPICtrl.Umin = SPLL[0].PLLPICtrl.Umin = SPLL[1].PLLPICtrl.Umin = SPLL[2].PLLPICtrl.Umin = 48.5*PI2;
-	PIVolB.Kp = PIVolC.Kp = PIVolA.Kp = VolKp*0.01;
-	PIVolB.Ki = PIVolC.Ki = PIVolA.Ki = VolKi*0.01;
+	SPLL_CUR.PLLPICtrl.Umin = SPLL[0].PLLPICtrl.Umin = SPLL[1].PLLPICtrl.Umin = SPLL[2].PLLPICtrl.Umin = 48.5 * PI2;
+	PIVolB.Kp = PIVolC.Kp = PIVolA.Kp = VolKp * 0.01;
+	PIVolB.Ki = PIVolC.Ki = PIVolA.Ki = VolKi * 0.01;
 	PIVolB.Umax = PIVolC.Umax = PIVolA.Umax = VoltDerivative;
 	PIVolB.Umin = PIVolC.Umin = PIVolA.Umin = -VoltDerivative;
 	SetWaveRecordMode(FaultRecSel.RecordMode);
 
-	OUTCUR_OVER_INS_NEG		=-OUTCUR_OVER_INS;
-	OutCurMaxLimitNeg		=-OutCurMaxLimit;
-	WholeOutCurRmsLimit 	= wholeOutCurRmsLimit*wholeOutCurRmsLimit;
-	NegCurLimit 			= wholeOutCurRmsLimit;
-	CapStartLimit 			= NegCurLimit*CapGroupAct.SvgPercent*0.0001;
+	OUTCUR_OVER_INS_NEG = -OUTCUR_OVER_INS;
+	OutCurMaxLimitNeg = -OutCurMaxLimit;
+	WholeOutCurRmsLimit = wholeOutCurRmsLimit * wholeOutCurRmsLimit;
+	NegCurLimit = wholeOutCurRmsLimit;
+	CapStartLimit = NegCurLimit * CapGroupAct.SvgPercent * 0.0001;
 
-	gridVoltRatio			= -gridVoltRatioVirtu;       //电网电压系数
-	loadVoltRatio			= -loadVoltRatioVirtu;       //负载电压系数
-	outputCurRatio			= outputCurRatioVirtu;      //主电抗电流系数
-	bypassCurrRatio         = bypassCurrRatioVirtu;      //旁路电流系数
-    dcCapVoltRatio          = DcCapVoltRatioVirtu;       //直流吸收电容电压系数
+	gridVoltRatio = -gridVoltRatioVirtu; //电网电压系数
+	loadVoltRatio = -loadVoltRatioVirtu; //负载电压系数
+	outputCurRatio = outputCurRatioVirtu; //主电抗电流系数
+	bypassCurrRatio = bypassCurrRatioVirtu; //旁路电流系数
+	dcCapVoltRatio = DcCapVoltRatioVirtu; //直流吸收电容电压系数
 
-    outputCurRatioCurrA     = outputCurRatio;
-    outputCurRatioCurrB     = outputCurRatio;
-    outputCurRatioCurrC     = outputCurRatio;
-    outputCurBypassCurrA    = bypassCurrRatio;
-    outputCurBypassCurrB    = bypassCurrRatio;
-    outputCurBypassCurrC    = bypassCurrRatio;
+	outputCurRatioCurrA = outputCurRatio;
+	outputCurRatioCurrB = outputCurRatio;
+	outputCurRatioCurrC = outputCurRatio;
+	outputCurBypassCurrA = bypassCurrRatio;
+	outputCurBypassCurrB = bypassCurrRatio;
+	outputCurBypassCurrC = bypassCurrRatio;
 
-	if(sPWM%1000 != 0){
-	   switch(sPWM%10){
-		   case 0:   StateFlag.spwmFlag = 0;StateFlag.DynamicProportionEn = 0;	break;	//开启PR控制
-		   case 1:   StateFlag.spwmFlag = 1;StateFlag.DynamicProportionEn = 0;	break;	//开启静态P系数
-		   case 2:   StateFlag.spwmFlag = 1;StateFlag.DynamicProportionEn = 1;	break;	//开启动态P系数
-		   default:  StateFlag.spwmFlag = 1;StateFlag.DynamicProportionEn = 0;	break;
-	   }
-	   switch((sPWM/10)%10){
-		   case 0:  StateFlag.VoltFilterEn = 0;		break;
-		   case 1:  StateFlag.VoltFilterEn = 1;		break;
-		   default:	StateFlag.VoltFilterEn = 0;		break;
-	   }
-	   switch((sPWM/100)%10){
-		   case 0:   StateFlag.SVPWMEn = 0;		break;
-		   case 1:   StateFlag.SVPWMEn = 1;		break;
-		   default:  StateFlag.SVPWMEn = 0;		break;
-	   }
-	}else{
-	   StateFlag.SVPWMEn = 1;	StateFlag.VoltFilterEn = 0;	StateFlag.spwmFlag = 0; StateFlag.DynamicProportionEn = 0;
+	if(sPWM % 1000 != 0)
+	{
+		switch(sPWM % 10)
+		{
+			case 0:
+				StateFlag.spwmFlag = 0;
+				StateFlag.DynamicProportionEn = 0;
+			break; //开启PR控制
+			case 1:
+				StateFlag.spwmFlag = 1;
+				StateFlag.DynamicProportionEn = 0;
+			break; //开启静态P系数
+			case 2:
+				StateFlag.spwmFlag = 1;
+				StateFlag.DynamicProportionEn = 1;
+			break; //开启动态P系数
+			default:
+				StateFlag.spwmFlag = 1;
+				StateFlag.DynamicProportionEn = 0;
+			break;
+		}
+		switch((sPWM / 10) % 10)
+		{
+			case 0:
+				StateFlag.VoltFilterEn = 0;
+			break;
+			case 1:
+				StateFlag.VoltFilterEn = 1;
+			break;
+			default:
+				StateFlag.VoltFilterEn = 0;
+			break;
+		}
+		switch((sPWM / 100) % 10)
+		{
+			case 0:
+				StateFlag.SVPWMEn = 0;
+			break;
+			case 1:
+				StateFlag.SVPWMEn = 1;
+			break;
+			default:
+				StateFlag.SVPWMEn = 0;
+			break;
+		}
+	}
+	else
+	{
+		StateFlag.SVPWMEn = 1;
+		StateFlag.VoltFilterEn = 0;
+		StateFlag.spwmFlag = 0;
+		StateFlag.DynamicProportionEn = 0;
 	}
 
-	if((isharmcompensatemode==0)||(isharmcompensatemode>=1000)){
-	    if(isharmcompensatemode>=1000){
-            Uint16 i,*p,*q;
-            p = (Uint16 *)&GenCorr;
-            q = (Uint16 *)&GenCorrPrv[isharmcompensatemode%1000];								//从预置谐波表取数
+	if((isharmcompensatemode == 0) || (isharmcompensatemode >= 1000))
+	{
+		if(isharmcompensatemode >= 1000)
+		{
+			Uint16 i, *p, *q;
+			p = (Uint16*) &GenCorr;
+			q = (Uint16*) &GenCorrPrv[isharmcompensatemode % 1000]; //从预置谐波表取数
 
-            for(i=0;i<sizeof(GenCorr);i++){
-                *p++=*q++;														//拷贝到谐波生成数组
-            }
-            TestWaveGenerator();
-	    }
+			for(i = 0; i < sizeof(GenCorr); i ++)
+			{
+				*p ++ = *q ++; //拷贝到谐波生成数组
+			}
+			TestWaveGenerator();
+		}
 		StateFlag.isHarmCompensateMode = 0;
-	}else{
+	}
+	else
+	{
 		StateFlag.isHarmCompensateMode = 1;
 	}
 
-	WindCold.windColdCtrMode				=(windColdCtr/1000);
-	WindCold.windColdStartTempterature		=(windColdCtr%1000);
-	WindCold.windColdStopTempterature		=WindCold.windColdStartTempterature-8;
-	WindCold.MotherBoardStartTempterature	=WindCold.BOARD_OVER_TEMP-10;
-	WindCold.MotherBoardStopTempterature	=WindCold.MotherBoardStartTempterature-6;
-	//散热器
-	WindCold.ReduceCapacityHeatSink 			= WindCold.UNIT_OVER_TEMP - 2;
-	if(WindCold.ReduceCapacityHeatSink<0) 		WindCold.ReduceCapacityHeatSink=0;
-	WindCold.BackReduceCapacityHeatSink 		= WindCold.UNIT_OVER_TEMP - 4;
-	if(WindCold.BackReduceCapacityHeatSink<0) 	WindCold.BackReduceCapacityHeatSink=0;
-    //板载
-    WindCold.ReduceCapacityMotherBoard             = WindCold.BOARD_OVER_TEMP - 2;
-    if(WindCold.ReduceCapacityMotherBoard<0)       WindCold.ReduceCapacityMotherBoard=0;
-    WindCold.BackReduceCapacityMotherBoard         = WindCold.BOARD_OVER_TEMP - 4;
-    if(WindCold.BackReduceCapacityMotherBoard<0)   WindCold.BackReduceCapacityMotherBoard=0;
-	CorrectingAD();							//电压相序
-	CorrectingCT();							//电流相序
-	DirectionCT();							//电流方向
+	WindCold.windColdCtrMode = (windColdCtr / 1000);
+	WindCold.windColdStartTempterature = (windColdCtr % 1000);
+	WindCold.windColdStopTempterature = WindCold.windColdStartTempterature - 8;
+	WindCold.MotherBoardStartTempterature = WindCold.BOARD_OVER_TEMP - 10;
+	WindCold.MotherBoardStopTempterature = WindCold.MotherBoardStartTempterature - 6;
+//散热器
+	WindCold.ReduceCapacityHeatSink = WindCold.UNIT_OVER_TEMP - 2;
+	if(WindCold.ReduceCapacityHeatSink < 0)
+		WindCold.ReduceCapacityHeatSink = 0;
+	WindCold.BackReduceCapacityHeatSink = WindCold.UNIT_OVER_TEMP - 4;
+	if(WindCold.BackReduceCapacityHeatSink < 0)
+		WindCold.BackReduceCapacityHeatSink = 0;
+//板载
+	WindCold.ReduceCapacityMotherBoard = WindCold.BOARD_OVER_TEMP - 2;
+	if(WindCold.ReduceCapacityMotherBoard < 0)
+		WindCold.ReduceCapacityMotherBoard = 0;
+	WindCold.BackReduceCapacityMotherBoard = WindCold.BOARD_OVER_TEMP - 4;
+	if(WindCold.BackReduceCapacityMotherBoard < 0)
+		WindCold.BackReduceCapacityMotherBoard = 0;
+	CorrectingAD(); //电压相序
+	CorrectingCT(); //电流相序
+	DirectionCT(); //电流方向
 }
 
-
+/*
+ * 由触控屏下发AD零偏基准值。WY
+ * 注意：此时，AD零偏基准值由触控屏下发，而非ESC设备自身计算得出。
+ */
 void VirtuPreferencesRefresh(void)         //界面显示零偏值(程序当中使用的零偏值 = 界面下发零偏值,倍率)
 {
-    struct VARIZEROVAL             *pOrg= &VariZeroOffsetVAL;
-    struct VARIZEROVAL             *pRat= &VariZeroOffsetRatioVAL;
+	struct VARIZEROVAL *pOrg = &VariZeroOffsetVAL;
+	struct VARIZEROVAL *pRat = &VariZeroOffsetRatioVAL;
 
-    VirtulADval.gridHVoltA        = SETUP_RATIO_CHANGE(pOrg->gridHVoltA       ,pRat->gridHVoltA);
-    VirtulADval.gridHVoltB        = SETUP_RATIO_CHANGE(pOrg->gridHVoltB       ,pRat->gridHVoltB);
-    VirtulADval.gridHVoltC        = SETUP_RATIO_CHANGE(pOrg->gridHVoltC       ,pRat->gridHVoltC);
-    VirtulAD_loadCurrentA = VirtulADval.gridLVoltA   \
-                                  = SETUP_RATIO_CHANGE(pOrg->gridLVoltA       ,pRat->gridLVoltA);
-    VirtulAD_loadCurrentB = VirtulADval.gridLVoltB   \
-                                  = SETUP_RATIO_CHANGE(pOrg->gridLVoltB       ,pRat->gridLVoltB);
-    VirtulAD_loadCurrentC = VirtulADval.gridLVoltC   \
-                                  = SETUP_RATIO_CHANGE(pOrg->gridLVoltC       ,pRat->gridLVoltC);
-    VirtulADval.gridMainCurA      = SETUP_RATIO_CHANGE(pOrg->gridMainCurA     ,pRat->gridMainCurA);
-    VirtulADval.gridMainCurB      = SETUP_RATIO_CHANGE(pOrg->gridMainCurB     ,pRat->gridMainCurB);
-    VirtulADval.gridMainCurC      = SETUP_RATIO_CHANGE(pOrg->gridMainCurC     ,pRat->gridMainCurC);
-    VirtulADval.gridBypassCurA    = SETUP_RATIO_CHANGE(pOrg->gridBypassCurA   ,pRat->gridBypassCurA);
-    VirtulADval.gridBypassCurB    = SETUP_RATIO_CHANGE(pOrg->gridBypassCurB   ,pRat->gridBypassCurB);
-    VirtulADval.gridBypassCurC    = SETUP_RATIO_CHANGE(pOrg->gridBypassCurC   ,pRat->gridBypassCurC);
-    VirtulADval.aDCUDCA           = 0;
-    VirtulADval.aDCUDCB           = 0;
-    VirtulADval.aDCUDCC           = 0;
+	VirtulADval.gridHVoltA = SETUP_RATIO_CHANGE(pOrg->gridHVoltA, pRat->gridHVoltA);
+	VirtulADval.gridHVoltB = SETUP_RATIO_CHANGE(pOrg->gridHVoltB, pRat->gridHVoltB);
+	VirtulADval.gridHVoltC = SETUP_RATIO_CHANGE(pOrg->gridHVoltC, pRat->gridHVoltC);
 
-    gridVoltRatio           = -gridVoltRatioVirtu;       //电网电压系数
-    loadVoltRatio           = -loadVoltRatioVirtu;       //负载电压系数
-    outputCurRatio          = outputCurRatioVirtu;      //主电抗电流系数
-    bypassCurrRatio         = bypassCurrRatioVirtu;      //旁路电流系数
-    dcCapVoltRatio          = DcCapVoltRatioVirtu;       //直流吸收电容电压系数
+	VirtulAD_loadCurrentA = VirtulADval.gridLVoltA = SETUP_RATIO_CHANGE(pOrg->gridLVoltA, pRat->gridLVoltA);
+	VirtulAD_loadCurrentB = VirtulADval.gridLVoltB = SETUP_RATIO_CHANGE(pOrg->gridLVoltB, pRat->gridLVoltB);
+	VirtulAD_loadCurrentC = VirtulADval.gridLVoltC = SETUP_RATIO_CHANGE(pOrg->gridLVoltC, pRat->gridLVoltC);
 
-    outputCurRatioCurrA     = outputCurRatio;
-    outputCurRatioCurrB     = outputCurRatio;
-    outputCurRatioCurrC     = outputCurRatio;
-    outputCurBypassCurrA    = bypassCurrRatio;
-    outputCurBypassCurrB    = bypassCurrRatio;
-    outputCurBypassCurrC    = bypassCurrRatio;
+	VirtulADval.gridMainCurA = SETUP_RATIO_CHANGE(pOrg->gridMainCurA, pRat->gridMainCurA);
+	VirtulADval.gridMainCurB = SETUP_RATIO_CHANGE(pOrg->gridMainCurB, pRat->gridMainCurB);
+	VirtulADval.gridMainCurC = SETUP_RATIO_CHANGE(pOrg->gridMainCurC, pRat->gridMainCurC);
 
-//    if(StateFlag.VoltageModeFlag == 0){
-//        outputCurRatioCurrA     = -outputCurRatio;
-//        outputCurRatioCurrB     = outputCurRatio;
-//        outputCurRatioCurrC     = outputCurRatio;
-//        outputCurBypassCurrA    = -dcVoltUpRatio;       //旁路电流系数A
-//        outputCurBypassCurrB    = dcVoltUpRatio;
-//        outputCurBypassCurrC    = dcVoltUpRatio;
-//    }else if(StateFlag.VoltageModeFlag == 1){
-//        outputCurRatioCurrA     = -outputCurRatio;
-//        outputCurRatioCurrB     = -outputCurRatio;
-//        outputCurRatioCurrC     = -outputCurRatio;
-//        outputCurBypassCurrA    = -dcVoltUpRatio;       //旁路电流系数A
-//        outputCurBypassCurrB    = -dcVoltUpRatio;
-//        outputCurBypassCurrC    = -dcVoltUpRatio;
-//    }
-    transfRatio                 = transfRatioVirtu;
+	VirtulADval.gridBypassCurA = SETUP_RATIO_CHANGE(pOrg->gridBypassCurA, pRat->gridBypassCurA);
+	VirtulADval.gridBypassCurB = SETUP_RATIO_CHANGE(pOrg->gridBypassCurB, pRat->gridBypassCurB);
+	VirtulADval.gridBypassCurC = SETUP_RATIO_CHANGE(pOrg->gridBypassCurC, pRat->gridBypassCurC);
+
+	VirtulADval.aDCUDCA = 0;
+	VirtulADval.aDCUDCB = 0;
+	VirtulADval.aDCUDCC = 0;
+
+	gridVoltRatio = -gridVoltRatioVirtu;       //电网电压系数
+	loadVoltRatio = -loadVoltRatioVirtu;       //负载电压系数
+	outputCurRatio = outputCurRatioVirtu;      //主电抗电流系数
+	bypassCurrRatio = bypassCurrRatioVirtu;      //旁路电流系数
+	dcCapVoltRatio = DcCapVoltRatioVirtu;       //直流吸收电容电压系数
+
+	outputCurRatioCurrA = outputCurRatio;
+	outputCurRatioCurrB = outputCurRatio;
+	outputCurRatioCurrC = outputCurRatio;
+	outputCurBypassCurrA = bypassCurrRatio;
+	outputCurBypassCurrB = bypassCurrRatio;
+	outputCurBypassCurrC = bypassCurrRatio;
+
+	transfRatio = transfRatioVirtu;
 }
 
 void CapParamRefresh(void)

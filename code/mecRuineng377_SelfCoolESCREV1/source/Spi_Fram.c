@@ -24,68 +24,32 @@ Stru_RemoteRefresh_Structure RemoteRefreshData;
 Stru_RemoteCtrl_Structure RemoteStateCtrl;
 Stru_RemoteInstruct_Structure RemoteInstructCtrl;
 Stru_RemoteMonitor_Structure RemoteStateMonitor;
-Stru_Information_Structure Information_Structure={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,12311,12312,12313,12314,12315,12316,12317,12318,12319,12320,12321,12322,12323,12324,12325,12326,12327,12328,12329,12330,12331,12332,12333,12334,12335,12336,12337,\
-		12338,12339,12340,12341,12342,12343,12344,12345,12346,12347,12348,12349,12350,12351,12352,12353,12354,12355,12356,12357,12358,12359,12360,12361,12362,-12363,-12364,-12365,-12366,-12367,-12368,-12369,-12370,-12371,-12372,-12373,-12374,-12375,-12376,-12377,-12378,-12379,-12380};
+
+/*监控信息？WY*/
+Stru_Information_Structure Information_Structure =
+{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12311, 12312, 12313, 12314, 12315, 12316, 12317,
+		12318, 12319, 12320, 12321, 12322, 12323, 12324, 12325, 12326, 12327, 12328, 12329, 12330, 12331, 12332, 12333, 12334, 12335, 12336, 12337, 12338,
+		12339, 12340, 12341, 12342, 12343, 12344, 12345, 12346, 12347, 12348, 12349, 12350, 12351, 12352, 12353, 12354, 12355, 12356, 12357, 12358, 12359,
+		12360, 12361, 12362, -12363, -12364, -12365, -12366, -12367, -12368, -12369, -12370, -12371, -12372, -12373, -12374, -12375, -12376, -12377, -12378,
+		-12379, -12380 };
+
 Stru_Multiple_Parallel_Value Multiple_Parallel_Value;
 Stru_Virtu_ZeroOffset VirtuZeroOffset={2076,2080,2080,2083,2081,2078,2053,2062,2056,0,0,0,0,0};
-Stru_Virtu_ZeroOffSETVAL VirtuZeroOffSETVAL={2076,2080,2080,2083,2081,2078,2053,2062,2056,2057,2063,2075,0,0,0};
-//#pragma	CODE_SECTION(SpiWrite ,"ram2func")
-//#pragma	CODE_SECTION(FM_Write_Enable ,"ram2func")
-//#pragma	CODE_SECTION(FM_Read_Byte ,"ram2func")
-//#pragma	CODE_SECTION(FM_StructureDatWrite ,"ram2func")
-//#pragma	CODE_SECTION(FM_DatRead ,"ram2func")
-//#pragma	CODE_SECTION(FM_DatWordWrite ,"ram2func")
+
+/*
+ * 由设备自身计算出的AD零偏基准值。WY
+ * 说明：
+   当AD输入浮空时，将AD采样真实值定义为【AD零偏基准值】。
+ */
+Stru_Virtu_ZeroOffSETVAL VirtuZeroOffSETVAL =
+{ 2076, 2080, 2080, 2083, 2081, 2078, 2053, 2062, 2056, 2057, 2063, 2075, 0, 0, 0 };
+
 #pragma	CODE_SECTION(SPITXINTB_ISR ,"ram2func")
-//#pragma	CODE_SECTION(FM_StructureDatWrite2 ,"ram2func")
-//#pragma	CODE_SECTION(SoeRecData ,"ram2func")
+
 #define  SPI_TX_OVER()  (SpibRegs.SPISTS.bit.INT_FLAG == 1)
 int RecordData[8];
 Uint16 *pSoe;
-//void InitSpiGpio(void)
-//{
-//	EALLOW;
-//
-//	GpioCtrlRegs.GPBPUD.bit.GPIO54 = 0;   // Enable pull-up on GPIO54 (SPISIMOA)
-//	GpioCtrlRegs.GPBPUD.bit.GPIO55 = 0;   // Enable pull-up on GPIO55 (SPISOMIA)
-//	GpioCtrlRegs.GPBPUD.bit.GPIO56 = 0;   // Enable pull-up on GPIO56 (SPICLKA)
-//
-//    GpioCtrlRegs.GPBQSEL2.bit.GPIO54 = 3; // Asynch input GPIO54 (SPISIMOA)
-//    GpioCtrlRegs.GPBQSEL2.bit.GPIO55 = 3; // Asynch input GPIO55 (SPISOMIA)
-//    GpioCtrlRegs.GPBQSEL2.bit.GPIO56 = 3; // Asynch input GPIO56 (SPICLKA)
-//
-//    GpioCtrlRegs.GPBMUX2.bit.GPIO54 = 1; // Configure GPIO54 as SPISIMOA
-//    GpioCtrlRegs.GPBMUX2.bit.GPIO55 = 1; // Configure GPIO55 as SPISOMIA
-//    GpioCtrlRegs.GPBMUX2.bit.GPIO56 = 1; // Configure GPIO56 as SPICLKA
-//
-//    //SPI wp,cs
-//    GpioCtrlRegs.GPBPUD.bit.GPIO48 = 0;  // Enable pullup on GPIO48
-//    GpioCtrlRegs.GPBMUX2.bit.GPIO48 = 0; // GPIO48 = WP
-//    GpioCtrlRegs.GPBDIR.bit.GPIO48 = 1;  // GPIO48 = output
-//    GpioCtrlRegs.GPBPUD.bit.GPIO57 = 0;  // Enable pullup on GPIO57
-//    GpioCtrlRegs.GPBMUX2.bit.GPIO57 = 0; // GPIO57 = SPICSn
-//    GpioCtrlRegs.GPBDIR.bit.GPIO57 = 1;  // GPIO57 = output
-//
-//    EDIS;
-//}
 
-
-//void InitESpi(void)
-//{
-//   EALLOW;
-//   SpiaRegs.SPICCR.all=0x0007;       //16-bit character, No Loopback mode
-//   //SpiaRegs.SPICTL.all=0x0017;       //Interrupt enabled, Master/Slave XMIT enabled
-//   SpiaRegs.SPICTL.all=0x0006;       //Interrupt disabled
-//   //SpiaRegs.SPISTS.all=0x0000;
-//   SpiaRegs.SPIBRR.all = 0x04;           // Baud rate  75Mhz /(4 + 1) = 15MHz
-//   SpiaRegs.SPIPRI.all = 0x30;	// free run
-//   SpiaRegs.SPICCR.all=0x0087;//使SPI退出复位状态
-//   SpiaRegs.SPICCR.bit.CLKPOLARITY = 0;
-//   SpiaRegs.SPICTL.bit.CLK_PHASE   = 1;
-//
-//   EDIS;
-////   FM_Write_Status(UNLOCK);
-//   ConfigCpuTimer(&CpuTimer0, 150, 0.01);
-//}
 
 
 Uint16 SpiWrite(Uint16 data)
@@ -573,133 +537,141 @@ void Monitor_Message(void)
 {
 //    Uint16 isTransoform = TransformRatioVal;
 	PowerReactStateRefresh();
-	Uint16 *InfDataPoint = (Uint16 *)&Information_Structure.GridVoltRms;
-	*InfDataPoint++  = GridVoltRms;
-    if(StateFlag.VoltageModeFlag == 0){       //升压
-        *InfDataPoint++  = GridCurRms;        //电网电流
-        *InfDataPoint++  = LoadVoltRms;
-        *InfDataPoint++  = GridCurBYRms;      //负载电流
-    }else if(StateFlag.VoltageModeFlag == 1){
-        *InfDataPoint++  = GridCurBYRms;      //电网电流
-        *InfDataPoint++  = LoadVoltRms;
-        *InfDataPoint++  = GridCurRms;        //负载电流
-    }
-    *InfDataPoint++  = VoltInA_rms;	          //A相电压有效值
-	*InfDataPoint++  = VoltInB_rms;
-	*InfDataPoint++  = VoltInC_rms;
+	Uint16 *InfDataPoint = (Uint16*) &Information_Structure.GridVoltRms;
+	*InfDataPoint ++ = GridVoltRms;
 
-	*InfDataPoint++  = VoltOutA_rms;          //A相负载电压有效值
-	*InfDataPoint++  = VoltOutB_rms;
-	*InfDataPoint++  = VoltOutC_rms;
-
-	if(StateFlag.VoltageModeFlag == 0){
-        *InfDataPoint++  = gridCurA_rms*10;                 //A相电网电流有效值
-        *InfDataPoint++  = gridCurB_rms*10;                 //B相电网电流有效值
-        *InfDataPoint++  = gridCurC_rms*10;                 //C相电网电流有效值
-
-        *InfDataPoint++  = gridCurrBYAF_rms*10;                //A相负载电流有效值
-        *InfDataPoint++  = gridCurrBYBF_rms*10;
-        *InfDataPoint++  = gridCurrBYCF_rms*10;
-	}else if(StateFlag.VoltageModeFlag == 1){
-        *InfDataPoint++  = gridCurrBYAF_rms*10;                 //A相电网电流有效值
-        *InfDataPoint++  = gridCurrBYBF_rms*10;                 //B相电网电流有效值
-        *InfDataPoint++  = gridCurrBYCF_rms*10;                 //C相电网电流有效值
-
-        *InfDataPoint++  = gridCurA_rms*10;                  //A相负载电流有效值
-        *InfDataPoint++  = gridCurB_rms*10;                  //B相负载电流有效值
-        *InfDataPoint++  = gridCurC_rms*10;                  //C相负载电流有效值
+	if(StateFlag.VoltageModeFlag == 0)
+	{       //升压
+		*InfDataPoint ++ = GridCurRms;        //电网电流
+		*InfDataPoint ++ = LoadVoltRms;
+		*InfDataPoint ++ = GridCurBYRms;      //负载电流
 	}
-	*InfDataPoint++	 = TempData[0]*10;    //散热器温度(出风口温度)
-	*InfDataPoint++  = TempData[1]*10;    //单元机壳内部温度
-	*InfDataPoint++  = GridFreq*100;
+	else if(StateFlag.VoltageModeFlag == 1)
+	{
+		*InfDataPoint ++ = GridCurBYRms;      //电网电流
+		*InfDataPoint ++ = LoadVoltRms;
+		*InfDataPoint ++ = GridCurRms;        //负载电流
+	}
 
-    //在协议中90AB-90DE未使用,为备用
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
- 	*InfDataPoint++  = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++	 = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++	 = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-    *InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
+	*InfDataPoint ++ = VoltInA_rms;	          //A相电压有效值
+	*InfDataPoint ++ = VoltInB_rms;
+	*InfDataPoint ++ = VoltInC_rms;
 
-	*InfDataPoint++	 = RecordFlash.RecordBlockNum;
-	*InfDataPoint++	 = StateEventFlag1.all;
-	*InfDataPoint++	 = StateFlag.startingMethod;	//启动方式
-	*InfDataPoint++	 = StateFlag.VoltageMode<<8;
-	*InfDataPoint++  = softwareFaultWord1.all;		//故障字1
-	*InfDataPoint++	 = softwareFaultWord2.all;		//故障字2
-	*InfDataPoint++  = softwareFaultWord3.all;		//故障字3
-	*InfDataPoint++  = softwareFaultWord4.all;		//故障字4
-	*InfDataPoint++  = softwareFaultWord5.all;		//故障字5
-	*InfDataPoint++	 = Choose1;
-	*InfDataPoint++	 = Choose2;
-	*InfDataPoint++	 = Choose3;
-	*InfDataPoint++	 = Choose4;
-	*InfDataPoint++	 = Choose5;
-	*InfDataPoint++  = DSPSOFT_VERSION_FREQC;       //从机版本:开关频率
-	*InfDataPoint++  = DSPSOFT_VERSION_MAJOR;
-	*InfDataPoint++  = DSPSOFT_VERSION_CHILD;
-	*InfDataPoint++  = DSPSOFT_VERSION_YEAR;
-	*InfDataPoint++  = DSPSOFT_VERSION_M_DAY;
-	*InfDataPoint++  = COMMUNCICATION_VERSION;
-	*InfDataPoint++  = GridCurRmsUnban*1000;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = 0;
-	*InfDataPoint++  = gridCurA_rms*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = gridCurB_rms*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = gridCurC_rms*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = apfOutCurA_rms*MU_LCD_RATIO*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = apfOutCurB_rms*MU_LCD_RATIO*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = apfOutCurC_rms*MU_LCD_RATIO*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = loadCurA_rms*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = loadCurB_rms*TransformCurrL2H *RATIO_UPLOAD10;
-	*InfDataPoint++  = loadCurC_rms*TransformCurrL2H *RATIO_UPLOAD10;
+	*InfDataPoint ++ = VoltOutA_rms;          //A相负载电压有效值
+	*InfDataPoint ++ = VoltOutB_rms;
+	*InfDataPoint ++ = VoltOutC_rms;
+
+	if(StateFlag.VoltageModeFlag == 0)
+	{
+		*InfDataPoint ++ = gridCurA_rms * 10;                 //A相电网电流有效值
+		*InfDataPoint ++ = gridCurB_rms * 10;                 //B相电网电流有效值
+		*InfDataPoint ++ = gridCurC_rms * 10;                 //C相电网电流有效值
+
+		*InfDataPoint ++ = gridCurrBYAF_rms * 10;                //A相负载电流有效值
+		*InfDataPoint ++ = gridCurrBYBF_rms * 10;
+		*InfDataPoint ++ = gridCurrBYCF_rms * 10;
+	}
+	else if(StateFlag.VoltageModeFlag == 1)
+	{
+		*InfDataPoint ++ = gridCurrBYAF_rms * 10;                 //A相电网电流有效值
+		*InfDataPoint ++ = gridCurrBYBF_rms * 10;                 //B相电网电流有效值
+		*InfDataPoint ++ = gridCurrBYCF_rms * 10;                 //C相电网电流有效值
+
+		*InfDataPoint ++ = gridCurA_rms * 10;                  //A相负载电流有效值
+		*InfDataPoint ++ = gridCurB_rms * 10;                  //B相负载电流有效值
+		*InfDataPoint ++ = gridCurC_rms * 10;                  //C相负载电流有效值
+	}
+	*InfDataPoint ++ = TempData[0] * 10;    //散热器温度(出风口温度)
+	*InfDataPoint ++ = TempData[1] * 10;    //单元机壳内部温度
+	*InfDataPoint ++ = GridFreq * 100;
+
+	//在协议中90AB-90DE未使用,为备用
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+
+	*InfDataPoint ++ = RecordFlash.RecordBlockNum;
+	*InfDataPoint ++ = StateEventFlag1.all;
+	*InfDataPoint ++ = StateFlag.startingMethod;	//启动方式
+	*InfDataPoint ++ = StateFlag.VoltageMode << 8;
+	*InfDataPoint ++ = softwareFaultWord1.all;		//故障字1
+	*InfDataPoint ++ = softwareFaultWord2.all;		//故障字2
+	*InfDataPoint ++ = softwareFaultWord3.all;		//故障字3
+	*InfDataPoint ++ = softwareFaultWord4.all;		//故障字4
+	*InfDataPoint ++ = softwareFaultWord5.all;		//故障字5
+	*InfDataPoint ++ = Choose1;
+	*InfDataPoint ++ = Choose2;
+	*InfDataPoint ++ = Choose3;
+	*InfDataPoint ++ = Choose4;
+	*InfDataPoint ++ = Choose5;
+	*InfDataPoint ++ = DSPSOFT_VERSION_FREQC;       //从机版本:开关频率
+	*InfDataPoint ++ = DSPSOFT_VERSION_MAJOR;
+	*InfDataPoint ++ = DSPSOFT_VERSION_CHILD;
+	*InfDataPoint ++ = DSPSOFT_VERSION_YEAR;
+	*InfDataPoint ++ = DSPSOFT_VERSION_M_DAY;
+	*InfDataPoint ++ = COMMUNCICATION_VERSION;
+	*InfDataPoint ++ = GridCurRmsUnban * 1000;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = 0;
+	*InfDataPoint ++ = gridCurA_rms * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = gridCurB_rms * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = gridCurC_rms * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = apfOutCurA_rms * MU_LCD_RATIO * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = apfOutCurB_rms * MU_LCD_RATIO * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = apfOutCurC_rms * MU_LCD_RATIO * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = loadCurA_rms * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = loadCurB_rms * TransformCurrL2H * RATIO_UPLOAD10;
+	*InfDataPoint ++ = loadCurC_rms * TransformCurrL2H * RATIO_UPLOAD10;
 }
 void RemoteParamerRefresh2(void)//0x02   遥信
 {
